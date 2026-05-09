@@ -3290,8 +3290,8 @@ setInterval(()=>{if(document.getElementById('titleScr').classList.contains('on')
   function resize(){
     const scaleX=window.innerWidth/648;// 640 + 8px border
     const scaleY=window.innerHeight/488;
-    const scale=Math.min(scaleX,scaleY,1);// never upscale beyond 1:1
-    gc.style.transform=scale<1?`scale(${scale})`:'';
+    const scale=Math.min(scaleX,scaleY);
+    gc.style.transform=`scale(${scale})`;
   }
   resize();
   window.addEventListener('resize',resize);
