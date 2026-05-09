@@ -22,6 +22,8 @@ canvas{display:block;image-rendering:pixelated;}
 .pinp{font-family:'Courier New',monospace;font-size:10px;background:#000;color:#f8c840;border:3px solid #6060c0;padding:8px;width:100%;outline:none;margin-bottom:10px;}
 .pinp:focus{border-color:#f8c840;}
 #flash{position:absolute;top:0;left:0;width:100%;height:100%;opacity:0;pointer-events:none;z-index:999;transition:opacity 0.08s;}
+@keyframes lbPulse{0%,100%{box-shadow:0 0 6px rgba(248,200,64,0.4);}50%{box-shadow:0 0 18px rgba(248,200,64,0.9);}}
+.lb-player{animation:lbPulse 1.2s infinite;}
 </style>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
@@ -37,6 +39,7 @@ canvas{display:block;image-rendering:pixelated;}
   <div style="background:rgba(0,0,20,0.88);border:3px solid #f8c840;padding:16px 20px;width:220px;box-shadow:4px 4px 0 #000,0 0 24px rgba(248,200,64,0.3);">
     <button class="pbtn" onclick="goName()">▶  NEW JOURNEY</button>
     <button class="pbtn bl" onclick="doLoad()">📂  CONTINUE</button>
+    <button class="pbtn" onclick="goLeaderboard(false)" style="background:#1a1a00;color:#f8c840;border:2px solid #f8c840;">🏆  LEADERBOARD</button>
     <button class="pbtn pu" onclick="goParent()">👁  PARENT MODE</button>
   </div>
 </div>
@@ -176,9 +179,22 @@ canvas{display:block;image-rendering:pixelated;}
 <!-- GAME OVER -->
 <div id="gameOverScr" class="scr" style="background:#000;">
 <canvas id="goCv" width="640" height="480" style="position:absolute;top:0;left:0;"></canvas>
-<div style="position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%;height:100%;">
-  <div id="goCountdown" style="font-size:8px;color:#ff6060;letter-spacing:2px;margin-bottom:20px;"></div>
-  <button class="pbtn rd" onclick="goTitle()" style="width:220px;">← BACK TO TITLE</button>
+<div style="position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;width:100%;height:100%;padding-bottom:20px;">
+  <div id="goCountdown" style="font-size:8px;color:#ff6060;letter-spacing:2px;"></div>
+</div>
+</div>
+
+<!-- LEADERBOARD -->
+<div id="lbScr" class="scr" style="background:#000;align-items:stretch;">
+<div style="width:100%;height:100%;display:flex;flex-direction:column;padding:14px 16px;box-sizing:border-box;">
+  <div style="font-size:12px;color:#f8c840;letter-spacing:3px;text-align:center;margin-bottom:6px;text-shadow:0 0 12px rgba(248,200,64,0.6);">🏆  LEADERBOARD</div>
+  <div id="lbScrRank" style="display:none;font-size:9px;color:#60ff60;text-align:center;letter-spacing:1px;margin-bottom:8px;padding:7px 10px;background:rgba(0,40,0,0.88);border:2px solid #40d040;border-radius:0;"></div>
+  <div style="display:grid;grid-template-columns:28px 1fr 58px 1fr;font-size:6px;color:#404080;padding:3px 4px 5px;border-bottom:2px solid #303060;gap:4px;letter-spacing:1px;">
+    <span>#</span><span>NAME</span><span>SCORE</span><span>DATE</span>
+  </div>
+  <div id="lbScrRows" style="flex:1;overflow-y:auto;margin-bottom:8px;"></div>
+  <div id="lbScrCountdown" style="display:none;font-size:8px;color:#ff6060;text-align:center;letter-spacing:2px;margin-bottom:8px;"></div>
+  <button class="pbtn" id="lbBackBtn" onclick="lbBack()" style="width:100%;">← BACK TO TITLE</button>
 </div>
 </div>
 
@@ -539,7 +555,8 @@ function goTitle(){
   stopLoop();
   G.paused=false;
   document.getElementById('pauseOverlay').style.display='none';
-  if(_goTimer){clearInterval(_goTimer);_goTimer=null;}
+  if(_goTimer){clearTimeout(_goTimer);clearInterval(_goTimer);_goTimer=null;}
+  if(_lbTimer){clearInterval(_lbTimer);_lbTimer=null;}
   show('titleScr');drawTitle();titleMusicPlaying=false;playTitleMusic();
 }
 function goName(){sfxMenu();show('nameScr');drawNameBg();drawPilgrimPreviews();}
@@ -3366,40 +3383,110 @@ function showGameOver(){
   if(_goTimer){clearInterval(_goTimer);_goTimer=null;}
   const cv=document.getElementById('goCv'),ctx=cv.getContext('2d');
   ctx.imageSmoothingEnabled=false;
-  // Background
   const gr=ctx.createLinearGradient(0,0,0,480);
   gr.addColorStop(0,'#1a0000');gr.addColorStop(0.5,'#0a0000');gr.addColorStop(1,'#000');
   ctx.fillStyle=gr;ctx.fillRect(0,0,640,480);
-  // Noise flicker
   for(let i=0;i<120;i++){ctx.fillStyle=`rgba(180,0,0,${Math.random()*0.07})`;ctx.fillRect(Math.random()*640,Math.random()*480,Math.random()*3+1,1);}
-  // Skull
-  ctx.font='72px serif';ctx.textAlign='center';ctx.fillText('💀',320,140);
-  // GAME OVER text — layered shadow
+  ctx.font='72px serif';ctx.textAlign='center';ctx.fillText('💀',320,150);
   ctx.font='bold 52px Courier New';
-  ctx.fillStyle='rgba(0,0,0,0.9)';ctx.fillText('GAME OVER',324,228);
-  ctx.fillStyle='#5a0000';ctx.fillText('GAME OVER',322,226);
-  ctx.fillStyle='#a00000';ctx.fillText('GAME OVER',320,224);
-  ctx.fillStyle='#ff2020';ctx.fillText('GAME OVER',318,222);
-  // Sub text
+  ctx.fillStyle='rgba(0,0,0,0.9)';ctx.fillText('GAME OVER',324,238);
+  ctx.fillStyle='#5a0000';ctx.fillText('GAME OVER',322,236);
+  ctx.fillStyle='#a00000';ctx.fillText('GAME OVER',320,234);
+  ctx.fillStyle='#ff2020';ctx.fillText('GAME OVER',318,232);
   ctx.fillStyle='#8080c0';ctx.font='10px monospace';
-  ctx.fillText('All lives lost — study God\'s Word and return stronger.',320,260);
-  ctx.fillStyle='rgba(100,100,160,0.55)';ctx.fillText('2 Timothy 2:15',320,278);
-  // Stats
-  ctx.fillStyle='rgba(0,0,20,0.85)';ctx.fillRect(160,296,320,52);
-  ctx.strokeStyle='#400000';ctx.lineWidth=1.5;ctx.strokeRect(160,296,320,52);
+  ctx.fillText("All lives lost — study God's Word and return stronger.",320,270);
+  ctx.fillStyle='rgba(100,100,160,0.55)';ctx.fillText('2 Timothy 2:15',320,288);
+  ctx.fillStyle='rgba(0,0,20,0.85)';ctx.fillRect(160,306,320,52);
+  ctx.strokeStyle='#400000';ctx.lineWidth=1.5;ctx.strokeRect(160,306,320,52);
   ctx.fillStyle='#f8c840';ctx.font='bold 10px monospace';ctx.textAlign='left';
-  ctx.fillText('Final Score:',176,318);ctx.fillText('Worlds:',176,336);
+  ctx.fillText('Final Score:',176,328);ctx.fillText('Worlds:',176,346);
   ctx.fillStyle='#c0c0ff';ctx.textAlign='right';
-  ctx.fillText(G.score,464,318);ctx.fillText(G.worldsDone.length+' / 6',464,336);
+  ctx.fillText(G.score,464,328);ctx.fillText(G.worldsDone.length+' / 6',464,346);
+  ctx.fillStyle='rgba(248,200,64,0.5)';ctx.font='8px monospace';ctx.textAlign='center';
+  ctx.fillText('Loading leaderboard...',320,400);
   show('gameOverScr');
-  let count=10;
-  const el=document.getElementById('goCountdown');
-  el.textContent='Returning to title in '+count+'...';
-  _goTimer=setInterval(()=>{
-    count--;
-    el.textContent='Returning to title in '+count+'...';
-    if(count<=0){clearInterval(_goTimer);_goTimer=null;goTitle();}
-  },1000);
+  // After 2.5s transition to leaderboard
+  _goTimer=setTimeout(()=>{_goTimer=null;goLeaderboard(true);},2500);
+}
+
+let _lbTimer=null;
+function lbBack(){
+  if(_lbTimer){clearInterval(_lbTimer);_lbTimer=null;}
+  goTitle();
+}
+function goLeaderboard(fromGameOver){
+  if(_lbTimer){clearInterval(_lbTimer);_lbTimer=null;}
+  const rankEl=document.getElementById('lbScrRank');
+  const cdEl=document.getElementById('lbScrCountdown');
+  const rowsEl=document.getElementById('lbScrRows');
+  rankEl.style.display='none';
+  cdEl.style.display='none';
+  rowsEl.innerHTML='<div style="font-size:7px;color:#6060a0;padding:12px;text-align:center;">Loading...</div>';
+  show('lbScr');
+
+  function renderLbScr(entries){
+    rowsEl.innerHTML='';
+    if(!entries.length){rowsEl.innerHTML='<div style="font-size:7px;color:#6060a0;padding:12px;text-align:center;">No scores yet — be the first!</div>';return;}
+    let playerRank=-1;
+    if(fromGameOver){
+      // Find best matching entry for current player
+      playerRank=entries.findIndex(e=>e.name===G.name);
+    }
+    if(playerRank>=0){
+      const rankNum=playerRank+1;
+      const medal=rankNum===1?'🥇 ':rankNum===2?'🥈 ':rankNum===3?'🥉 ':'🎖 ';
+      rankEl.textContent=medal+G.name.toUpperCase()+' — YOU RANKED #'+rankNum+'!  '+medal;
+      rankEl.style.display='block';
+      sfxWin();
+    } else if(fromGameOver){
+      rankEl.textContent='Keep going — hit the leaderboard next time!';
+      rankEl.style.display='block';
+      rankEl.style.color='#8080c0';
+      rankEl.style.borderColor='#404060';
+      rankEl.style.background='rgba(0,0,20,0.88)';
+    }
+    const medals=['🥇','🥈','🥉'];
+    entries.forEach((e,i)=>{
+      const isPlayer=fromGameOver&&i===playerRank;
+      rowsEl.innerHTML+=`<div class="${isPlayer?'lb-player':''}" style="display:grid;grid-template-columns:28px 1fr 58px 1fr;font-size:7px;padding:5px 4px;border-bottom:1px solid #1a1a30;gap:4px;background:${isPlayer?'rgba(248,200,64,0.12)':'transparent'};color:${isPlayer?'#f8c840':'#c0c0ff'};">
+        <span style="color:${isPlayer?'#f8c840':'#505080'}">${medals[i]||(i+1)}</span>
+        <span style="${isPlayer?'font-weight:bold;':''}">${e.name}</span>
+        <span style="color:${isPlayer?'#ffe060':'#f0d060'}">${e.score}</span>
+        <span style="color:#505080">${e.date||''}</span>
+      </div>`;
+    });
+    if(playerRank>4){
+      setTimeout(()=>{
+        const rows=rowsEl.querySelectorAll('div');
+        if(rows[playerRank])rows[playerRank].scrollIntoView({behavior:'smooth',block:'center'});
+      },400);
+    }
+  }
+
+  const doFetch=()=>{
+    if(_fbDb){
+      _fbDb.ref('cq3lb').orderByChild('score').limitToLast(25).once('value',snap=>{
+        const entries=[];snap.forEach(c=>entries.push(c.val()));
+        entries.sort((a,b)=>b.score-a.score);
+        renderLbScr(entries);
+      });
+    } else {
+      renderLbScr(JSON.parse(localStorage.getItem('cq3lb')||'[]'));
+    }
+  };
+  // Small delay when coming from game over to let Firebase write settle
+  fromGameOver ? setTimeout(doFetch,600) : doFetch();
+
+  if(fromGameOver){
+    let count=18;
+    cdEl.style.display='block';
+    cdEl.textContent='Returning to title in '+count+'...';
+    _lbTimer=setInterval(()=>{
+      count--;
+      cdEl.textContent='Returning to title in '+count+'...';
+      if(count<=0){clearInterval(_lbTimer);_lbTimer=null;goTitle();}
+    },1000);
+  }
 }
 
 // ===============================
