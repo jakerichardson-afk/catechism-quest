@@ -23,6 +23,8 @@ canvas{display:block;image-rendering:pixelated;}
 .pinp:focus{border-color:#f8c840;}
 #flash{position:absolute;top:0;left:0;width:100%;height:100%;opacity:0;pointer-events:none;z-index:999;transition:opacity 0.08s;}
 </style>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
 </head>
 <body>
 <div id="gc">
@@ -182,6 +184,31 @@ canvas{display:block;image-rendering:pixelated;}
 
 </div>
 <script>
+// ===============================
+// FIREBASE — shared leaderboard
+// ===============================
+const _fbConfig={
+  apiKey:"REPLACE_WITH_API_KEY",
+  authDomain:"REPLACE_WITH_PROJECT_ID.firebaseapp.com",
+  databaseURL:"https://REPLACE_WITH_PROJECT_ID-default-rtdb.firebaseio.com",
+  projectId:"REPLACE_WITH_PROJECT_ID",
+};
+let _fbDb=null,_fbTopScore=null;
+try{
+  firebase.initializeApp(_fbConfig);
+  _fbDb=firebase.database();
+  _fbDb.ref('cq3lb').orderByChild('score').limitToLast(1).on('value',snap=>{
+    const e=[];snap.forEach(c=>e.push(c.val()));
+    if(e.length){_fbTopScore=e[e.length-1];}
+    if(document.getElementById('titleScr').classList.contains('on'))drawTitle();
+  });
+}catch(err){console.warn('Firebase unavailable:',err);}
+function _fmtDate(ts){
+  const d=new Date(ts),mo=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getMonth()];
+  const h=d.getHours()%12||12,mn=d.getMinutes().toString().padStart(2,'0'),ap=d.getHours()>=12?'PM':'AM';
+  return `${mo} ${d.getDate()} ${h}:${mn} ${ap}`;
+}
+
 // ===============================
 // WORLD DEFINITIONS
 // ===============================
@@ -427,10 +454,17 @@ function save(){
   localStorage.setItem('cq3s',JSON.stringify(saves));
   const lb=JSON.parse(localStorage.getItem('cq3lb')||'[]');
   const ei=lb.findIndex(e=>e.name===G.name);
-  const ent={name:G.name,score:G.score,worlds:G.worldsDone.length,armor:G.armorEarned.length};
+  const ent={name:G.name,score:G.score,worlds:G.worldsDone.length,armor:G.armorEarned.length,ts:Date.now(),date:_fmtDate(Date.now())};
   if(ei>=0){if(G.score>lb[ei].score)lb[ei]=ent;}else lb.push(ent);
   lb.sort((a,b)=>b.score-a.score);
-  localStorage.setItem('cq3lb',JSON.stringify(lb.slice(0,20)));
+  localStorage.setItem('cq3lb',JSON.stringify(lb.slice(0,25)));
+  if(_fbDb){
+    _fbDb.ref('cq3lb').orderByChild('name').equalTo(G.name).once('value',snap=>{
+      const data=snap.val();
+      if(data){const key=Object.keys(data)[0];if(G.score>data[key].score)_fbDb.ref('cq3lb/'+key).set(ent);}
+      else _fbDb.ref('cq3lb').push(ent);
+    });
+  }
 }
 
 // ===============================
@@ -745,11 +779,11 @@ function drawTitle(){
   ctx.fillText('A CATECHISM FOR BOYS AND GIRLS',320,140);
   ctx.fillStyle='rgba(0,20,60,0.88)';ctx.fillRect(0,456,W,24);
   ctx.fillStyle='#f8c840';ctx.fillRect(0,456,W,2);
-  // High score (left side)
-  const _lb=JSON.parse(localStorage.getItem('cq3lb')||'[]');
-  if(_lb.length>0){
+  // High score (left side) \u2014 from Firebase if available, else localStorage
+  const _best=_fbTopScore||(JSON.parse(localStorage.getItem('cq3lb')||'[]')[0]||null);
+  if(_best){
     ctx.fillStyle='#f8c840';ctx.font='bold 8px monospace';ctx.textAlign='left';
-    ctx.fillText('\u2605 BEST: '+_lb[0].score+' \u2014 '+_lb[0].name.toUpperCase(),10,472);
+    ctx.fillText('\u2605 BEST: '+_best.score+' \u2014 '+_best.name.toUpperCase()+(_best.date?' \u2022 '+_best.date:''),10,472);
   }
   // Sound icon (right side) \u2014 just a label, actual toggle is in pause menu
   ctx.fillStyle=soundOn?'#90d0ff':'#606080';ctx.font='9px monospace';ctx.textAlign='right';
@@ -3435,14 +3469,25 @@ function doLoad(){
 // PARENT MODE
 // ===============================
 function buildParent(){
-  const lb=JSON.parse(localStorage.getItem('cq3lb')||'[]');
   const saves=JSON.parse(localStorage.getItem('cq3s')||'{}');
-  const lbEl=document.getElementById('lbRows');lbEl.innerHTML='';
-  if(!lb.length)lbEl.innerHTML='<div style="font-size:7px;color:#6060a0;padding:8px">No scores yet!</div>';
-  else lb.forEach((e,i)=>{
-    const m=['🥇','🥈','🥉'];
-    lbEl.innerHTML+=`<div style="display:grid;grid-template-columns:30px 1fr 70px 80px 60px;font-size:7px;color:#c0c0ff;padding:4px 0;border-bottom:1px solid #202040;"><span style="color:#f8c840">${m[i]||(i+1)}</span><span>${e.name}</span><span>${e.score}</span><span>${e.worlds}/6 worlds</span><span>${e.armor}/6</span></div>`;
-  });
+  const lbEl=document.getElementById('lbRows');
+  lbEl.innerHTML='<div style="font-size:7px;color:#6060a0;padding:8px">Loading scores...</div>';
+  function renderLb(entries){
+    lbEl.innerHTML='';
+    if(!entries.length){lbEl.innerHTML='<div style="font-size:7px;color:#6060a0;padding:8px">No scores yet!</div>';return;}
+    entries.forEach((e,i)=>{
+      const m=['🥇','🥈','🥉'];
+      lbEl.innerHTML+=`<div style="display:grid;grid-template-columns:28px 1fr 55px 1fr;font-size:7px;color:#c0c0ff;padding:4px 0;border-bottom:1px solid #202040;gap:4px;"><span style="color:#f8c840">${m[i]||(i+1)}</span><span>${e.name}</span><span style="color:#f8c840">${e.score}</span><span style="color:#8080a0">${e.date||''}</span></div>`;
+    });
+  }
+  if(_fbDb){
+    _fbDb.ref('cq3lb').orderByChild('score').limitToLast(25).once('value',snap=>{
+      const entries=[];snap.forEach(c=>entries.push(c.val()));
+      entries.sort((a,b)=>b.score-a.score);renderLb(entries);
+    });
+  } else {
+    const lb=JSON.parse(localStorage.getItem('cq3lb')||'[]');renderLb(lb);
+  }
   const si=document.getElementById('savesInfo');si.innerHTML='';
   Object.entries(saves).forEach(([n,s])=>{
     const d=new Date(s.ts).toLocaleDateString();
