@@ -155,12 +155,16 @@ canvas{display:block;image-rendering:pixelated;}
 </div>
 </div>
 
+<!-- PAUSE BUTTON (shown during gameplay) -->
+<button id="pauseBtn" onclick="pauseGame()" style="display:none;position:absolute;top:6px;right:8px;z-index:90;font-family:'Courier New',monospace;font-size:13px;background:rgba(0,0,20,0.82);color:#f8c840;border:2px solid #f8c840;padding:3px 10px;cursor:pointer;letter-spacing:1px;box-shadow:2px 2px 0 #000;">⏸</button>
+
 <!-- PAUSE OVERLAY -->
 <div id="pauseOverlay" style="display:none;position:absolute;top:0;left:0;width:100%;height:100%;z-index:100;background:rgba(0,0,0,0.82);flex-direction:column;align-items:center;justify-content:center;">
 <div style="background:rgba(0,0,20,0.97);border:3px solid #f8c840;padding:20px 24px;width:272px;box-shadow:4px 4px 0 #000,0 0 28px rgba(248,200,64,0.2);">
   <div style="font-size:11px;color:#f8c840;text-align:center;letter-spacing:3px;margin-bottom:4px;">II PAUSED</div>
   <div style="height:1px;background:rgba(248,200,64,0.3);margin-bottom:14px;"></div>
   <button class="pbtn gr" onclick="resumeGame()">▶ RESUME</button>
+  <button class="pbtn" onclick="pauseSave()">💾 SAVE PROGRESS</button>
   <button class="pbtn" onclick="pauseQuitWM()">🗺 WORLD MAP</button>
   <button class="pbtn bl" onclick="pauseQuitTitle()">← TITLE</button>
   <button class="pbtn" id="soundBtn" onclick="toggleSound()" style="background:#1a1a3a;color:#c0c0ff;border:2px solid #4040a0;margin-top:8px;"></button>
@@ -1141,6 +1145,8 @@ function show(id){
   if(id!=='wmScr'&&wmLoopId){cancelAnimationFrame(wmLoopId);wmLoopId=null;}
   document.querySelectorAll('.scr').forEach(s=>s.classList.remove('on'));
   document.getElementById(id).classList.add('on');
+  const pb=document.getElementById('pauseBtn');
+  if(pb)pb.style.display=(id==='owScr')?'block':'none';
 }
 
 // ===============================
@@ -3219,6 +3225,13 @@ function pauseGame(){
 function resumeGame(){
   G.paused=false;
   document.getElementById('pauseOverlay').style.display='none';
+}
+function pauseSave(){
+  save();
+  const btn=document.querySelector('#pauseOverlay .pbtn:nth-child(3)');
+  // Flash the button text briefly to confirm
+  const saveBtn=Array.from(document.querySelectorAll('#pauseOverlay .pbtn')).find(b=>b.textContent.includes('SAVE'));
+  if(saveBtn){const orig=saveBtn.textContent;saveBtn.textContent='✓ SAVED!';saveBtn.style.color='#60ff60';setTimeout(()=>{saveBtn.textContent=orig;saveBtn.style.color='';},1200);}
 }
 function pauseQuitWM(){
   G.paused=false;
