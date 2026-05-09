@@ -2071,6 +2071,14 @@ function showQFeedback(good){
 
 // ─── Keyboard for questions + pause ──────────────────────
 document.addEventListener('keydown',e=>{
+  // DEV SHORTCUT: Shift+B = jump straight to boss battle of current world (or world 0)
+  if(e.shiftKey&&e.key==='B'){
+    if(!G.name){G.name='DEV';G.gender='boy';G.diff='young';G.score=0;G.lives=3;G.worldsDone=[];G.armorEarned=[];G.totalAnswered=0;}
+    const wi=G.wIdx||0;
+    G.wIdx=wi;const r=WRANGES[wi];G.wQs=[];for(let i=r[0];i<=r[1];i++)G.wQs.push(i);
+    G.qIdx=0;G.correct=0;G.wrong=0;G.streak=0;G.bossHP=100;
+    stopLoop();show('bossBattleScr');startBossBattle();return;
+  }
   // P key toggles pause (any phase except title/name/result)
   if((e.key==='p'||e.key==='P')&&['walk','question','boss'].includes(G.phase)){
     if(G.paused)resumeGame();else pauseGame();
@@ -2852,8 +2860,6 @@ function renderBossScene(){
   }
 
   ctx.fillStyle='rgba(0,0,0,0.32)';ctx.beginPath();ctx.ellipse(bossX+80,groundY+10,46,9,0,0,Math.PI*2);ctx.fill();
-  const glowCol=['rgba(200,0,0,0.18)','rgba(140,0,200,0.22)','rgba(200,60,0,0.2)','rgba(160,130,0,0.18)','rgba(0,100,200,0.18)','rgba(180,100,255,0.2)'][G.wIdx];
-  ctx.fillStyle=glowCol;ctx.beginPath();ctx.arc(bossX+80+shudderOffX,bossY+60+bobY+shudderOffY,75,0,Math.PI*2);ctx.fill();
   // Draw boss with shudder transform
   ctx.save();
   ctx.translate(bossX+80+shudderOffX,bossY+60+bobY+shudderOffY);
@@ -2930,7 +2936,7 @@ function triggerBossAttackAnim(onDone){
   ctx.imageSmoothingEnabled=false;
   const apCol=ARMOR_BATTLE_COLS[G.wIdx],armorIdx=G.wIdx;
   const pX=452,pY=171; // pilgrim standing position
-  const bX=135,bY=112; // boss center target
+  const bX=168,bY=178; // boss front chest (scale 2.8 from bossX=55,bossY=52)
   const bqDlg=document.getElementById('bqDlg');
   bqDlg.style.display='none';
   let f=0;
