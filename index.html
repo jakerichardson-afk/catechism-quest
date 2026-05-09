@@ -2896,7 +2896,7 @@ function renderBossScene(){
   drawBattleBg();
   const cv=document.getElementById('bbCv'),ctx=cv.getContext('2d');
   ctx.imageSmoothingEnabled=false;
-  const w=WORLDS[G.wIdx],groundY=275,bossX=55,bossY=52;
+  const w=WORLDS[G.wIdx],groundY=275,bossX=55,bossY=75;
   const bobY=Math.sin(mapFrame*0.06)*5;
 
   // Boss shudder effect
@@ -2931,7 +2931,7 @@ function renderBossScene(){
   ctx.fillStyle='#ff8080';ctx.font='7px monospace';ctx.textAlign='center';ctx.fillText('HP '+G.bossHP+'%',hpBarX+66,hpBarY+24);
   // Pilgrim
   ctx.fillStyle='rgba(0,0,0,0.32)';ctx.beginPath();ctx.ellipse(490,groundY+10,30,7,0,0,Math.PI*2);ctx.fill();
-  drawPilgrimCanvas(ctx,452,groundY-104,G.armorEarned,2.2);
+  drawPilgrimCanvas(ctx,452,groundY-60,G.armorEarned,2.2);
   ctx.fillStyle='rgba(0,0,0,0.65)';ctx.fillRect(408,groundY+14,170,16);
   ctx.fillStyle='#80ff80';ctx.font='bold 8px monospace';ctx.textAlign='center';ctx.fillText(G.name.toUpperCase(),493,groundY+26);
   ctx.fillStyle='rgba(0,0,0,0.5)';ctx.fillRect(414,groundY+32,170,20);
@@ -2979,7 +2979,7 @@ document.getElementById('bqCv').addEventListener('click',e=>{
 
 function showBossDamageNumber(dmg){
   const cv=document.getElementById('bbCv'),ctx=cv.getContext('2d');
-  const bossX=55,bossY=52;let fy=bossY+10,fa=1;
+  const bossX=55,bossY=75;let fy=bossY+10,fa=1;
   function animDmg(){fy-=1.8;fa-=0.038;if(fa>0){ctx.save();ctx.globalAlpha=fa;ctx.fillStyle='#000';ctx.font='bold 18px Courier New';ctx.textAlign='center';ctx.fillText('-'+dmg+'%',bossX+83,fy);ctx.fillStyle='#ff4040';ctx.fillText('-'+dmg+'%',bossX+81,fy-2);ctx.restore();requestAnimationFrame(animDmg);}}
   animDmg();
 }
@@ -2989,8 +2989,8 @@ function triggerBossAttackAnim(onDone){
   const cv=document.getElementById('bbCv'),ctx=cv.getContext('2d');
   ctx.imageSmoothingEnabled=false;
   const apCol=ARMOR_BATTLE_COLS[G.wIdx],armorIdx=G.wIdx;
-  const pX=452,pY=171; // pilgrim standing position
-  const bX=168,bY=178; // boss front chest (scale 2.8 from bossX=55,bossY=52)
+  const pX=452,pY=215; // pilgrim standing position
+  const bX=168,bY=201; // boss front chest (scale 2.8 from bossX=55,bossY=75)
   const bqDlg=document.getElementById('bqDlg');
   bqDlg.style.display='none';
   let f=0;
@@ -3076,7 +3076,7 @@ function bossDefeatAnimation(){
   const cv=document.getElementById('bbCv'),ctx=cv.getContext('2d');
   ctx.imageSmoothingEnabled=false;
   const w=WORLDS[G.wIdx],apCol=ARMOR_BATTLE_COLS[G.wIdx],armorIdx=G.wIdx;
-  let pilgrimX=452,pilgrimY=171,bossX=55,bossY=52;
+  let pilgrimX=452,pilgrimY=215,bossX=55,bossY=75;
   let bossOffX=0,bossOffY=0,bossAlpha=1,bossScale=1;
   let particles=[],shockRings=[],embers=[];
   let animPhase='epicCharge',f=0,screenShakeX=0,screenShakeY=0,whiteFlash=0;
@@ -3256,7 +3256,7 @@ function bossWinsAnimation(){
   const cv=document.getElementById('bbCv'),ctx=cv.getContext('2d');
   ctx.imageSmoothingEnabled=false;
   const w=WORLDS[G.wIdx],apCol=ARMOR_BATTLE_COLS[G.wIdx],armorIdx=G.wIdx;
-  let pilgrimX=452,pilgrimY=171,bossX=55,bossY=52;
+  let pilgrimX=452,pilgrimY=215,bossX=55,bossY=75;
   let bossScale=1,bossOffX=0,pilgrimFallAngle=0,pilgrimFallY=0,pilgrimFallVY=0;
   let particles=[],shockRings=[],animPhase='ominousGrowl',f=0;
   let screenShakeX=0,screenShakeY=0,whiteFlash=0,darkAlpha=0;
