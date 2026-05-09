@@ -43,46 +43,44 @@ canvas{display:block;image-rendering:pixelated;}
 <!-- NAME -->
 <div id="nameScr" class="scr">
 <canvas id="nameBgCv" width="640" height="480" style="position:absolute;top:0;left:0;"></canvas>
-<div style="position:absolute;top:0;left:0;width:100%;height:100%;display:flex;align-items:center;justify-content:flex-start;padding-left:18px;z-index:2;">
-  <!-- Open book panel -->
-  <div id="nameBook" style="width:310px;background:rgba(10,6,0,0.96);border:3px solid #c8a040;box-shadow:4px 4px 0 #000,0 0 24px rgba(200,160,40,0.18);position:relative;">
-    <!-- book spine line -->
-    <div style="position:absolute;top:0;bottom:0;left:50%;width:2px;background:rgba(200,160,60,0.35);pointer-events:none;"></div>
-    <div style="padding:10px 12px 12px;">
-      <div style="font-size:9px;color:#f8c840;text-align:center;letter-spacing:2px;margin-bottom:6px;text-shadow:1px 1px 0 #000;">⚔  CREATE YOUR PILGRIM  ⚔</div>
-      <div style="height:1px;background:rgba(200,160,60,0.4);margin-bottom:10px;"></div>
-      <!-- Two-page layout -->
-      <div style="display:flex;gap:8px;">
-        <!-- Left page: name + pilgrim -->
+<div style="position:absolute;top:0;left:0;width:100%;height:100%;display:flex;align-items:center;justify-content:center;z-index:2;">
+  <div id="nameBook" style="width:572px;background:rgba(0,18,0,0.93);border:3px solid #40d040;box-shadow:4px 4px 0 #000,0 0 36px rgba(64,208,64,0.35);position:relative;">
+    <!-- Header bar -->
+    <div style="background:rgba(0,40,0,0.97);border-bottom:3px solid #40d040;padding:10px 18px;text-align:center;">
+      <div style="font-size:13px;color:#60ff60;letter-spacing:3px;text-shadow:0 0 14px rgba(96,255,96,0.7);">⚔  CREATE YOUR PILGRIM  ⚔</div>
+    </div>
+    <div style="padding:14px 18px 16px;">
+      <div style="display:flex;gap:16px;">
+        <!-- Left: name + character select -->
         <div style="flex:1;">
-          <div style="font-size:6px;color:#c8a040;margin-bottom:3px;letter-spacing:1px;">YOUR NAME:</div>
-          <input class="pinp" id="nameInp" maxlength="12" placeholder="Enter name..." style="margin-bottom:8px;font-size:9px;padding:5px 6px;"/>
-          <div style="font-size:6px;color:#c8a040;margin-bottom:4px;letter-spacing:1px;">YOUR PILGRIM:</div>
-          <div style="display:flex;gap:5px;margin-bottom:6px;">
-            <div id="gBoy" onclick="selG('boy')" style="flex:1;cursor:pointer;text-align:center;border:2px solid #f8c840;padding:6px 4px;background:#060400;">
-              <canvas id="pilBoyPrev" width="38" height="44" style="display:block;margin:0 auto;image-rendering:pixelated;"></canvas>
-              <div style="font-size:7px;color:#f8c840;margin-top:2px;">BOY</div>
+          <div style="font-size:9px;color:#60ff60;margin-bottom:5px;letter-spacing:2px;">YOUR NAME:</div>
+          <input class="pinp" id="nameInp" maxlength="12" placeholder="Enter name..." style="margin-bottom:12px;font-size:11px;padding:7px 8px;border-color:#40d040;color:#80ff80;"/>
+          <div style="font-size:9px;color:#60ff60;margin-bottom:7px;letter-spacing:2px;">YOUR HERO:</div>
+          <div style="display:flex;gap:10px;">
+            <div id="gBoy" onclick="selG('boy')" style="flex:1;cursor:pointer;text-align:center;border:2px solid #40d040;padding:10px 6px;background:rgba(0,28,0,0.85);">
+              <canvas id="pilBoyPrev" width="56" height="66" style="display:block;margin:0 auto;image-rendering:pixelated;"></canvas>
+              <div style="font-size:9px;color:#60ff60;margin-top:5px;letter-spacing:1px;">BOY</div>
             </div>
-            <div id="gGirl" onclick="selG('girl')" style="flex:1;cursor:pointer;text-align:center;border:2px solid #404040;padding:6px 4px;background:#060400;">
-              <canvas id="pilGirlPrev" width="38" height="44" style="display:block;margin:0 auto;image-rendering:pixelated;"></canvas>
-              <div style="font-size:7px;color:#f8c840;margin-top:2px;">GIRL</div>
+            <div id="gGirl" onclick="selG('girl')" style="flex:1;cursor:pointer;text-align:center;border:2px solid #404040;padding:10px 6px;background:rgba(0,28,0,0.85);">
+              <canvas id="pilGirlPrev" width="56" height="66" style="display:block;margin:0 auto;image-rendering:pixelated;"></canvas>
+              <div style="font-size:9px;color:#60ff60;margin-top:5px;letter-spacing:1px;">GIRL</div>
             </div>
           </div>
         </div>
-        <!-- Right page: mode + begin -->
+        <!-- Right: difficulty + begin -->
         <div style="flex:1;display:flex;flex-direction:column;">
-          <div style="font-size:6px;color:#c8a040;margin-bottom:4px;letter-spacing:1px;">DIFFICULTY:</div>
-          <div id="dYoung" onclick="selD('young')" style="cursor:pointer;text-align:center;border:2px solid #f8c840;padding:6px 4px;background:#060400;margin-bottom:5px;">
-            <div style="font-size:8px;color:#f8c840;">YOUNG</div>
-            <div style="font-size:6px;color:#80c080;margin-top:2px;">Ages 4-7 · Word Bank</div>
+          <div style="font-size:9px;color:#60ff60;margin-bottom:7px;letter-spacing:2px;">DIFFICULTY:</div>
+          <div id="dYoung" onclick="selD('young')" style="cursor:pointer;text-align:center;border:2px solid #40d040;padding:12px 8px;background:rgba(0,28,0,0.85);margin-bottom:10px;">
+            <div style="font-size:12px;color:#60ff60;font-weight:bold;">⚔ YOUNG</div>
+            <div style="font-size:8px;color:#80d080;margin-top:4px;">Ages 4-7 · Word Bank</div>
           </div>
-          <div id="dOlder" onclick="selD('older')" style="cursor:pointer;text-align:center;border:2px solid #404040;padding:6px 4px;background:#060400;margin-bottom:10px;">
-            <div style="font-size:8px;color:#f8c840;">OLDER</div>
-            <div style="font-size:6px;color:#80c080;margin-top:2px;">Ages 8+ · Type Answer</div>
+          <div id="dOlder" onclick="selD('older')" style="cursor:pointer;text-align:center;border:2px solid #404040;padding:12px 8px;background:rgba(0,28,0,0.85);margin-bottom:16px;">
+            <div style="font-size:12px;color:#60ff60;font-weight:bold;">🗡 OLDER</div>
+            <div style="font-size:8px;color:#80d080;margin-top:4px;">Ages 8+ · Type Answer</div>
           </div>
           <div style="flex:1;"></div>
-          <button class="pbtn gr" onclick="startJourney()" style="font-size:8px;padding:7px 8px;margin-bottom:4px;">BEGIN JOURNEY →</button>
-          <button class="pbtn sm" onclick="goTitle()" style="background:#2a1a00;color:#c8a040;border:1px solid #604020;font-size:7px;padding:4px;">← BACK</button>
+          <button class="pbtn gr" onclick="startJourney()" style="font-size:11px;padding:12px 8px;margin-bottom:7px;background:#1a8020;box-shadow:3px 3px 0 #000,0 0 14px rgba(26,128,32,0.55);">▶  BEGIN JOURNEY  ▶</button>
+          <button class="pbtn sm" onclick="goTitle()" style="background:rgba(0,18,0,0.85);color:#60ff60;border:2px solid #208020;font-size:9px;padding:6px;">← BACK</button>
         </div>
       </div>
     </div>
@@ -508,80 +506,83 @@ function goParent(){sfxMenu();buildParent();show('parentScr');}
 function goWM(){stopLoop();save();buildWM();show('wmScr');}
 
 // ===============================
-// NAME SCREEN BACKGROUND — Option D: Open Road at Dawn
+// NAME SCREEN BACKGROUND — Zelda bright daytime
 // ===============================
 function drawNameBg(){
   const cv=document.getElementById('nameBgCv');if(!cv)return;
   const ctx=cv.getContext('2d');ctx.imageSmoothingEnabled=false;
   const W=640,H=480;
-  // Dawn sky
-  const sky=ctx.createLinearGradient(0,0,0,H*0.52);
-  sky.addColorStop(0,'#0c0820');sky.addColorStop(0.28,'#1a0e38');sky.addColorStop(0.55,'#28100a');sky.addColorStop(0.75,'#401806');sky.addColorStop(1,'#602008');
-  ctx.fillStyle=sky;ctx.fillRect(0,0,W,H*0.52+20);
-  // Stars
-  for(let i=0;i<55;i++){const sx=(i*137+i*i*3)%W,sy=(i*47)%110;ctx.fillStyle=`rgba(255,255,220,${0.3+i%3*0.22})`;ctx.fillRect(sx,sy,i%7===0?2:1,1);}
-  // Sun glow on horizon
-  const sunX=W*0.7,sunY=H*0.42;
-  const sunR=ctx.createRadialGradient(sunX,sunY,0,sunX,sunY,140);
-  sunR.addColorStop(0,'rgba(255,220,80,0.62)');sunR.addColorStop(0.3,'rgba(255,140,20,0.28)');sunR.addColorStop(1,'transparent');
-  ctx.fillStyle=sunR;ctx.beginPath();ctx.arc(sunX,sunY,140,0,Math.PI*2);ctx.fill();
-  ctx.fillStyle='#ffe840';ctx.beginPath();ctx.arc(sunX,sunY,18,0,Math.PI*2);ctx.fill();
-  ctx.fillStyle='#fff080';ctx.beginPath();ctx.arc(sunX-2,sunY-2,11,0,Math.PI*2);ctx.fill();
-  // Distant mountains silhouette
-  ctx.fillStyle='#1a1020';
-  ctx.beginPath();ctx.moveTo(0,H*0.48);
-  [[30,H*0.33],[90,H*0.44],[150,H*0.28],[220,H*0.38],[290,H*0.22],[360,H*0.34],[420,H*0.19],[490,H*0.30],[550,H*0.38],[620,H*0.25],[640,H*0.42],[640,H*0.48]].forEach(([x,y])=>ctx.lineTo(x,y));
-  ctx.closePath();ctx.fill();
-  ctx.fillStyle='#22182a';
-  ctx.beginPath();ctx.moveTo(0,H*0.48);
-  [[60,H*0.36],[140,H*0.30],[230,H*0.25],[320,H*0.30],[410,H*0.22],[500,H*0.33],[580,H*0.28],[640,H*0.36],[640,H*0.48]].forEach(([x,y])=>ctx.lineTo(x,y));
-  ctx.closePath();ctx.fill();
-  // Distant fortress/city top right
-  const fx=460,fy=H*0.19;
-  ctx.fillStyle='#1e1610';
-  ctx.fillRect(fx,fy,90,56);
-  ctx.fillRect(fx+8,fy-22,16,24);ctx.fillRect(fx+64,fy-20,16,22);ctx.fillRect(fx+34,fy-32,22,34);
-  [[fx+8,fy-22],[fx+12,fy-22],[fx+64,fy-20],[fx+68,fy-20],[fx+34,fy-32],[fx+40,fy-32],[fx+46,fy-32]].forEach(([bx,by])=>{ctx.fillStyle='#2a1e12';ctx.fillRect(bx,by-5,5,7);});
-  ctx.fillStyle='rgba(255,180,60,0.45)';ctx.fillRect(fx+37,fy-12,6,9);ctx.fillRect(fx+10,fy+6,6,9);ctx.fillRect(fx+72,fy+7,6,9);
-  ctx.fillStyle='rgba(248,200,64,0.55)';ctx.font='6px monospace';ctx.textAlign='center';ctx.fillText('CELESTIAL CITY',fx+45,fy-36);
-  // Ground
-  const gnd=ctx.createLinearGradient(0,H*0.48,0,H);
-  gnd.addColorStop(0,'#1a1208');gnd.addColorStop(1,'#0c0c06');
-  ctx.fillStyle=gnd;ctx.fillRect(0,H*0.48,W,H*0.52);
-  ctx.fillStyle='#2a1e0c';ctx.fillRect(0,H*0.48,W,3);
-  // Road
-  ctx.fillStyle='#261c0c';
-  ctx.beginPath();ctx.moveTo(W/2-90,H);ctx.lineTo(W/2-20,H*0.5);ctx.lineTo(W/2+20,H*0.5);ctx.lineTo(W/2+90,H);ctx.closePath();ctx.fill();
-  ctx.fillStyle='rgba(255,200,80,0.12)';
-  ctx.beginPath();ctx.moveTo(W/2-65,H);ctx.lineTo(W/2-13,H*0.5);ctx.lineTo(W/2+13,H*0.5);ctx.lineTo(W/2+65,H);ctx.closePath();ctx.fill();
-  ctx.strokeStyle='rgba(248,200,64,0.28)';ctx.lineWidth=1.5;ctx.setLineDash([9,9]);
-  ctx.beginPath();ctx.moveTo(W/2,H*0.51);ctx.lineTo(W/2,H);ctx.stroke();ctx.setLineDash([]);
-  // Grass
-  ctx.fillStyle='#1c1608';ctx.fillRect(0,H*0.48,W/2-88,H*0.52);ctx.fillRect(W/2+88,H*0.48,W/2-88,H*0.52);
-  // Trees left side
-  function tree(tx,ty,h,dark){
-    const c1=dark?'#141008':'#1a1408',c2=dark?'#1c1a0a':'#22200c';
-    ctx.fillStyle='#18100a';ctx.fillRect(tx+2,ty+h,4,8);
-    ctx.fillStyle=c1;ctx.beginPath();ctx.moveTo(tx-6,ty+h);ctx.lineTo(tx+4,ty);ctx.lineTo(tx+14,ty+h);ctx.closePath();ctx.fill();
-    ctx.fillStyle=c2;ctx.beginPath();ctx.moveTo(tx-4,ty+h-5);ctx.lineTo(tx+4,ty-5);ctx.lineTo(tx+12,ty+h-5);ctx.closePath();ctx.fill();
+  // Bright blue sky
+  const skyGr=ctx.createLinearGradient(0,0,0,320);
+  skyGr.addColorStop(0,'#38b8f8');skyGr.addColorStop(0.4,'#50c8ff');
+  skyGr.addColorStop(0.75,'#78d8ff');skyGr.addColorStop(1,'#a0e8f8');
+  ctx.fillStyle=skyGr;ctx.fillRect(0,0,W,340);
+  // Sun (top-left)
+  const sx=80,sy=70;
+  ctx.fillStyle='rgba(255,240,120,0.18)';ctx.beginPath();ctx.arc(sx,sy,80,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='rgba(255,240,120,0.28)';ctx.beginPath();ctx.arc(sx,sy,56,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#ffe840';ctx.beginPath();ctx.arc(sx,sy,40,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#fff060';ctx.beginPath();ctx.arc(sx-2,sy-2,33,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#ffffa0';ctx.beginPath();ctx.arc(sx-4,sy-4,22,0,Math.PI*2);ctx.fill();
+  for(let i=0;i<8;i++){const a=i*Math.PI/4;ctx.save();ctx.translate(sx,sy);ctx.rotate(a);ctx.fillStyle='rgba(255,240,100,0.45)';ctx.fillRect(-3,48,6,18);ctx.restore();}
+  // Clouds
+  function cloud(cx,cy,sc){
+    ctx.fillStyle='rgba(255,255,255,0.96)';
+    [[0,0,28],[20,-8,22],[-20,-8,22],[36,-2,18],[-36,-2,18],[0,-14,18]].forEach(([dx,dy,r])=>{ctx.beginPath();ctx.arc(cx+dx*sc,cy+dy*sc,r*sc,0,Math.PI*2);ctx.fill();});
+    ctx.fillStyle='rgba(200,230,255,0.5)';ctx.beginPath();ctx.arc(cx+10*sc,cy-5*sc,12*sc,0,Math.PI*2);ctx.fill();
   }
-  [360,410,455,498,535,572,605].forEach((x,i)=>tree(x,H*0.44-14-i%2*6,20,i%2===0));
-  // Waypoints on road
-  const wpData=[{x:W/2-42,y:H*0.74,done:true,icon:'🏛'},{x:W/2-24,y:H*0.65,done:true,icon:'🌑'},{x:W/2-8,y:H*0.57,done:false,icon:'✝'},{x:W/2+6,y:H*0.53,done:false,icon:'⛰'}];
-  wpData.forEach(wp=>{
-    ctx.globalAlpha=wp.done?0.9:0.38;
-    ctx.fillStyle='rgba(0,0,0,0.7)';ctx.beginPath();ctx.arc(wp.x,wp.y,7,0,Math.PI*2);ctx.fill();
-    ctx.strokeStyle=wp.done?'#f8c840':'#444';ctx.lineWidth=1;ctx.beginPath();ctx.arc(wp.x,wp.y,7,0,Math.PI*2);ctx.stroke();
-    ctx.font='9px serif';ctx.textAlign='center';ctx.fillText(wp.icon,wp.x,wp.y+3);
-    ctx.globalAlpha=1;
+  cloud(230,72,0.9);cloud(420,52,1.15);cloud(565,88,0.8);cloud(310,100,0.6);
+  // Distant green hills
+  ctx.fillStyle='#5ac840';
+  ctx.beginPath();ctx.moveTo(0,315);
+  [[0,295],[80,262],[160,282],[240,252],[320,268],[400,250],[480,264],[560,248],[640,260],[640,315]].forEach(([x,y])=>ctx.lineTo(x,y));
+  ctx.closePath();ctx.fill();
+  ctx.fillStyle='#78e060';
+  ctx.beginPath();ctx.moveTo(0,296);
+  [[80,263],[240,253],[400,251],[560,249],[640,261],[640,296],[0,296]].forEach(([x,y])=>ctx.lineTo(x,y));
+  ctx.closePath();ctx.fill();
+  ctx.fillStyle='#40a030';
+  ctx.beginPath();ctx.moveTo(0,336);
+  [[0,318],[70,302],[150,320],[230,298],[310,312],[390,300],[470,316],[550,302],[640,310],[640,336]].forEach(([x,y])=>ctx.lineTo(x,y));
+  ctx.closePath();ctx.fill();
+  ctx.fillStyle='#58c048';
+  ctx.beginPath();ctx.moveTo(0,319);
+  [[80,303],[240,299],[400,301],[560,303],[640,311],[640,319],[0,319]].forEach(([x,y])=>ctx.lineTo(x,y));
+  ctx.closePath();ctx.fill();
+  // Ground
+  ctx.fillStyle='#38a028';ctx.fillRect(0,334,W,146);
+  ctx.fillStyle='#48b838';ctx.fillRect(0,334,W,7);
+  ctx.fillStyle='#30901e';
+  for(let x=0;x<W;x+=12){ctx.fillRect(x,338,6,3);}
+  for(let x=6;x<W;x+=12){ctx.fillRect(x,344,5,3);}
+  // Path (centered road vanishing into horizon)
+  ctx.fillStyle='#d0a848';
+  ctx.beginPath();ctx.moveTo(248,480);ctx.lineTo(296,342);ctx.lineTo(356,342);ctx.lineTo(400,480);ctx.closePath();ctx.fill();
+  ctx.fillStyle='#e8c060';ctx.fillRect(296,342,60,5);
+  ctx.fillStyle='rgba(255,255,200,0.45)';
+  for(let y=365;y<480;y+=26){ctx.fillRect(320,y,8,16);}
+  // Trees — lush, both sides
+  function pxTree(tx,ty,sc,c1,c2,c3){
+    c1=c1||'#1a8010';c2=c2||'#28b018';c3=c3||'#50d030';
+    ctx.fillStyle='#804020';ctx.fillRect(tx+4*sc,ty+14*sc,5*sc,10*sc);
+    ctx.fillStyle=c1;ctx.beginPath();ctx.moveTo(tx,ty+14*sc);ctx.lineTo(tx+6*sc,ty);ctx.lineTo(tx+12*sc,ty+14*sc);ctx.closePath();ctx.fill();
+    ctx.fillStyle=c2;ctx.beginPath();ctx.moveTo(tx+1*sc,ty+10*sc);ctx.lineTo(tx+6*sc,ty-4*sc);ctx.lineTo(tx+11*sc,ty+10*sc);ctx.closePath();ctx.fill();
+    ctx.fillStyle=c3;ctx.beginPath();ctx.moveTo(tx+2*sc,ty+7*sc);ctx.lineTo(tx+6*sc,ty-8*sc);ctx.lineTo(tx+10*sc,ty+7*sc);ctx.closePath();ctx.fill();
+  }
+  pxTree(6,292,4.5);pxTree(74,308,3.8,'#208018','#30a828','#60d840');pxTree(150,320,3.2);
+  pxTree(488,296,4.5,'#1a7010','#28a018','#48c828');pxTree(555,310,3.8);pxTree(610,316,3.0,'#208018','#38b028','#58d838');
+  // Flowers (bright, numerous)
+  [[28,356,'#ff4080'],[92,362,'#ffcc00'],[172,353,'#ff6040'],[212,366,'#ff80c0'],
+   [428,355,'#ff4080'],[478,363,'#80ff40'],[542,357,'#ffcc00'],[598,364,'#ff80c0']].forEach(([fx,fy,fc])=>{
+    ctx.fillStyle='#208010';ctx.fillRect(fx,fy,3,8);
+    ctx.fillStyle=fc;ctx.beginPath();ctx.arc(fx+1,fy,5,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#fff080';ctx.beginPath();ctx.arc(fx+1,fy,2,0,Math.PI*2);ctx.fill();
   });
-  // Pilgrim on road right side of book
-  const pilX=W/2+68,pilY=H*0.77;
-  ctx.fillStyle='rgba(0,0,0,0.45)';ctx.beginPath();ctx.ellipse(pilX+6,pilY+14,14,3,0,0,Math.PI*2);ctx.fill();
-  drawPilgrimCanvas(ctx,pilX,pilY-38,G.armorEarned||[],1.8);
-  // Staff
-  ctx.fillStyle='#5a3818';ctx.fillRect(pilX+28,pilY-42,2,36);
-  ctx.fillStyle='rgba(255,200,80,0.5)';ctx.beginPath();ctx.ellipse(pilX+29,pilY-43,4,4,0,0,Math.PI*2);ctx.fill();
+  // Sparkles
+  [[68,198],[178,155],[462,170],[534,196],[320,242]].forEach(([sx2,sy2])=>{
+    ctx.fillStyle='rgba(255,240,80,0.9)';
+    ctx.fillRect(sx2,sy2,3,3);ctx.fillRect(sx2+1,sy2-2,1,7);ctx.fillRect(sx2-2,sy2+1,7,1);
+  });
 }
 
 // Draw pixel-art pilgrim previews for boy/girl selectors
@@ -591,11 +592,11 @@ function drawPilgrimPreviews(){
   if(!boyC||!girlC)return;
   const origGender=G.gender;
   G.gender='boy';
-  const bCtx=boyC.getContext('2d');bCtx.imageSmoothingEnabled=false;bCtx.clearRect(0,0,38,44);
-  drawPilgrimCanvas(bCtx,2,2,[],1.4);
+  const bCtx=boyC.getContext('2d');bCtx.imageSmoothingEnabled=false;bCtx.clearRect(0,0,56,66);
+  drawPilgrimCanvas(bCtx,4,4,[],2.0);
   G.gender='girl';
-  const gCtx=girlC.getContext('2d');gCtx.imageSmoothingEnabled=false;gCtx.clearRect(0,0,38,44);
-  drawPilgrimCanvas(gCtx,2,2,[],1.4);
+  const gCtx=girlC.getContext('2d');gCtx.imageSmoothingEnabled=false;gCtx.clearRect(0,0,56,66);
+  drawPilgrimCanvas(gCtx,4,4,[],2.0);
   G.gender=origGender||'boy';
 }
 
@@ -3232,8 +3233,8 @@ function toggleSound(){
 // ===============================
 // NAME / GENDER / DIFF SELECTORS
 // ===============================
-function selG(g){sel.g=g;['boy','girl'].forEach(x=>document.getElementById('g'+x.charAt(0).toUpperCase()+x.slice(1)).style.borderColor=g===x?'#f8c840':'#404040');sfxMenu();}
-function selD(d){sel.d=d;['young','older'].forEach(x=>document.getElementById('d'+x.charAt(0).toUpperCase()+x.slice(1)).style.borderColor=d===x?'#f8c840':'#404040');sfxMenu();}
+function selG(g){sel.g=g;['boy','girl'].forEach(x=>document.getElementById('g'+x.charAt(0).toUpperCase()+x.slice(1)).style.borderColor=g===x?'#40d040':'#404040');sfxMenu();}
+function selD(d){sel.d=d;['young','older'].forEach(x=>document.getElementById('d'+x.charAt(0).toUpperCase()+x.slice(1)).style.borderColor=d===x?'#40d040':'#404040');sfxMenu();}
 
 function startJourney(){
   const n=document.getElementById('nameInp').value.trim();
