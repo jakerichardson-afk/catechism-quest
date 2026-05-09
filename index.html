@@ -2924,6 +2924,79 @@ function showBossDamageNumber(dmg){
   animDmg();
 }
 
+// Attack animation fired on every correct boss answer (non-fatal)
+function triggerBossAttackAnim(onDone){
+  const cv=document.getElementById('bbCv'),ctx=cv.getContext('2d');
+  ctx.imageSmoothingEnabled=false;
+  const apCol=ARMOR_BATTLE_COLS[G.wIdx],armorIdx=G.wIdx;
+  const pX=452,pY=171; // pilgrim standing position
+  const bX=135,bY=112; // boss center target
+  const bqDlg=document.getElementById('bqDlg');
+  bqDlg.style.display='none';
+  let f=0;
+  // Quick ascending SFX to signal the strike
+  tone(420,0.03,'square',0.13);setTimeout(()=>tone(560,0.03,'square',0.15),90);setTimeout(()=>tone(740,0.04,'square',0.18),170);
+  function step(){
+    f++;
+    renderBossScene();
+    if(f<=10){
+      // Windup: pilgrim crouches/raises weapon, golden charge ring pulses
+      const a=f/10;
+      const gr=ctx.createRadialGradient(pX+24,pY+24,0,pX+24,pY+24,46);
+      gr.addColorStop(0,`rgba(255,255,180,${a*0.75})`);gr.addColorStop(0.55,`rgba(255,210,60,${a*0.3})`);gr.addColorStop(1,'transparent');
+      ctx.fillStyle=gr;ctx.beginPath();ctx.arc(pX+24,pY+24,46,0,Math.PI*2);ctx.fill();
+      ctx.save();ctx.globalAlpha=a*0.7;ctx.strokeStyle=apCol;ctx.lineWidth=2;
+      ctx.beginPath();ctx.arc(pX+24,pY+24,28+f*1.8,0,Math.PI*2);ctx.stroke();ctx.restore();
+      drawArmorWeaponBattle(ctx,pX+56,pY-22,armorIdx,-Math.PI*0.62,3.1);
+    } else if(f<=26){
+      // Projectile bolt arcs from pilgrim to boss
+      const t=(f-10)/16;
+      const px=pX+28+(bX-pX-28)*t;
+      const py=pY+18+(bY-pY-18)*t-Math.sin(t*Math.PI)*26;
+      // Trail ghost copies fading behind
+      for(let i=4;i>=1;i--){
+        const bt=Math.max(0,t-i*0.065);
+        const bpx=pX+28+(bX-pX-28)*bt,bpy=pY+18+(bY-pY-18)*bt-Math.sin(bt*Math.PI)*26;
+        ctx.save();ctx.globalAlpha=0.20-i*0.038;ctx.fillStyle=apCol;
+        ctx.beginPath();ctx.arc(bpx,bpy,Math.max(1,(5-i)*3.2),0,Math.PI*2);ctx.fill();ctx.restore();
+      }
+      // Core orb: white center → armor color rim
+      const gr=ctx.createRadialGradient(px,py,0,px,py,13);
+      gr.addColorStop(0,'#ffffff');gr.addColorStop(0.3,'rgba(255,255,200,0.9)');gr.addColorStop(0.65,apCol);gr.addColorStop(1,'transparent');
+      ctx.fillStyle=gr;ctx.beginPath();ctx.arc(px,py,13,0,Math.PI*2);ctx.fill();
+      ctx.fillStyle='#ffffff';ctx.beginPath();ctx.arc(px-1,py-1,3.5,0,Math.PI*2);ctx.fill();
+      // Sparks along trail
+      ctx.save();ctx.globalAlpha=0.6;ctx.fillStyle='#ffe080';
+      ctx.fillRect(px-1,py-3,2,6);ctx.fillRect(px-3,py-1,6,2);ctx.restore();
+      drawArmorWeaponBattle(ctx,pX+56,pY-8,armorIdx,-Math.PI*0.28,2.5);
+    } else if(f<=38){
+      // Impact: burst ring + flash at boss position
+      const p=(f-26)/12,flashA=Math.max(0,1-p)*0.85;
+      const rr=(f-26)*9;
+      // Radial burst
+      const gr2=ctx.createRadialGradient(bX,bY,0,bX,bY,rr);
+      gr2.addColorStop(0,`rgba(255,255,200,${flashA*0.9})`);gr2.addColorStop(0.4,`rgba(255,210,80,${flashA*0.55})`);gr2.addColorStop(1,'transparent');
+      ctx.fillStyle=gr2;ctx.beginPath();ctx.arc(bX,bY,rr+4,0,Math.PI*2);ctx.fill();
+      // Expanding ring
+      ctx.save();ctx.globalAlpha=flashA*0.95;ctx.strokeStyle=apCol;ctx.lineWidth=3;
+      ctx.beginPath();ctx.arc(bX,bY,rr,0,Math.PI*2);ctx.stroke();
+      ctx.strokeStyle='#ffffff';ctx.lineWidth=1.5;
+      ctx.beginPath();ctx.arc(bX,bY,rr*0.6,0,Math.PI*2);ctx.stroke();ctx.restore();
+      // Spiky cross flash
+      ctx.save();ctx.globalAlpha=flashA*0.7;ctx.fillStyle='#fff8c0';
+      ctx.fillRect(bX-2,bY-22,4,44);ctx.fillRect(bX-22,bY-2,44,4);ctx.restore();
+      drawArmorWeaponBattle(ctx,pX+56,pY-2,armorIdx,-Math.PI*0.12,2.4);
+    } else {
+      bqDlg.style.display='block';
+      triggerBossShudder();
+      onDone();
+      return;
+    }
+    requestAnimationFrame(step);
+  }
+  step();
+}
+
 function submitBossBlank(answer){
   const correct=(G.bossBlanks||G.bossQ.blanks)[G.bossBlankIdx];
   const ok=answer.toLowerCase().trim()===correct.toLowerCase().trim();
@@ -2931,7 +3004,7 @@ function submitBossBlank(answer){
     sfxBossHit();flash('#f8c840',0.22);G.bossFilledBlanks.push(answer);G.bossBlankIdx++;
     const dmgPer=Math.floor(100/G.bossMaxBlanks);G.bossHP=Math.max(0,G.bossHP-dmgPer);showBossDamageNumber(dmgPer);
     if(G.bossBlankIdx>=G.bossMaxBlanks){G.bossHP=0;G.score+=200;G.correct++;G.totalAnswered++;bossDefeatAnimation();}
-    else{G.bossTyped='';G.bossSel=0;if(G.diff==='young')G.bossWB=buildBossWordBank(G.bossBlanks||G.bossQ.blanks,G.bossBlankIdx);triggerBossShudder();renderBQDlg();}
+    else{G.bossTyped='';G.bossSel=0;if(G.diff==='young')G.bossWB=buildBossWordBank(G.bossBlanks||G.bossQ.blanks,G.bossBlankIdx);triggerBossAttackAnim(()=>{renderBQDlg();});}
   }else{sfxLose();flash('#ff0000',0.4);G.lives=Math.max(0,G.lives-1);G.wrong++;G.totalAnswered++;bossWinsAnimation();}
 }
 
@@ -2946,7 +3019,7 @@ function bossDefeatAnimation(){
   let pilgrimX=452,pilgrimY=171,bossX=55,bossY=52;
   let bossOffX=0,bossOffY=0,bossAlpha=1,bossScale=1;
   let particles=[],shockRings=[],embers=[];
-  let animPhase='slowRun',f=0,screenShakeX=0,screenShakeY=0,whiteFlash=0;
+  let animPhase='epicCharge',f=0,screenShakeX=0,screenShakeY=0,whiteFlash=0;
   const coinsList=[];for(let i=0;i<22;i++)coinsList.push({x:Math.random()*620+10,y:-30-Math.random()*280,vy:1.6+Math.random()*2,vx:(Math.random()-0.5)*1.2,spin:Math.random()*Math.PI*2});
   function addPx(cx,cy,count,cols,sp=6,grav=0.18,sz=4){for(let i=0;i<count;i++){const a=Math.random()*Math.PI*2,s=sp*0.5+Math.random()*sp;particles.push({x:cx,y:cy,vx:Math.cos(a)*s,vy:Math.sin(a)*s-sp*0.3,size:Math.floor(Math.random()*sz)+1,col:cols[Math.floor(Math.random()*cols.length)],life:1,decay:0.013+Math.random()*0.017,grav});}}
   function addRing(cx,cy,col,speed=20,maxR=360){shockRings.push({x:cx,y:cy,r:8,maxR,col,life:1,speed});}
@@ -2958,6 +3031,84 @@ function bossDefeatAnimation(){
     f++;screenShakeX*=0.72;screenShakeY*=0.72;
     ctx.save();if(Math.abs(screenShakeX)>0.3||Math.abs(screenShakeY)>0.3)ctx.translate(Math.round(screenShakeX),Math.round(screenShakeY));
     drawBattleBg();ctx.fillStyle='rgba(0,0,0,0.3)';ctx.beginPath();ctx.ellipse(pilgrimX+24,275+10,28,6,0,0,Math.PI*2);ctx.fill();ctx.fillStyle='rgba(0,0,0,0.3)';ctx.beginPath();ctx.ellipse(bossX+bossOffX+80,275+10,44,9,0,0,Math.PI*2);ctx.fill();drawHUD();
+    if(animPhase==='epicCharge'){
+      // Dark vignette builds in over first 24 frames
+      const vigA=Math.min(0.70,f*0.029);
+      ctx.fillStyle=`rgba(0,0,0,${vigA})`;ctx.fillRect(0,0,640,480);
+      // Boss trembles with escalating fear — re-draw on top of darkness
+      const fearAmt=Math.sin(f*2.8)*(1.8+f*0.06);
+      ctx.save();ctx.translate(bossX+80+fearAmt,bossY+60);ctx.translate(-80,-60);drawBossPixel(ctx,bossX,bossY,G.wIdx,2.8,0,'idle');ctx.restore();
+      // Growing radial aura around pilgrim
+      const aR=42+f*1.6;
+      const aGr=ctx.createRadialGradient(pilgrimX+24,pilgrimY+24,0,pilgrimX+24,pilgrimY+24,aR);
+      aGr.addColorStop(0,'rgba(255,255,210,0.65)');aGr.addColorStop(0.45,'rgba(255,215,70,0.28)');aGr.addColorStop(1,'transparent');
+      ctx.fillStyle=aGr;ctx.beginPath();ctx.arc(pilgrimX+24,pilgrimY+24,aR,0,Math.PI*2);ctx.fill();
+      // Pulsing rings from pilgrim every 16 frames
+      if(f%16===1)addRing(pilgrimX+24,pilgrimY+24,apCol,14,110);
+      // Particles building up
+      if(f%4===0)addPx(pilgrimX+24,pilgrimY+24,2,[apCol,'#fff','#ffe080'],3,0.05,3);
+      // Weapon raised high with growing scale
+      const wSc=Math.min(3.6,2.4+f*0.016),wAng=-Math.PI*0.58-Math.sin(f*0.09)*0.1;
+      drawArmorWeaponBattle(ctx,pilgrimX+56,pilgrimY-22,armorIdx,wAng,wSc);
+      // Pilgrim with gentle bob
+      drawPilgrimCanvas(ctx,pilgrimX,pilgrimY+Math.round(Math.sin(f*0.13)*3),G.armorEarned,2.2);
+      // "FINAL BLOW!" text builds in at f>14
+      if(f>14){
+        const tA=Math.min(1,(f-14)/16),tSc=0.65+tA*0.45+Math.sin(f*0.11)*0.03;
+        ctx.save();ctx.translate(320,222);ctx.scale(tSc,tSc);bChromaText(ctx,'★  FINAL  BLOW  ★',0,0,'#f8c840',38,5);ctx.restore();
+      }
+      // Boss name line at f>34
+      if(f>34){
+        const tA2=Math.min(1,(f-34)/14);
+        ctx.save();ctx.globalAlpha=tA2;ctx.fillStyle='rgba(0,0,0,0.72)';ctx.fillRect(160,248,320,22);
+        ctx.strokeStyle=apCol;ctx.lineWidth=1;ctx.strokeRect(160,248,320,22);
+        ctx.fillStyle='#ffd080';ctx.font='bold 10px Courier New';ctx.textAlign='center';
+        ctx.fillText('DEFEATING  '+w.boss.name.toUpperCase()+'...',320,263);ctx.restore();
+      }
+      // Sound cues
+      if(f===1)sfxCharge();
+      if(f===46){sfxCharge();tone(110,0.06,'sawtooth',0.25);}
+      if(f>=72){
+        // Big flash + boom, transition to epicRun
+        whiteFlash=0.55;screenShakeX=10;screenShakeY=6;
+        tone(88,0.08,'sawtooth',0.32);setTimeout(()=>tone(132,0.06,'sawtooth',0.22),55);setTimeout(()=>tone(176,0.04,'square',0.18),110);
+        animPhase='epicRun';f=0;
+      }
+    }
+    if(animPhase==='epicRun'){
+      // Very slow dramatic cross — build from slow to slightly-less-slow
+      const spd=f<40?1.8:f<80?2.6:3.4,target=bossX+bossOffX+90;
+      if(pilgrimX>target){
+        pilgrimX-=spd;
+        // 6 ghost trail copies with wide spacing
+        for(let i=6;i>=1;i--){ctx.save();ctx.globalAlpha=0.07*i;drawPilgrimCanvas(ctx,pilgrimX+i*spd*3.8,pilgrimY,G.armorEarned,2.2);ctx.restore();}
+        // Dual speed lines — white outer + armor color inner
+        bSpeedLines(ctx,pilgrimX+24,pilgrimY+30,52,10,400,'#fff',0.07+f*0.002);
+        bSpeedLines(ctx,pilgrimX+24,pilgrimY+30,38,8,280,apCol,0.05+f*0.0015);
+        // Expanding aura trailing behind
+        const aR2=60+f*0.6;
+        const aGr2=ctx.createRadialGradient(pilgrimX+24,pilgrimY+24,0,pilgrimX+24,pilgrimY+24,aR2);
+        aGr2.addColorStop(0,'rgba(255,255,210,0.22)');aGr2.addColorStop(0.5,'rgba(255,210,60,0.12)');aGr2.addColorStop(1,'transparent');
+        ctx.fillStyle=aGr2;ctx.beginPath();ctx.arc(pilgrimX+24,pilgrimY+24,aR2,0,Math.PI*2);ctx.fill();
+        // Particles streaming behind pilgrim
+        if(f%2===0)addPx(pilgrimX+46,pilgrimY+24,3,[apCol,'#fff','#ffe080'],4,0.08,4);
+        // Rings pulsing out every 20 frames
+        if(f%20===1)addRing(pilgrimX+24,pilgrimY+24,apCol,20,140);
+        // Weapon forward
+        drawArmorWeaponBattle(ctx,pilgrimX+60,pilgrimY-6,armorIdx,0.48,2.6);
+        drawPilgrimCanvas(ctx,pilgrimX,pilgrimY,G.armorEarned,2.2);
+        // Boss trembles harder
+        const fs2=Math.sin(f*3.1)*(3+f*0.07);
+        ctx.save();ctx.translate(bossX+80+fs2,bossY+60);ctx.translate(-80,-60);drawBossPixel(ctx,bossX,bossY,G.wIdx,2.8,0,'idle');ctx.restore();
+        // "FINAL BLOW!" persists top-center
+        ctx.save();const ts2=1.0+Math.sin(f*0.16)*0.04;ctx.translate(320,188);ctx.scale(ts2,ts2);bChromaText(ctx,'★  FINAL  BLOW  ★',0,0,'#f8c840',30,4);ctx.restore();
+        if(f===1){sfxCharge();screenShakeX=6;screenShakeY=4;}
+        if(f%10===0)sfxStep();
+        screenShakeX*=0.88;screenShakeY*=0.88;
+      } else {
+        animPhase='freezeFrame';f=0;screenShakeX=0;
+      }
+    }
     if(animPhase==='slowRun'){
       const spd=f<18?4:f<34?8:14,target=bossX+bossOffX+90;
       if(pilgrimX>target){pilgrimX-=spd;for(let i=3;i>=1;i--){ctx.save();ctx.globalAlpha=0.1*i;drawPilgrimCanvas(ctx,pilgrimX+i*spd*2,pilgrimY,G.armorEarned,2.2);ctx.restore();}bSpeedLines(ctx,pilgrimX+24,pilgrimY+30,40,8,340,'#fff',0.06+f*0.003);drawArmorWeaponBattle(ctx,pilgrimX+58,pilgrimY+8,armorIdx,0.55,2.2);if(f===1)sfxCharge();if(f%6===0)sfxStep();}
