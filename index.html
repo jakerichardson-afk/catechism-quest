@@ -31,8 +31,8 @@ canvas{display:block;image-rendering:pixelated;}
 <!-- TITLE -->
 <div id="titleScr" class="scr on">
 <canvas id="titleCv" width="640" height="480" style="position:absolute;top:0;left:0;"></canvas>
-<div style="position:relative;z-index:2;width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding-bottom:48px;">
-  <div style="background:rgba(0,0,20,0.88);border:3px solid #f8c840;padding:16px 20px;width:280px;box-shadow:4px 4px 0 #000,0 0 24px rgba(248,200,64,0.3);">
+<div style="position:relative;z-index:2;width:100%;height:100%;display:flex;flex-direction:column;align-items:flex-start;justify-content:flex-end;padding-bottom:48px;padding-left:24px;">
+  <div style="background:rgba(0,0,20,0.88);border:3px solid #f8c840;padding:16px 20px;width:220px;box-shadow:4px 4px 0 #000,0 0 24px rgba(248,200,64,0.3);">
     <button class="pbtn" onclick="goName()">▶  NEW JOURNEY</button>
     <button class="pbtn bl" onclick="doLoad()">📂  CONTINUE</button>
     <button class="pbtn pu" onclick="goParent()">👁  PARENT MODE</button>
@@ -662,13 +662,13 @@ function drawTitle(){
 
   // ── PATH ─────────────────────────────────────────────────
   ctx.fillStyle='#d0a848';
-  ctx.beginPath();ctx.moveTo(248,480);ctx.lineTo(296,342);ctx.lineTo(356,342);ctx.lineTo(400,480);ctx.closePath();ctx.fill();
-  ctx.fillStyle='#e8c060';ctx.fillRect(296,342,60,5);
+  ctx.beginPath();ctx.moveTo(338,480);ctx.lineTo(386,342);ctx.lineTo(446,342);ctx.lineTo(490,480);ctx.closePath();ctx.fill();
+  ctx.fillStyle='#e8c060';ctx.fillRect(386,342,60,5);
   ctx.fillStyle='rgba(255,255,200,0.45)';
-  for(let y=365;y<480;y+=26){ctx.fillRect(320,y,8,16);}
+  for(let y=365;y<480;y+=26){ctx.fillRect(410,y,8,16);}
 
   // ── CASTLE (bright stone) ────────────────────────────────
-  const cOx=338,cOy=225;
+  const cOx=428,cOy=225;
   function cb(x,y,w,h,col){ctx.fillStyle=col;ctx.fillRect(cOx+x,cOy+y,w,h);}
   cb(20,42,100,122,'#d8c898');cb(22,44,96,118,'#e8d8a8');cb(24,46,92,4,'#f0e0b0');
   cb(34,58,18,20,'#90c8ff');cb(88,58,18,20,'#90c8ff');
@@ -703,7 +703,7 @@ function drawTitle(){
   });
 
   // ── PILGRIM ───────────────────────────────────────────────
-  drawPilgrimCanvas(ctx,293,375,G.armorEarned,2.5);
+  drawPilgrimCanvas(ctx,383,375,G.armorEarned,2.5);
 
   // ── SPARKLES ─────────────────────────────────────────────
   [[75,200],[172,158],[458,172],[538,198]].forEach(([sx,sy])=>{
