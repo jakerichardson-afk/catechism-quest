@@ -198,6 +198,10 @@ canvas{display:block;image-rendering:pixelated;}
 </div>
 </div>
 
+<!-- iOS dictation input: real focused input so iOS mic/dictation can inject text -->
+<input id="dictInp" type="text" inputmode="text" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false"
+  style="position:absolute;bottom:80px;left:50%;transform:translateX(-50%);width:2px;height:2px;opacity:0.01;font-size:16px;border:none;outline:none;background:transparent;color:transparent;padding:0;pointer-events:none;z-index:49;">
+
 </div>
 <script>
 // ===============================
@@ -1915,7 +1919,7 @@ function shuffle(a){const b=[...a];for(let i=b.length-1;i>0;i--){const j=Math.fl
 
 function openQuestion(qIdx){
   G.activeQ=QS[qIdx];G.blankIdx=0;G.filledBlanks=[];
-  G.typedAns='';G.wbSel=0;
+  G.typedAns='';G.wbSel=0;_di.value='';
   G.wordBank=buildWordBank(G.activeQ.blanks,0);
   G.phase='question';
   document.getElementById('qDlg').style.display='block';
@@ -2068,7 +2072,7 @@ function submitBlank(answer){
       showQFeedback(true);
     }else{
       // next blank
-      G.wbSel=0;G.typedAns='';
+      G.wbSel=0;G.typedAns='';_di.value='';
       G.wordBank=buildWordBank(G.activeQ.blanks,G.blankIdx);
       renderQDlg();
     }
@@ -2154,9 +2158,11 @@ document.addEventListener('keydown',e=>{
       else if(e.key>='1'&&e.key<='4'){const i=parseInt(e.key)-1;if(i<G.wordBank.length){G.wbSel=i;sfxMenu();renderQDlg();}}
       else if(e.key==='Enter'){e.preventDefault();submitBlank(G.wordBank[G.wbSel]);}
     }else{
-      if(e.key==='Backspace'){G.typedAns=G.typedAns.slice(0,-1);renderQDlg();}
-      else if(e.key==='Enter'){e.preventDefault();submitBlank(G.typedAns);}
-      else if(e.key.length===1){G.typedAns+=e.key;renderQDlg();}
+      if(e.key==='Enter'){e.preventDefault();submitBlank(G.typedAns);}
+      else if(document.activeElement!==_di){
+        if(e.key==='Backspace'){G.typedAns=G.typedAns.slice(0,-1);_di.value=G.typedAns;renderQDlg();}
+        else if(e.key.length===1){G.typedAns+=e.key;_di.value=G.typedAns;renderQDlg();}
+      }
     }
   }
   // boss question — only when the question dialog is actually visible
@@ -2167,9 +2173,11 @@ document.addEventListener('keydown',e=>{
       else if(e.key>='1'&&e.key<='4'){const i=parseInt(e.key)-1;if(i<G.bossWB.length){G.bossSel=i;sfxMenu();renderBQDlg();}}
       else if(e.key==='Enter'){e.preventDefault();submitBossBlank(G.bossWB[G.bossSel]);}
     }else{
-      if(e.key==='Backspace'){G.bossTyped=G.bossTyped.slice(0,-1);renderBQDlg();}
-      else if(e.key==='Enter'){e.preventDefault();submitBossBlank(G.bossTyped);}
-      else if(e.key.length===1){G.bossTyped+=e.key;renderBQDlg();}
+      if(e.key==='Enter'){e.preventDefault();submitBossBlank(G.bossTyped);}
+      else if(document.activeElement!==_di){
+        if(e.key==='Backspace'){G.bossTyped=G.bossTyped.slice(0,-1);_di.value=G.bossTyped;renderBQDlg();}
+        else if(e.key.length===1){G.bossTyped+=e.key;_di.value=G.bossTyped;renderBQDlg();}
+      }
     }
   }
 });
@@ -2203,7 +2211,7 @@ document.getElementById('qCv').addEventListener('click',e=>{
 
 function skipQ(){
   G.lives=Math.max(0,G.lives-1);G.streak=0;sfxBad();flash('#ff8800',0.2);
-  G.activeQ=null;G.filledBlanks=[];G.blankIdx=0;
+  G.activeQ=null;G.filledBlanks=[];G.blankIdx=0;G.typedAns='';_di.value='';
   document.getElementById('qDlg').style.display='none';
   if(G.lives<=0){endWorld(false);return;}
   G.phase='walk';startMapLoop();
@@ -2626,7 +2634,7 @@ function startBossBattle(){
     G.bossQ=bossQ;
     G.bossBlanks=bossBlanks;
     G.bossDisplayStr=buildBossDisplayStr(bossQ.full,bossBlanks);
-    G.bossBlankIdx=0;G.bossFilledBlanks=[];G.bossTyped='';G.bossSel=0;
+    G.bossBlankIdx=0;G.bossFilledBlanks=[];G.bossTyped='';G.bossSel=0;_di.value='';
     G.bossMaxBlanks=bossBlanks.length;
     if(G.diff==='young'){G.bossWB=buildBossWordBank(bossBlanks,0);}
     document.getElementById('bqDlg').style.display='block';
@@ -2896,7 +2904,7 @@ function renderBossScene(){
   drawBattleBg();
   const cv=document.getElementById('bbCv'),ctx=cv.getContext('2d');
   ctx.imageSmoothingEnabled=false;
-  const w=WORLDS[G.wIdx],groundY=275,bossX=55,bossY=75;
+  const w=WORLDS[G.wIdx],groundY=275,bossX=55,bossY=38;
   const bobY=Math.sin(mapFrame*0.06)*5;
 
   // Boss shudder effect
@@ -2922,7 +2930,7 @@ function renderBossScene(){
   drawBossPixel(ctx,bossX,bossY,G.wIdx,2.8,mapFrame,'idle');
   ctx.restore();
   // HP bar above boss
-  const hpBarX=bossX+14,hpBarY=bossY-32;
+  const hpBarX=bossX+14,hpBarY=bossY+8;
   ctx.fillStyle='rgba(0,0,0,0.78)';ctx.fillRect(hpBarX,hpBarY-16,132,16);
   ctx.fillStyle='#ff6060';ctx.font='bold 8px monospace';ctx.textAlign='center';ctx.fillText(w.boss.name.toUpperCase(),hpBarX+66,hpBarY-3);
   ctx.fillStyle='rgba(0,0,0,0.72)';ctx.fillRect(hpBarX,hpBarY,132,14);ctx.fillStyle='#300';ctx.fillRect(hpBarX+2,hpBarY+2,128,10);
@@ -2931,7 +2939,7 @@ function renderBossScene(){
   ctx.fillStyle='#ff8080';ctx.font='7px monospace';ctx.textAlign='center';ctx.fillText('HP '+G.bossHP+'%',hpBarX+66,hpBarY+24);
   // Pilgrim
   ctx.fillStyle='rgba(0,0,0,0.32)';ctx.beginPath();ctx.ellipse(490,groundY+10,30,7,0,0,Math.PI*2);ctx.fill();
-  drawPilgrimCanvas(ctx,452,groundY-60,G.armorEarned,2.2);
+  drawPilgrimCanvas(ctx,452,groundY-95,G.armorEarned,2.2);
   ctx.fillStyle='rgba(0,0,0,0.65)';ctx.fillRect(408,groundY+14,170,16);
   ctx.fillStyle='#80ff80';ctx.font='bold 8px monospace';ctx.textAlign='center';ctx.fillText(G.name.toUpperCase(),493,groundY+26);
   ctx.fillStyle='rgba(0,0,0,0.5)';ctx.fillRect(414,groundY+32,170,20);
@@ -2958,6 +2966,22 @@ function renderBQDlg(){
   ctx.fillStyle='#303055';ctx.font='9px monospace';ctx.textAlign='right';ctx.fillText('ALL blanks must be correct to defeat the boss',630,224);
 }
 
+// iOS dictation support — sync real input ↔ canvas type boxes
+const _di=document.getElementById('dictInp');
+_di.addEventListener('input',()=>{
+  if(G.phase==='question'&&G.activeQ&&G.diff!=='young'){
+    G.typedAns=_di.value;renderQDlg();
+  }else if(G.phase==='boss'&&G.bossQ&&G.diff!=='young'&&document.getElementById('bqDlg').style.display!=='none'){
+    G.bossTyped=_di.value;renderBQDlg();
+  }
+});
+document.getElementById('qCv').addEventListener('touchstart',()=>{
+  if(G.phase==='question'&&G.activeQ&&G.diff!=='young'){_di.value=G.typedAns;_di.focus();}
+},{passive:true});
+document.getElementById('bqCv').addEventListener('touchstart',()=>{
+  if(G.phase==='boss'&&G.bossQ&&G.diff!=='young'&&document.getElementById('bqDlg').style.display!=='none'){_di.value=G.bossTyped;_di.focus();}
+},{passive:true});
+
 document.getElementById('bqCv').addEventListener('click',e=>{
   if(G.phase!=='boss'||!G.bossQ||G.diff!=='young')return;
   const rect=e.target.getBoundingClientRect();const mx=(e.clientX-rect.left)*(640/rect.width),my=(e.clientY-rect.top)*(230/rect.height);
@@ -2979,7 +3003,7 @@ document.getElementById('bqCv').addEventListener('click',e=>{
 
 function showBossDamageNumber(dmg){
   const cv=document.getElementById('bbCv'),ctx=cv.getContext('2d');
-  const bossX=55,bossY=75;let fy=bossY+10,fa=1;
+  const bossX=55,bossY=38;let fy=bossY+10,fa=1;
   function animDmg(){fy-=1.8;fa-=0.038;if(fa>0){ctx.save();ctx.globalAlpha=fa;ctx.fillStyle='#000';ctx.font='bold 18px Courier New';ctx.textAlign='center';ctx.fillText('-'+dmg+'%',bossX+83,fy);ctx.fillStyle='#ff4040';ctx.fillText('-'+dmg+'%',bossX+81,fy-2);ctx.restore();requestAnimationFrame(animDmg);}}
   animDmg();
 }
@@ -2990,7 +3014,7 @@ function triggerBossAttackAnim(onDone){
   ctx.imageSmoothingEnabled=false;
   const apCol=ARMOR_BATTLE_COLS[G.wIdx],armorIdx=G.wIdx;
   const pX=452,pY=215; // pilgrim standing position
-  const bX=168,bY=201; // boss front chest (scale 2.8 from bossX=55,bossY=75)
+  const bX=168,bY=164; // boss front chest (scale 2.8 from bossX=55,bossY=38)
   const bqDlg=document.getElementById('bqDlg');
   bqDlg.style.display='none';
   let f=0;
@@ -3064,7 +3088,7 @@ function submitBossBlank(answer){
     sfxBossHit();flash('#f8c840',0.22);G.bossFilledBlanks.push(answer);G.bossBlankIdx++;
     const dmgPer=Math.floor(100/G.bossMaxBlanks);G.bossHP=Math.max(0,G.bossHP-dmgPer);showBossDamageNumber(dmgPer);
     if(G.bossBlankIdx>=G.bossMaxBlanks){G.bossHP=0;G.score+=200;G.correct++;G.totalAnswered++;bossDefeatAnimation();}
-    else{G.bossTyped='';G.bossSel=0;if(G.diff==='young')G.bossWB=buildBossWordBank(G.bossBlanks||G.bossQ.blanks,G.bossBlankIdx);triggerBossAttackAnim(()=>{renderBQDlg();});}
+    else{G.bossTyped='';G.bossSel=0;_di.value='';if(G.diff==='young')G.bossWB=buildBossWordBank(G.bossBlanks||G.bossQ.blanks,G.bossBlankIdx);triggerBossAttackAnim(()=>{renderBQDlg();});}
   }else{sfxLose();flash('#ff0000',0.4);G.lives=Math.max(0,G.lives-1);G.wrong++;G.totalAnswered++;bossWinsAnimation();}
 }
 
@@ -3076,7 +3100,7 @@ function bossDefeatAnimation(){
   const cv=document.getElementById('bbCv'),ctx=cv.getContext('2d');
   ctx.imageSmoothingEnabled=false;
   const w=WORLDS[G.wIdx],apCol=ARMOR_BATTLE_COLS[G.wIdx],armorIdx=G.wIdx;
-  let pilgrimX=452,pilgrimY=215,bossX=55,bossY=75;
+  let pilgrimX=452,pilgrimY=180,bossX=55,bossY=38;
   let bossOffX=0,bossOffY=0,bossAlpha=1,bossScale=1;
   let particles=[],shockRings=[],embers=[];
   let animPhase='epicCharge',f=0,screenShakeX=0,screenShakeY=0,whiteFlash=0;
@@ -3256,7 +3280,7 @@ function bossWinsAnimation(){
   const cv=document.getElementById('bbCv'),ctx=cv.getContext('2d');
   ctx.imageSmoothingEnabled=false;
   const w=WORLDS[G.wIdx],apCol=ARMOR_BATTLE_COLS[G.wIdx],armorIdx=G.wIdx;
-  let pilgrimX=452,pilgrimY=215,bossX=55,bossY=75;
+  let pilgrimX=452,pilgrimY=180,bossX=55,bossY=38;
   let bossScale=1,bossOffX=0,pilgrimFallAngle=0,pilgrimFallY=0,pilgrimFallVY=0;
   let particles=[],shockRings=[],animPhase='ominousGrowl',f=0;
   let screenShakeX=0,screenShakeY=0,whiteFlash=0,darkAlpha=0;
