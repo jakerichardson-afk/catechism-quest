@@ -1796,9 +1796,9 @@ function dwDrawWicket(ctx,sx,sy){
   ctx.fillStyle=open?'#fff6c0':'#f0d890';ctx.font='bold 6px monospace';ctx.textAlign='center';ctx.textBaseline='middle';
   ctx.fillText('WICKET GATE',sx+24,sy-15);ctx.textBaseline='alphabetic';
   if(!open){
-    ctx.fillStyle='rgba(0,0,20,0.75)';ctx.fillRect(sx-4,sy+20,56,11);
-    ctx.fillStyle='#f0d890';ctx.font='bold 7px monospace';ctx.textAlign='center';
-    ctx.fillText((10-G.altarsLit)+' MORE',sx+24,sy+28);
+    ctx.fillStyle='rgba(0,0,20,0.85)';ctx.fillRect(sx-28,sy+20,104,18);
+    ctx.fillStyle='#f0d890';ctx.font='bold 12px monospace';ctx.textAlign='center';
+    ctx.fillText((10-G.altarsLit)+' MORE ALTARS',sx+24,sy+33);
   }
 }
 
@@ -1907,10 +1907,7 @@ function startDenseLoop(){
     list.push({base:G.py+0.5,draw:()=>dwDrawPlayer(spCtx,Math.round(G.px-camX),Math.round(G.py-camY))});
     list.sort((a,b)=>a.base-b.base).forEach(o=>o.draw());
     dwSmoke(spCtx,camX,camY);
-    if(G.nearAltar&&!G.nearAltar.lit){
-      drawAltarHint(spCtx,G.nearAltar.x-camX,G.nearAltar.y-camY);
-      drawCompanionHint(spCtx,G.companion.px-camX,Math.max(100,G.companion.py-camY));
-    }
+    drawPrayPrompt(spCtx,G.py-camY);
     drawMapHUDNew(spCtx);
   }
   loop();
@@ -1974,9 +1971,7 @@ function startMapLoop(){
     drawMapHUDNew(spCtx);
     drawCompanionSprite(spCtx,G.companion.px-camX,G.companion.py-camY);
     drawPilgrimMapDir(spCtx,G.px-camX,G.py-camY,G.armorEarned,G.frame,G.dir,G.burden);
-    if(G.nearAltar&&!G.nearAltar.lit)drawAltarHint(spCtx,G.nearAltar.x-camX,G.nearAltar.y-camY);
-    // Companion hint near unlit altar
-    if(G.nearAltar&&!G.nearAltar.lit)drawCompanionHint(spCtx,G.companion.px-camX,G.companion.py-camY);
+    drawPrayPrompt(spCtx,G.py-camY);
   }
   loop();
 }
@@ -2446,10 +2441,10 @@ function drawAltarAt(ctx,alt,i,sx,sy){
     // Number badge
     const isNear=(G.nearAltar===alt);
     ctx.fillStyle=alt.lit?'rgba(0,50,0,0.9)':isNear?'rgba(20,20,80,0.9)':'rgba(0,0,30,0.75)';
-    ctx.beginPath();ctx.arc(sx+10,sy-13,7,0,Math.PI*2);ctx.fill();
-    ctx.fillStyle=alt.lit?'#60ff60':isNear?'#a0c0ff':'#8080b0';
-    ctx.font='bold 7px monospace';ctx.textAlign='center';
-    ctx.fillText(alt.lit?'✓':(i+1),sx+10,sy-11);
+    ctx.beginPath();ctx.arc(sx+11,sy-14,9,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle=alt.lit?'#60ff60':isNear?'#ffffff':'#c0c8ff';
+    ctx.font='bold 11px monospace';ctx.textAlign='center';
+    ctx.fillText(alt.lit?'✓':(i+1),sx+11,sy-10);
   }
 }
 
@@ -2499,10 +2494,10 @@ function drawMapHUDNew(ctx){
   }
   ctx.fillStyle='#f8c840';ctx.font='bold 10px monospace';ctx.textAlign='left';ctx.fillText('★'+G.score,76,19);
   // World name + altar counter (center)
-  ctx.fillStyle='#e0e0ff';ctx.textAlign='center';ctx.font='bold 10px monospace';
-  ctx.fillText(WORLDS[G.wIdx].name.toUpperCase(),320,12);
-  ctx.fillStyle=G.altarsLit>=10?'#60ff60':'#8080c0';ctx.font='9px monospace';
-  ctx.fillText('⊕ '+G.altarsLit+'/10'+(G.altarsLit>=10?' — GATE OPEN!':''),320,24);
+  ctx.fillStyle='#e0e0ff';ctx.textAlign='center';ctx.font='bold 12px monospace';
+  ctx.fillText(WORLDS[G.wIdx].name.toUpperCase(),320,13);
+  ctx.fillStyle=G.altarsLit>=10?'#60ff60':'#b0b8ff';ctx.font='bold 12px monospace';
+  ctx.fillText('ALTARS '+G.altarsLit+'/10'+(G.altarsLit>=10?' — GATE OPEN!':''),320,27);
   // Burden bar (right, worlds 0-2 only)
   if(G.wIdx<=2&&G.burden>0){
     const bx=530,by=8,bw=100;
@@ -2510,7 +2505,7 @@ function drawMapHUDNew(ctx){
     const burdenCol=G.burden>60?'#7a4010':G.burden>30?'#b06020':'#d09040';
     ctx.fillStyle=burdenCol;ctx.fillRect(bx,by,Math.round(bw*G.burden/100),10);
     ctx.strokeStyle='#604020';ctx.lineWidth=1;ctx.strokeRect(bx,by,bw,10);
-    ctx.fillStyle='#c09060';ctx.font='7px monospace';ctx.textAlign='left';ctx.fillText('BURDEN',bx,by+20);
+    ctx.fillStyle='#e0b080';ctx.font='bold 10px monospace';ctx.textAlign='right';ctx.fillText('BURDEN',bx-6,by+9);
   }else if(G.altarsLit>=10){
     ctx.fillStyle='#f8c840';ctx.font='8px monospace';ctx.textAlign='right';ctx.fillText('▲ GO NORTH FOR BOSS',630,19);
   }
@@ -2575,6 +2570,27 @@ function drawCompanionHint(ctx,cx,cy){
   ctx.fillText(hint.substring(0,32),cx,by+23);
   // Arrow down
   ctx.fillStyle='#4060c0';ctx.beginPath();ctx.moveTo(cx-5,by+bh);ctx.lineTo(cx+5,by+bh);ctx.lineTo(cx,by+bh+6);ctx.closePath();ctx.fill();
+}
+
+function drawPrayPrompt(ctx,playerScreenY){
+  if(!G.nearAltar||G.nearAltar.lit)return;
+  const q=QS[G.nearAltar.qIdx]?QS[G.nearAltar.qIdx].q:'';
+  const bw=600,bh=70,bx=20,by=playerScreenY>300?40:480-bh-10;
+  ctx.fillStyle='rgba(8,10,40,0.94)';ctx.fillRect(bx,by,bw,bh);
+  ctx.strokeStyle='#f8c840';ctx.lineWidth=3;ctx.strokeRect(bx+1.5,by+1.5,bw-3,bh-3);
+  ctx.textAlign='left';ctx.textBaseline='alphabetic';
+  ctx.fillStyle='#9ab4ff';ctx.font='bold 13px monospace';
+  ctx.fillText('Evangelist says:',bx+16,by+22);
+  ctx.fillStyle='#ffffff';ctx.font='bold 18px monospace';
+  let line='"'+q+'"';
+  while(ctx.measureText(line).width>bw-32&&line.length>4)line=line.slice(0,-5)+'…"';
+  ctx.fillText(line,bx+16,by+50);
+  const touch='ontouchstart' in window;
+  const pulse=Math.floor(mapFrame/20)%2===0;
+  ctx.textAlign='right';ctx.font='bold 14px monospace';
+  ctx.fillStyle=pulse?'#f8c840':'#c89820';
+  ctx.fillText(touch?'TAP to pray ▶':'SPACE to pray ▶',bx+bw-16,by+22);
+  ctx.textAlign='left';
 }
 
 function drawAltarHint(ctx,ax,ay){
