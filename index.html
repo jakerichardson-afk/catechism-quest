@@ -1869,8 +1869,11 @@ function startDenseLoop(){
   owCtx.imageSmoothingEnabled=false;spCtx.imageSmoothingEnabled=false;
   keys.up=keys.down=keys.left=keys.right=false;
   const SPEED=1.9,TOP=30;
-  function loop(){
+  let last=0;
+  function loop(now){
     loopId=requestAnimationFrame(loop);
+    if(now&&now-last<15.5)return;
+    last=now||0;
     if(G.paused)return;
     mapFrame++;
     if(G.phase==='walk'){
@@ -1928,8 +1931,11 @@ function startMapLoop(){
   const T=16,SPEED=2.2,w=WORLDS[G.wIdx];
   // Clear held keys on start
   keys.up=keys.down=keys.left=keys.right=false;
-  function loop(){
+  let last=0;
+  function loop(now){
     loopId=requestAnimationFrame(loop);
+    if(now&&now-last<15.5)return;
+    last=now||0;
     if(G.paused)return;
     mapFrame++;
     if(G.phase==='walk'){
@@ -3108,7 +3114,476 @@ function drawLightningBolt(ctx,x1,y1,x2,y2,col,w,jag){
   ctx.restore();
 }
 
+// ===========================================================
+// WORLD 1 BOSS ARENA — The Doubter before the Wicket Gate
+// ===========================================================
+function raf60(cb){const t=now=>{if(now-(raf60.last.get(cb)||0)<15.5){requestAnimationFrame(t);return;}raf60.last.set(cb,now);cb(now);};requestAnimationFrame(t);}
+raf60.last=new WeakMap();
+const W0B={gateX:190,horizon:134,bossX:190,feetY:240,BS:1.5,pX:470,bg:null,clouds:null,anim:false,idle:0,boss:null,bossG:null};
+
+function w0BuildBg(){
+  const[cv,g]=mkCv(640,480);
+  const F=(x,y,w,h,c)=>{g.fillStyle=c;g.fillRect(x,y,w,h);};
+  const HZ=W0B.horizon,GX=W0B.gateX;
+  // sky
+  const sk=g.createLinearGradient(0,0,0,HZ);
+  sk.addColorStop(0,'#6fa4dc');sk.addColorStop(0.55,'#b8d4ec');sk.addColorStop(1,'#f6e2b0');
+  g.fillStyle=sk;g.fillRect(0,0,640,HZ);
+  // far hills
+  for(let x=0;x<640;x++){
+    const h1=Math.round(18+Math.sin(x*0.018)*8+Math.sin(x*0.047+1)*4);
+    F(x,HZ-h1-10,1,h1+10,'#8db2b0');
+    const h2=Math.round(10+Math.sin(x*0.031+2)*6+Math.sin(x*0.09)*2);
+    F(x,HZ-h2-4,1,h2+4,'#76a28c');
+  }
+  // field
+  F(0,HZ,640,480-HZ,'#5cab3c');
+  for(let by=HZ;by<480;by+=4)for(let bx=0;bx<640;bx+=4){const n=vnoise(bx,by,34);if(n>0.66)F(bx,by,4,4,'#54a236');else if(n<0.28)F(bx,by,4,4,'#63b343');}
+  for(let y=HZ;y<480;y++){
+    const depth=(y-HZ)/(480-HZ),sz=1+Math.floor(depth*2.2);
+    for(let x=0;x<640;x+=2){
+      const h=tHash(x,y);
+      if(h%23===0)F(x,y,sz,sz,'#4e9832');
+      else if(h%29===0)F(x,y,sz,sz,'#78c852');
+      else if(h%211===0&&depth>0.15){const fc=['#fff6a0','#ffffff','#ff9ec4','#ffd040'][(h>>9)&3];F(x,y,sz,sz,fc);}
+    }
+  }
+  // road (perspective) from foreground to the gate
+  for(let y=HZ;y<480;y++){
+    const t=(y-HZ)/(480-HZ),cx=GX+(W0B.pX+10-GX)*Math.pow(t,1.15),hw=8+t*62;
+    const x0=Math.round(cx-hw),x1=Math.round(cx+hw);
+    F(x0,y,x1-x0,1,'#9a7850');
+    for(let x=x0;x<x1;x++){const h=tHash(x,y);if(h%17===0)F(x,y,1,1,'#7e5f3e');else if(h%19===0)F(x,y,1,1,'#b08e64');}
+    F(x0,y,1+Math.floor(t*2),1,'#4a9230');F(x1-1-Math.floor(t*2),y,1+Math.floor(t*2),1,'#4a9230');
+  }
+  // hedge
+  const HY=HZ-18;
+  F(0,HY,640,20,'#2f6a2c');
+  for(let x=0;x<640;x+=6){const r=4+(tHash(x,1)%4);pcirc(g,x+3,HY+2,r,'#3a7f34');pcirc(g,x+2,HY+1,r-2,'#478f3e');F(x+1,HY-r+2,2,1,'#5aa84a');}
+  F(0,HZ,640,3,'#204a1c');
+  // Wicket Gate (big)
+  const gx=GX-22,gy=HY-18;
+  F(gx-10,gy-8,10,46,'#a49a8a');F(gx-10,gy-8,10,2,'#c4baa8');F(gx-2,gy-8,2,46,'#857b6d');
+  F(gx+44,gy-8,10,46,'#a49a8a');F(gx+44,gy-8,10,2,'#c4baa8');F(gx+52,gy-8,2,46,'#857b6d');
+  F(gx-14,gy-16,72,9,'#8a5a30');F(gx-14,gy-16,72,2,'#b8844a');F(gx-14,gy-8,72,1,'#5a3818');
+  g.fillStyle='#fff0c0';g.font='bold 7px monospace';g.textAlign='center';g.textBaseline='middle';g.fillText('WICKET GATE',GX,gy-11);
+  // distant trees on the horizon
+  const small=dwGreenTree(1);
+  [[40,HZ+4],[330,HZ+2],[420,HZ+6],[560,HZ+3],[110,HZ+8]].forEach(([x,y])=>g.drawImage(small,x-16,y-38));
+  // foreground trees (2x, chunky)
+  const big=dwGreenTree(0),big2=dwGreenTree(3);
+  g.drawImage(big,-14,150,64,76);g.drawImage(big2,584,128,64,76);
+  // foreground grass tufts
+  for(let i=0;i<70;i++){const x=(i*97)%640,y=250+((i*53)%220),h=tHash(i,7);if(Math.abs(x-(W0B.pX))<90&&y>250)continue;F(x,y,2,6,'#78c852');F(x+3,y+2,2,4,'#4e9832');F(x-3,y+3,2,3,'#6cbc48');if(h%5===0)F(x,y-2,2,2,'#ffd040');}
+  return cv;
+}
+
+function w0Clouds(){
+  const mk=(w,seed)=>{const[cv,g]=mkCv(w,30);[[w*0.3,18,10],[w*0.5,13,13],[w*0.7,18,9],[w*0.15,21,6],[w*0.85,21,6]].forEach(([x,y,r],i)=>{pcirc(g,Math.round(x),y,r,'#e8eef8');pcirc(g,Math.round(x)-1,y-2,r-2,'#ffffff');});g.fillStyle='#d0dcec';g.fillRect(4,24,w-8,2);return cv;};
+  return[{cv:mk(90,1),x:60,y:14,s:0.06},{cv:mk(70,2),x:300,y:40,s:0.04},{cv:mk(110,3),x:470,y:20,s:0.05},{cv:mk(60,4),x:200,y:66,s:0.03}];
+}
+
+// The Doubter: drawn on a 2px grid, origin top-left of a 44x64 unit box
+function w0DrawDoubter(g,f,hp){
+  const u=2,F=(x,y,w,h,c)=>{g.fillStyle=c;g.fillRect(x*u,y*u,w*u,h*u);};
+  const base='#3c3550',hi='#51486a',dk='#2a2438',fold='#2e2840';
+  const sway=Math.round(Math.sin(f*0.05)*1);
+  // cloak
+  for(let y=20;y<60;y++){
+    const half=Math.round(10+(y-20)*0.16),x0=22-half;
+    F(x0,y,half*2,1,base);F(x0,y,2,1,hi);F(x0+half*2-3,y,3,1,dk);
+  }
+  for(let y=30;y<58;y++){F(17,y,1,1,fold);F(27,y,1,1,fold);if(y>40)F(22,y,1,1,fold);}
+  // tattered hem (tears grow as HP drops)
+  const tear=hp<50?2:hp<80?1:0;
+  for(let x=6;x<38;x++){const k=((x+sway)>>1)%2;F(x,60,1,k?2+tear:1,k?base:dk);if(k&&tear&&x%5===0)F(x,61,1,tear,'rgba(0,0,0,0)');}
+  // sash + buckle
+  F(12,36,20,2,'#5a3a5a');F(20,35,4,4,'#8a7a3a');F(21,36,2,2,'#c0a848');
+  // shoulders
+  [[7,16],[26,16]].forEach(([x,y])=>{F(x,y+1,11,6,'#6c6c7c');F(x+1,y,9,1,'#8e8ea0');F(x,y+1,11,1,'#8e8ea0');F(x,y+6,11,1,'#4a4a58');F(x+2,y+3,1,1,'#b0b0c0');F(x+8,y+3,1,1,'#b0b0c0');});
+  // hood
+  const hood=[[2,18,26],[3,16,28],[4,15,29],[5,15,29]];
+  hood.forEach(([y,a,b])=>F(a,y,b-a+1,1,'#463e5c'));
+  for(let y=6;y<22;y++)F(14,y,17,1,'#463e5c');
+  F(14,6,2,16,'#5a5074');F(16,3,3,1,'#5a5074');
+  F(29,6,2,16,'#342c46');
+  // face void
+  for(let y=8;y<20;y++){const inset=y<10||y>17?1:0;F(17+inset,y,11-inset*2,1,'#100c16');}
+  // eyes: one squints, one raised in doubt; blink
+  const blink=(f%200)<6;
+  const eye='#e6f27a';
+  if(blink){F(19,13,2,1,'#9aa050');F(24,13,2,1,'#9aa050');}
+  else{F(19,13,2,1,eye);F(24,12,2,2,eye);F(23,10,1,1,'#9aa050');F(24,9,2,1,'#9aa050');}
+  F(20,16,3,1,'#6a6a40');F(23,15,1,1,'#6a6a40');
+  // gauntlet on staff + resting hand
+  F(8,28,5,4,'#6c6c7c');F(8,28,5,1,'#8e8ea0');
+  F(32,34,4,4,'#6c6c7c');F(32,34,4,1,'#8e8ea0');
+  // question-mark staff
+  const st='#4a4a58',sh='#7a7a8c';
+  for(let y=16;y<54;y++){F(10,y,2,1,st);F(10,y,1,1,sh);}
+  const hook=[[11,15],[12,14],[13,13],[14,12],[15,10],[15,8],[15,7],[14,5],[13,4],[12,3],[10,3],[8,3],[7,4],[6,5],[5,7],[5,8]];
+  hook.forEach(([x,y])=>{F(x-1,y,2,2,st);F(x-1,y,1,1,sh);});
+  F(4,8,3,3,st);F(4,8,1,1,sh);
+  const glow=0.6+Math.sin(f*0.1)*0.3;
+  g.fillStyle=`rgba(176,112,255,${glow*0.35})`;g.beginPath();g.arc(11*u,58*u,7*u,0,Math.PI*2);g.fill();
+  pcirc(g,11*u,58*u,3*u,'#7a40c0');pcirc(g,11*u,58*u,2*u,'#b070ff');F(10,57,1,1,'#f0d8ff');
+}
+
+function w0BossCanvas(f,hp,flash){
+  if(!W0B.boss){const[c,g]=mkCv(88,128);W0B.boss=c;W0B.bossG=g;}
+  const g=W0B.bossG;g.clearRect(0,0,88,128);
+  w0DrawDoubter(g,f,hp);
+  if(flash>0){g.save();g.globalCompositeOperation='source-atop';g.fillStyle=`rgba(255,255,255,${flash})`;g.fillRect(0,0,88,128);g.restore();}
+  return W0B.boss;
+}
+
+function w0LightLevel(){return 0.35+0.65*(1-G.bossHP/100);}
+
+function w0DrawBg(ctx,opts={}){
+  if(!W0B.bg){W0B.bg=w0BuildBg();W0B.clouds=w0Clouds();}
+  const lt=opts.light!=null?opts.light:w0LightLevel();
+  ctx.imageSmoothingEnabled=false;
+  ctx.drawImage(W0B.bg,0,0);
+  W0B.clouds.forEach(c=>{const x=((c.x+mapFrame*c.s)%760)-110;ctx.drawImage(c.cv,Math.round(x),c.y);});
+  // light behind the gate
+  const lx=W0B.gateX,ly=92;
+  const gr=ctx.createRadialGradient(lx,ly,4,lx,ly,60+170*lt);
+  gr.addColorStop(0,`rgba(255,252,220,${0.6+0.4*lt})`);gr.addColorStop(0.25,`rgba(255,236,150,${0.35+0.3*lt})`);gr.addColorStop(1,'rgba(255,220,120,0)');
+  ctx.fillStyle=gr;ctx.fillRect(0,0,640,300);
+  ctx.save();ctx.translate(lx,ly);ctx.rotate(mapFrame*0.002);ctx.fillStyle=`rgba(255,246,200,${0.08+0.14*lt})`;
+  for(let i=0;i<12;i++){ctx.rotate(Math.PI/6);ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(-10,260);ctx.lineTo(10,260);ctx.closePath();ctx.fill();}
+  ctx.restore();
+  // the Doubter's gloom
+  const gl=opts.gloom!=null?opts.gloom:0.32*(G.bossHP/100);
+  if(gl>0){
+    ctx.fillStyle=`rgba(38,28,66,${gl})`;ctx.fillRect(0,0,640,480);
+    const vg=ctx.createRadialGradient(320,200,120,320,240,420);vg.addColorStop(0,'rgba(20,10,40,0)');vg.addColorStop(1,`rgba(20,10,40,${gl*1.4})`);
+    ctx.fillStyle=vg;ctx.fillRect(0,0,640,480);
+  }
+}
+
+function w0DrawGateDoors(ctx,open){
+  const gx=W0B.gateX-22,gy=W0B.horizon-36;
+  if(open>0){
+    const w=Math.round(22*(1-open));
+    ctx.fillStyle=`rgba(255,248,200,${0.85*open})`;ctx.fillRect(gx,gy,44,36);
+    ctx.fillStyle='#8a5a30';ctx.fillRect(gx,gy,w,36);ctx.fillRect(gx+44-w,gy,w,36);
+  }else{
+    ctx.fillStyle='#7a4e28';ctx.fillRect(gx,gy,44,36);
+    ctx.fillStyle='#5a3818';for(let x=gx;x<gx+44;x+=5)ctx.fillRect(x,gy,1,36);
+    ctx.fillStyle='#3a3632';ctx.fillRect(gx,gy+7,44,2);ctx.fillRect(gx,gy+26,44,2);
+  }
+}
+
+function w0BossScale(hp){return 0.78+0.22*(hp/100);}
+
+function w0DrawBoss(ctx,f,opts={}){
+  const hp=opts.hp!=null?opts.hp:G.bossHP;
+  const sc=w0BossScale(hp)*(opts.scale||1)*W0B.BS;
+  const flashA=opts.flash||0;
+  const bc=w0BossCanvas(f,hp,flashA);
+  const W=88*sc,H=128*sc;
+  const x=Math.round(W0B.bossX-W/2+(opts.dx||0)),y=Math.round(W0B.feetY-H+(opts.dy||0)+Math.sin(f*0.06)*2);
+  // aura + shadow
+  ctx.fillStyle='rgba(0,0,0,0.28)';ctx.beginPath();ctx.ellipse(W0B.bossX+(opts.dx||0),W0B.feetY+2,34*sc,7*sc,0,0,Math.PI*2);ctx.fill();
+  const au=ctx.createRadialGradient(W0B.bossX,W0B.feetY-60*sc,10,W0B.bossX,W0B.feetY-60*sc,90*sc);
+  au.addColorStop(0,`rgba(60,30,90,${0.35*(opts.alpha==null?1:opts.alpha)})`);au.addColorStop(1,'rgba(60,30,90,0)');
+  ctx.fillStyle=au;ctx.fillRect(W0B.bossX-150,W0B.feetY-260,300,270);
+  ctx.save();if(opts.alpha!=null)ctx.globalAlpha=opts.alpha;
+  ctx.drawImage(bc,x,y,Math.round(W),Math.round(H));
+  ctx.restore();
+  return{x,y,W,H};
+}
+
+function w0DrawQMarks(ctx,f,n,cx,cy,r,alpha=1){
+  ctx.font='bold 16px monospace';ctx.textAlign='center';ctx.textBaseline='middle';
+  for(let i=0;i<n;i++){
+    const a=f*0.025+i*(Math.PI*2/n),x=cx+Math.cos(a)*r,y=cy+Math.sin(a)*r*0.45+Math.sin(f*0.08+i)*4;
+    ctx.fillStyle=`rgba(40,20,60,${0.6*alpha})`;ctx.fillText('?',x+1,y+1);
+    ctx.fillStyle=`rgba(200,160,255,${0.85*alpha})`;ctx.fillText('?',x,y);
+  }
+  ctx.textBaseline='alphabetic';
+}
+
+function w0DrawPilgrim(ctx,x,y,f,opts={}){
+  ctx.fillStyle='rgba(0,0,0,0.3)';ctx.beginPath();ctx.ellipse(x,y+1,24,5,0,0,Math.PI*2);ctx.fill();
+  const bp=G.burden/100;
+  if(bp>0&&!opts.noPack){
+    const pw=16+Math.round(20*bp),ph=14+Math.round(14*bp),px=x-Math.round(pw/2),py=y-48-Math.round(8*bp);
+    ctx.fillStyle='#4a2a0e';ctx.fillRect(px-2,py-2,pw+4,ph+4);
+    ctx.fillStyle=bp>0.6?'#7a3a10':bp>0.3?'#9a5020':'#b07040';ctx.fillRect(px,py,pw,ph);
+    ctx.fillStyle='rgba(255,255,255,0.22)';ctx.fillRect(px,py,pw,4);
+  }
+  drawPilgrimCanvas(ctx,x-28,y-52+(opts.dy||0),G.armorEarned,2.0,opts.frame||0);
+}
+
+function w0DrawHUD(ctx){
+  ctx.fillStyle='rgba(6,6,24,0.94)';ctx.fillRect(0,0,640,36);ctx.fillStyle='#f8c840';ctx.fillRect(0,34,640,2);
+  for(let i=0;i<3;i++){const hx=16+i*24,hy=19;ctx.fillStyle=i<G.lives?'#e03030':'#302020';ctx.beginPath();ctx.arc(hx-4,hy-3,5,0,Math.PI*2);ctx.arc(hx+4,hy-3,5,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.moveTo(hx-9,hy-1);ctx.lineTo(hx,hy+7);ctx.lineTo(hx+9,hy-1);ctx.closePath();ctx.fill();}
+  ctx.fillStyle='#e0e0ff';ctx.font='bold 12px monospace';ctx.textAlign='left';ctx.fillText(G.name.toUpperCase(),90,23);
+  ctx.fillStyle='#e0c0ff';ctx.font='bold 13px monospace';ctx.textAlign='center';ctx.fillText('THE DOUBTER',400,15);
+  const bx=300,by=20,bw=200;
+  ctx.fillStyle='#1a0a20';ctx.fillRect(bx-2,by-2,bw+4,12);
+  const hpw=Math.round(bw*G.bossHP/100);
+  ctx.fillStyle='#8a50d0';ctx.fillRect(bx,by,hpw,8);ctx.fillStyle='#b080ff';ctx.fillRect(bx,by,hpw,3);
+  ctx.fillStyle='#f8c840';ctx.font='bold 12px monospace';ctx.textAlign='right';ctx.fillText('★'+G.score,630,23);
+}
+
+function w0RenderScene(opts={}){
+  const ctx=document.getElementById('bbCv').getContext('2d');
+  w0DrawBg(ctx);
+  w0DrawGateDoors(ctx,0);
+  let flashA=0,dx=0,dy=0;
+  if(bossShudder.active){
+    bossShudder.f++;const t=bossShudder.f/bossShudder.maxF;
+    dx=Math.sin(bossShudder.f*1.8)*(1-t)*8;dy=-Math.abs(Math.sin(bossShudder.f*1.2))*(1-t)*4;flashA=Math.max(0,0.8-t*1.6);
+    if(bossShudder.f>=bossShudder.maxF)bossShudder.active=false;
+  }
+  w0DrawBoss(ctx,mapFrame,{flash:flashA,dx,dy});
+  w0DrawQMarks(ctx,mapFrame,Math.max(1,Math.round(G.bossHP/25)),W0B.bossX,W0B.feetY-110,96);
+  w0DrawPilgrim(ctx,W0B.pX,W0B.feetY,mapFrame);
+  if(opts.overlay)opts.overlay(ctx);
+  w0DrawHUD(ctx);
+}
+
+function w0StartIdle(){
+  const id=++W0B.idle;
+  const bq=document.getElementById('bqDlg');
+  (function tick(){
+    if(id!==W0B.idle||G.phase!=='boss'||G.wIdx!==0)return;
+    mapFrame++;
+    if(!W0B.anim&&bq.style.display!=='none'&&!bossShudder.active)w0RenderScene();
+    raf60(tick);
+  })();
+}
+
+function w0WordBolt(ctx,word,t,fromX,fromY,toX,toY){
+  const x=fromX+(toX-fromX)*t,y=fromY+(toY-fromY)*t-Math.sin(t*Math.PI)*50;
+  for(let i=5;i>=1;i--){const bt=Math.max(0,t-i*0.05),bx=fromX+(toX-fromX)*bt,by=fromY+(toY-fromY)*bt-Math.sin(bt*Math.PI)*50;ctx.fillStyle=`rgba(255,230,120,${0.12*(6-i)/5})`;ctx.beginPath();ctx.arc(bx,by,14-i*1.5,0,Math.PI*2);ctx.fill();}
+  const gr=ctx.createRadialGradient(x,y,0,x,y,34);gr.addColorStop(0,'rgba(255,255,220,0.9)');gr.addColorStop(0.5,'rgba(255,220,90,0.45)');gr.addColorStop(1,'rgba(255,200,60,0)');
+  ctx.fillStyle=gr;ctx.beginPath();ctx.arc(x,y,34,0,Math.PI*2);ctx.fill();
+  ctx.font='bold 18px monospace';ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.lineWidth=4;ctx.strokeStyle='#6a4a00';ctx.strokeText(word.toUpperCase(),x,y);
+  ctx.fillStyle='#fff8d0';ctx.fillText(word.toUpperCase(),x,y);ctx.textBaseline='alphabetic';
+}
+
+function w0AttackAnim(onDone){
+  const bq=document.getElementById('bqDlg');bq.style.display='none';
+  W0B.anim=true;
+  const word=G.bossFilledBlanks[G.bossFilledBlanks.length-1]||'TRUTH';
+  const dmg=Math.floor(100/G.bossMaxBlanks);
+  const ctx=document.getElementById('bbCv').getContext('2d');
+  let f=0;
+  tone(420,0.03,'square',0.13);setTimeout(()=>tone(560,0.03,'square',0.15),90);setTimeout(()=>tone(740,0.04,'square',0.18),170);
+  (function step(){
+    f++;mapFrame++;
+    const sx=W0B.pX-10,sy=W0B.feetY-40,tx=W0B.bossX,ty=W0B.feetY-110;
+    w0DrawBg(ctx);w0DrawGateDoors(ctx,0);
+    if(f<=12){
+      w0DrawBoss(ctx,mapFrame);
+      const a=f/12;const gr=ctx.createRadialGradient(W0B.pX,W0B.feetY-30,0,W0B.pX,W0B.feetY-30,60);gr.addColorStop(0,`rgba(255,240,160,${a*0.7})`);gr.addColorStop(1,'rgba(255,220,80,0)');
+      ctx.fillStyle=gr;ctx.fillRect(W0B.pX-70,W0B.feetY-100,140,120);
+      w0DrawPilgrim(ctx,W0B.pX,W0B.feetY,f,{dy:-Math.round(a*4)});
+    }else if(f<=34){
+      w0DrawBoss(ctx,mapFrame);
+      w0DrawPilgrim(ctx,W0B.pX,W0B.feetY,f);
+      w0WordBolt(ctx,word,(f-12)/22,sx,sy,tx,ty);
+    }else if(f<=60){
+      const p=(f-34)/26;
+      w0DrawBoss(ctx,mapFrame,{flash:Math.max(0,1-p*2),dx:Math.sin(f*1.7)*(1-p)*10,dy:-(1-p)*6});
+      const rr=10+p*90;ctx.strokeStyle=`rgba(255,240,160,${1-p})`;ctx.lineWidth=4*(1-p)+1;ctx.beginPath();ctx.arc(tx,ty,rr,0,Math.PI*2);ctx.stroke();
+      ctx.fillStyle=`rgba(255,250,220,${Math.max(0,0.6-p)})`;ctx.fillRect(tx-3,ty-40,6,80);ctx.fillRect(tx-40,ty-3,80,6);
+      w0DrawPilgrim(ctx,W0B.pX,W0B.feetY,f);
+      ctx.font='bold 22px monospace';ctx.textAlign='center';ctx.lineWidth=4;ctx.strokeStyle='#2a0a40';
+      ctx.strokeText('-'+dmg+'%',tx+50,ty-30-p*30);ctx.fillStyle='#ffe080';ctx.fillText('-'+dmg+'%',tx+50,ty-30-p*30);
+      if(f===35){sfxBossHit();}
+    }else{
+      W0B.anim=false;bq.style.display='block';
+      triggerBossShudder();onDone();return;
+    }
+    w0DrawQMarks(ctx,mapFrame,Math.max(1,Math.round(G.bossHP/25)),W0B.bossX,W0B.feetY-110,96);
+    w0DrawHUD(ctx);
+    raf60(step);
+  })();
+}
+
+function w0Victory(){
+  const bq=document.getElementById('bqDlg');bq.style.display='none';
+  W0B.anim=true;W0B.idle++;
+  const word='TRUTH',full=G.bossQ?G.bossQ.full:'';
+  const ctx=document.getElementById('bbCv').getContext('2d');
+  let f=0,parts=null,done=false;
+  const finish=()=>{if(done)return;done=true;document.removeEventListener('keydown',kh);ctx.canvas.removeEventListener('click',finish);W0B.anim=false;setTimeout(()=>endWorld(true),150);};
+  const kh=e=>{if((e.key==='Enter'||e.key===' ')&&f>200){e.preventDefault();finish();}};
+  document.addEventListener('keydown',kh);ctx.canvas.addEventListener('click',()=>{if(f>200)finish();});
+  const bossBox={x:0,y:0,W:0,H:0};
+  (function step(){
+    if(done)return;
+    f++;mapFrame++;
+    const sx=W0B.pX-10,sy=W0B.feetY-40,tx=W0B.bossX,ty=W0B.feetY-100;
+    const light=f<60?w0LightLevel():Math.min(1.4,w0LightLevel()+(f-60)/60);
+    w0DrawBg(ctx,{light,gloom:f<60?0.08:Math.max(0,0.08-(f-60)/200)});
+    w0DrawGateDoors(ctx,f<150?0:Math.min(1,(f-150)/40));
+    if(f<=26){
+      Object.assign(bossBox,w0DrawBoss(ctx,mapFrame,{hp:5}));
+      w0DrawPilgrim(ctx,W0B.pX,W0B.feetY,f);
+      w0WordBolt(ctx,word,f/26,sx,sy,tx,ty);
+    }else if(f<=70){
+      const p=(f-26)/44;
+      Object.assign(bossBox,w0DrawBoss(ctx,mapFrame,{hp:5,flash:0.3+0.5*Math.abs(Math.sin(f*0.5)),dx:Math.sin(f*2.1)*4}));
+      // cracks of light
+      ctx.strokeStyle=`rgba(255,250,210,${0.4+p*0.6})`;ctx.lineWidth=2;
+      for(let i=0;i<7;i++){const a=i*0.9+0.3,l=10+p*60;ctx.beginPath();ctx.moveTo(tx,ty);ctx.lineTo(tx+Math.cos(a)*l,ty+Math.sin(a)*l*0.9);ctx.stroke();}
+      w0DrawPilgrim(ctx,W0B.pX,W0B.feetY,f);
+      if(f===27){sfxBossHit();flash('#fff8d0',0.5);}
+      if(f===70){
+        const bc=w0BossCanvas(mapFrame,5,0),g=bc.getContext('2d'),d=g.getImageData(0,0,88,128).data;
+        parts=[];const sc=bossBox.W/88;
+        for(let y=0;y<128;y+=2)for(let x=0;x<88;x+=2){const i=(y*88+x)*4;if(d[i+3]>40)parts.push({x:bossBox.x+x*sc,y:bossBox.y+y*sc,r:d[i],g:d[i+1],b:d[i+2],vx:(Math.random()-0.5)*0.6,vy:-0.2-Math.random()*0.8,delay:Math.floor((128-y)*0.25+Math.random()*20),life:0});}
+        sfxWin();
+      }
+    }else{
+      if(parts){
+        parts.forEach(p=>{
+          if(f-70<p.delay){ctx.fillStyle=`rgb(${p.r},${p.g},${p.b})`;ctx.fillRect(Math.round(p.x),Math.round(p.y),2,2);return;}
+          p.life++;p.x+=p.vx+Math.sin((p.life+p.x)*0.05)*0.3;p.y+=p.vy;p.vy-=0.015;
+          const t=Math.min(1,p.life/50),r=Math.round(p.r+(255-p.r)*t),gg=Math.round(p.g+(225-p.g)*t),b=Math.round(p.b+(120-p.b)*t);
+          const a=Math.max(0,1-p.life/140);if(a<=0)return;
+          ctx.fillStyle=`rgba(${r},${gg},${b},${a})`;ctx.fillRect(Math.round(p.x),Math.round(p.y),2,2);
+        });
+      }
+      const bob=f>150?Math.round(Math.abs(Math.sin(f*0.12))*-6):0;
+      if(f>150){const gr=ctx.createRadialGradient(W0B.pX,W0B.feetY-30,0,W0B.pX,W0B.feetY-30,90);gr.addColorStop(0,'rgba(255,240,160,0.4)');gr.addColorStop(1,'rgba(255,220,80,0)');ctx.fillStyle=gr;ctx.fillRect(W0B.pX-100,W0B.feetY-130,200,160);}
+      w0DrawPilgrim(ctx,W0B.pX,W0B.feetY,f,{dy:bob,frame:f>150?Math.floor(f/8):0});
+    }
+    if(f<70)w0DrawQMarks(ctx,mapFrame,3,W0B.bossX,W0B.feetY-110,96+(f>26?(f-26)*3:0),Math.max(0,1-(f-26)/40));
+    w0DrawHUD(ctx);
+    if(f<150&&full){
+      const a=Math.min(1,f/12)*Math.min(1,(150-f)/20);
+      ctx.save();ctx.globalAlpha=a;
+      ctx.font='bold 17px monospace';const tw=ctx.measureText(full).width+40;
+      ctx.fillStyle='rgba(8,10,40,0.9)';ctx.fillRect(320-tw/2,46,tw,34);ctx.strokeStyle='#f8c840';ctx.lineWidth=2;ctx.strokeRect(320-tw/2,46,tw,34);
+      ctx.fillStyle='#fff8d0';ctx.textAlign='center';ctx.fillText(full,320,69);
+      ctx.restore();
+    }
+    if(f>170){
+      const t=Math.min(1,(f-170)/24),py=Math.round(480-bEaseOut(t)*220);
+      ctx.fillStyle='rgba(8,10,40,0.95)';ctx.fillRect(70,py,500,160);
+      ctx.strokeStyle='#f8c840';ctx.lineWidth=4;ctx.strokeRect(72,py+2,496,156);
+      ctx.textAlign='center';
+      bChromaText(ctx,'VICTORY!',320,py+52,'#f8c840',40,4);
+      ctx.fillStyle='#ffffff';ctx.font='bold 16px monospace';ctx.fillText('The Doubter fades into the light!',320,py+84);
+      ctx.fillStyle='#a0ffa0';ctx.font='bold 14px monospace';ctx.fillText('+200 BONUS  •  WORLD COMPLETE',320,py+108);
+      ctx.fillStyle=ARMOR_BATTLE_COLS[0];ctx.fillText('BELT OF TRUTH EQUIPPED',320,py+130);
+      if(f>200){ctx.fillStyle=Math.floor(f/20)%2?'#f8c840':'#c89820';ctx.font='bold 13px monospace';ctx.fillText('▶ PRESS ENTER OR TAP TO CONTINUE',320,py+150);}
+    }
+    if(f>420){finish();return;}
+    raf60(step);
+  })();
+}
+
+function w0Defeat(){
+  const bq=document.getElementById('bqDlg');bq.style.display='none';
+  W0B.anim=true;W0B.idle++;
+  G.armorEarned=G.armorEarned.filter(i=>i!==G.wIdx);
+  const answer=(G.bossBlanks||G.bossQ.blanks)[G.bossBlankIdx]||'';
+  const full=G.bossQ?G.bossQ.full:'';
+  const ctx=document.getElementById('bbCv').getContext('2d');
+  let f=0,done=false;
+  const finish=()=>{if(done)return;done=true;document.removeEventListener('keydown',kh);W0B.anim=false;setTimeout(()=>endWorld(false),150);};
+  const kh=e=>{if((e.key==='Enter'||e.key===' ')&&f>160){e.preventDefault();finish();}};
+  document.addEventListener('keydown',kh);ctx.canvas.addEventListener('click',()=>{if(f>160)finish();},{once:false});
+  (function step(){
+    if(done)return;
+    f++;mapFrame++;
+    const dim=Math.min(1,f/50);
+    w0DrawBg(ctx,{light:Math.max(0.1,w0LightLevel()*(1-dim*0.8)),gloom:0.32+dim*0.25});
+    w0DrawGateDoors(ctx,0);
+    const laugh=f<90?Math.round(Math.abs(Math.sin(f*0.35))*-5):0;
+    w0DrawBoss(ctx,mapFrame,{scale:1+Math.min(0.12,f*0.003),dy:laugh});
+    // doubts swarm the pilgrim
+    const swarmT=Math.min(1,f/60),cx=W0B.bossX+(W0B.pX-W0B.bossX)*swarmT,cy=W0B.feetY-110+(70*swarmT);
+    w0DrawQMarks(ctx,mapFrame*2,6,cx,cy,70-40*swarmT);
+    const knock=f>60?Math.min(1,(f-60)/20):0;
+    ctx.save();ctx.translate(W0B.pX+knock*24,W0B.feetY);ctx.rotate(knock*0.45);ctx.translate(-W0B.pX,-W0B.feetY);
+    w0DrawPilgrim(ctx,W0B.pX,W0B.feetY,0);ctx.restore();
+    if(f===2)sfxLose();
+    if(f>30&&f<90&&f%30===0)tone(140,0.12,'sawtooth',0.12);
+    if(f>30&&f<110){ctx.fillStyle='rgba(8,4,20,0.85)';ctx.fillRect(W0B.bossX-90,40,180,30);ctx.strokeStyle='#b080ff';ctx.lineWidth=2;ctx.strokeRect(W0B.bossX-90,40,180,30);ctx.fillStyle='#e0c0ff';ctx.font='bold 14px monospace';ctx.textAlign='center';ctx.fillText('"Are you SURE?"',W0B.bossX,60);}
+    w0DrawHUD(ctx);
+    if(f>100){
+      const t=Math.min(1,(f-100)/24),py=Math.round(480-bEaseOut(t)*330);
+      ctx.fillStyle='rgba(16,6,26,0.96)';ctx.fillRect(50,py,540,280);
+      ctx.strokeStyle='#b080ff';ctx.lineWidth=4;ctx.strokeRect(52,py+2,536,276);
+      ctx.textAlign='center';
+      ctx.fillStyle='#e0c0ff';ctx.font='bold 24px monospace';ctx.fillText('THE DOUBTER WINS THIS TIME',320,py+40);
+      ctx.fillStyle='#ffffff';ctx.font='bold 15px monospace';ctx.fillText('The right word was:',320,py+76);
+      ctx.fillStyle='#f8c840';ctx.font='bold 26px monospace';ctx.fillText(answer.toUpperCase(),320,py+108);
+      ctx.fillStyle='#c0d0ff';ctx.font='bold 14px monospace';
+      if(ctx.measureText(full).width<=500)ctx.fillText(full,320,py+142);else wrapText(ctx,full,70,py+136,500,18);
+      ctx.textAlign='center';ctx.fillStyle='#ff9080';ctx.font='bold 13px monospace';ctx.fillText('Belt of Truth lost — beat the Doubter to win it back!',320,py+196);
+      ctx.fillStyle='#a0a0e0';ctx.font='12px monospace';ctx.fillText('"Study God\'s Word and return stronger." — 2 Tim 2:15',320,py+222);
+      if(f>160){ctx.fillStyle=Math.floor(f/20)%2?'#f8c840':'#c89820';ctx.font='bold 13px monospace';ctx.fillText('▶ PRESS ENTER OR TAP TO CONTINUE',320,py+258);}
+    }
+    if(f>600){finish();return;}
+    raf60(step);
+  })();
+}
+
+function w0Intro(roar,theme){
+  show('bossIntroScr');
+  G.bossHP=100;
+  const ctx=document.getElementById('biCv').getContext('2d');ctx.imageSmoothingEnabled=false;
+  let f=0,done=false;
+  const dismiss=()=>{if(done||f<130)return;done=true;document.removeEventListener('keydown',kh);ctx.canvas.removeEventListener('click',dismiss);startBossBattle();};
+  const kh=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();dismiss();}};
+  document.addEventListener('keydown',kh);ctx.canvas.addEventListener('click',dismiss);
+  (function step(){
+    if(done)return;
+    f++;mapFrame++;
+    const rise=Math.min(1,Math.max(0,(f-40)/50));
+    w0DrawBg(ctx,{light:1-rise*0.65,gloom:rise*0.32});
+    w0DrawGateDoors(ctx,0);
+    // mist rising
+    if(f>30){for(let i=0;i<14;i++){const mx=W0B.bossX-70+i*10+Math.sin(f*0.05+i)*6,my=W0B.feetY-8-((f*0.6+i*13)%40);ctx.fillStyle=`rgba(90,60,130,${0.25*Math.min(1,(f-30)/20)})`;ctx.fillRect(Math.round(mx),Math.round(my),10,6);}}
+    // the Doubter rises from the mist
+    if(rise>0){
+      ctx.save();ctx.beginPath();ctx.rect(0,0,640,W0B.feetY+4);ctx.clip();
+      w0DrawBoss(ctx,mapFrame,{hp:100,dy:Math.round((1-rise)*210)});
+      ctx.restore();
+      w0DrawQMarks(ctx,mapFrame,4,W0B.bossX,W0B.feetY-110,96*rise,rise);
+    }
+    // pilgrim walks in
+    const px=Math.round(W0B.pX+Math.max(0,(40-f))*5);
+    w0DrawPilgrim(ctx,px,W0B.feetY,0,{frame:f<40?Math.floor(f/6):0,dy:f>60&&f<80?Math.round(Math.sin(f)*2):0});
+    if(f===10)theme();
+    if(f===55)roar();
+    if(f>=55&&f<80)ctx.translate((Math.random()-0.5)*6,(Math.random()-0.5)*4);
+    ctx.setTransform(1,0,0,1,0,0);
+    if(f>95){
+      const t=Math.min(1,(f-95)/14);
+      ctx.save();ctx.globalAlpha=t;
+      ctx.fillStyle='rgba(16,6,26,0.92)';ctx.fillRect(250,40,320,56);ctx.strokeStyle='#b080ff';ctx.lineWidth=3;ctx.strokeRect(251,41,318,54);
+      ctx.fillStyle='#e0c0ff';ctx.font='bold 15px monospace';ctx.textAlign='center';ctx.fillText('"Is God even real?"',410,64);
+      ctx.fillStyle='#a090c0';ctx.font='bold 12px monospace';ctx.fillText('"Turn back to the city, pilgrim!"',410,84);
+      ctx.restore();
+    }
+    if(f>110){
+      const t=Math.min(1,(f-110)/12);
+      ctx.save();ctx.globalAlpha=t;
+      ctx.fillStyle='rgba(16,6,26,0.92)';ctx.fillRect(0,300,640,96);ctx.fillStyle='#b080ff';ctx.fillRect(0,300,640,3);ctx.fillRect(0,393,640,3);
+      bChromaText(ctx,'THE DOUBTER',320,346,'#e0c0ff',34,3);
+      ctx.fillStyle='#ffffff';ctx.font='bold 14px monospace';ctx.textAlign='center';ctx.fillText('He blocks the Wicket Gate. Answer with TRUTH!',320,376);
+      ctx.restore();
+    }
+    w0DrawHUD(ctx);
+    if(f>=130){ctx.fillStyle=Math.floor(f/20)%2?'#f8c840':'#c89820';ctx.font='bold 14px monospace';ctx.textAlign='center';ctx.fillText('▶ PRESS ENTER OR TAP TO FACE HIM',320,440);}
+    raf60(step);
+  })();
+}
+
 function triggerBossIntro(){
+  if(G.wIdx===0){w0Intro(bossRoarSFX,introTheme);return;}
   show('bossIntroScr');
   const w=WORLDS[G.wIdx];
   const cv=document.getElementById('biCv'),ctx=cv.getContext('2d');
@@ -3389,6 +3864,7 @@ function startBossBattle(){
     if(G.diff==='young'){G.bossWB=buildBossWordBank(bossBlanks,0);}
     document.getElementById('bqDlg').style.display='block';
     renderBQDlg();
+    if(G.wIdx===0)w0StartIdle();
   });
 }
 
@@ -3615,6 +4091,7 @@ function bossDeath_ascend(ctx,bx,by,f){
 const BOSS_DEATH_FX=[bossDeath_crumble,bossDeath_dissolve,bossDeath_scatter,bossDeath_shatter,bossDeath_sink,bossDeath_ascend];
 
 function drawBattleBg(){
+  if(G.wIdx===0){w0DrawBg(document.getElementById('bbCv').getContext('2d'));return;}
   const cv=document.getElementById('bbCv'),ctx=cv.getContext('2d');
   ctx.imageSmoothingEnabled=false;
   const w=WORLDS[G.wIdx];
@@ -3651,6 +4128,7 @@ function triggerBossShudder(){
 }
 
 function renderBossScene(){
+  if(G.wIdx===0){w0RenderScene();return;}
   drawBattleBg();
   const cv=document.getElementById('bbCv'),ctx=cv.getContext('2d');
   ctx.imageSmoothingEnabled=false;
@@ -3706,10 +4184,10 @@ function renderBQDlg(){
   const cv=document.getElementById('bqCv'),ctx=cv.getContext('2d');
   ctx.imageSmoothingEnabled=false;ctx.clearRect(0,0,640,230);
   ctx.fillStyle='rgba(0,0,12,0.97)';ctx.fillRect(0,0,640,230);ctx.fillStyle='#e03030';ctx.fillRect(0,0,640,3);
-  ctx.fillStyle='#ff4040';ctx.font='bold 11px monospace';ctx.textAlign='left';ctx.fillText('⚔ BOSS QUESTION — Fill ALL blanks correctly to win!',10,17);
-  ctx.fillStyle='#ff2020';ctx.font='9px monospace';ctx.fillText('Blank '+(G.bossBlankIdx+1)+' of '+((G.bossBlanks||G.bossQ.blanks).length)+' — ANY wrong answer = BOSS WINS',10,29);
-  ctx.fillStyle='#202050';ctx.fillRect(0,34,640,1);ctx.fillStyle='#ffd0d0';ctx.font='12px monospace';wrapText(ctx,G.bossQ.q,10,52,620,16);
-  ctx.fillStyle='#202050';ctx.fillRect(0,72,640,1);ctx.fillStyle='#ff8080';ctx.font='bold 11px monospace';ctx.textAlign='left';ctx.fillText('ANSWER:',10,88);
+  ctx.fillStyle='#ff6060';ctx.font='bold 13px monospace';ctx.textAlign='left';ctx.fillText('⚔ BOSS QUESTION — fill every blank!',10,18);
+  ctx.fillStyle='#ffb0b0';ctx.font='bold 11px monospace';ctx.textAlign='right';ctx.fillText('Blank '+(G.bossBlankIdx+1)+' of '+((G.bossBlanks||G.bossQ.blanks).length)+'  •  one wrong word = the boss wins',630,18);
+  ctx.fillStyle='#202050';ctx.fillRect(0,28,640,1);ctx.fillStyle='#ffe0e0';ctx.font='bold 16px monospace';wrapText(ctx,G.bossQ.q,10,52,620,18);
+  ctx.fillStyle='#202050';ctx.fillRect(0,72,640,1);ctx.fillStyle='#ff8080';ctx.font='bold 12px monospace';ctx.textAlign='left';ctx.fillText('ANSWER:',10,88);
   const _bqObj={dp:G.bossDisplayStr||G.bossQ.dp,blanks:G.bossBlanks||G.bossQ.blanks};
   renderBlankDisplay(ctx,_bqObj,G.bossFilledBlanks,G.bossBlankIdx,10,104,620);
   if(G.diff==='young')renderWB(ctx,G.bossWB,G.bossSel,10,150);else renderTypeBox(ctx,G.bossTyped,10,150);
@@ -3790,6 +4268,7 @@ document.getElementById('bqCv').addEventListener('click',e=>{
 });
 
 function showBossDamageNumber(dmg){
+  if(G.wIdx===0)return;
   const cv=document.getElementById('bbCv'),ctx=cv.getContext('2d');
   const bossX=55,bossY=38;let fy=bossY+10,fa=1;
   function animDmg(){fy-=1.8;fa-=0.038;if(fa>0){ctx.save();ctx.globalAlpha=fa;ctx.fillStyle='#000';ctx.font='bold 18px Courier New';ctx.textAlign='center';ctx.fillText('-'+dmg+'%',bossX+83,fy);ctx.fillStyle='#ff4040';ctx.fillText('-'+dmg+'%',bossX+81,fy-2);ctx.restore();requestAnimationFrame(animDmg);}}
@@ -3798,6 +4277,7 @@ function showBossDamageNumber(dmg){
 
 // Attack animation fired on every correct boss answer (non-fatal)
 function triggerBossAttackAnim(onDone){
+  if(G.wIdx===0){w0AttackAnim(onDone);return;}
   const cv=document.getElementById('bbCv'),ctx=cv.getContext('2d');
   ctx.imageSmoothingEnabled=false;
   const apCol=ARMOR_BATTLE_COLS[G.wIdx],armorIdx=G.wIdx;
@@ -3884,6 +4364,7 @@ function submitBossBlank(answer){
 // BOSS DEFEAT ANIMATION — anime style 8-phase
 // ===========================================================
 function bossDefeatAnimation(){
+  if(G.wIdx===0){w0Victory();return;}
   document.getElementById('bqDlg').style.display='none';
   const cv=document.getElementById('bbCv'),ctx=cv.getContext('2d');
   ctx.imageSmoothingEnabled=false;
@@ -4063,6 +4544,7 @@ function bossDefeatAnimation(){
 // BOSS WINS ANIMATION — anime style 7-phase
 // ===========================================================
 function bossWinsAnimation(){
+  if(G.wIdx===0){w0Defeat();return;}
   document.getElementById('bqDlg').style.display='none';
   G.armorEarned=G.armorEarned.filter(i=>i!==G.wIdx);// armor lost on defeat
   const cv=document.getElementById('bbCv'),ctx=cv.getContext('2d');
