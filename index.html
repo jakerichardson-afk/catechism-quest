@@ -4934,6 +4934,10 @@ function clearAll(){if(confirm('Clear ALL data?')){localStorage.removeItem('cq3s
 // INIT
 // ===============================
 drawTitle();
+if(location.hash==='#boss'){
+  G.name='Preview';G.gender='boy';G.diff='young';G.score=0;G.lives=3;G.worldsDone=[];G.armorEarned=[];
+  beginWorld(0);stopLoop();G.phase='bossIntro';triggerBossIntro();
+}
 // Start title music on first click (audio context needs user gesture)
 document.getElementById('titleScr').addEventListener('click',()=>playTitleMusic(),{once:false});
 setInterval(()=>{if(document.getElementById('titleScr').classList.contains('on'))drawTitle();},4000);
