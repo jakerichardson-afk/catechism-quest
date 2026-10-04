@@ -3407,6 +3407,41 @@ function w0AttackAnim(onDone){
   })();
 }
 
+function w0CounterAnim(onDone){
+  const bq=document.getElementById('bqDlg');bq.style.display='none';
+  W0B.anim=true;
+  const ctx=document.getElementById('bbCv').getContext('2d');
+  let f=0;
+  const ox=W0B.bossX-26,oy=W0B.feetY-14,tx=W0B.pX,ty=W0B.feetY-34;
+  (function step(){
+    f++;mapFrame++;
+    w0DrawBg(ctx);w0DrawGateDoors(ctx,0);
+    w0DrawBoss(ctx,mapFrame,{dy:f<20?-Math.round(Math.sin(f/20*Math.PI)*6):0});
+    w0DrawQMarks(ctx,mapFrame,Math.max(1,Math.round(G.bossHP/25)),W0B.bossX,W0B.feetY-110,96);
+    if(f<=14){const a=f/14;const gr=ctx.createRadialGradient(ox,oy,0,ox,oy,30);gr.addColorStop(0,`rgba(200,140,255,${a})`);gr.addColorStop(1,'rgba(176,112,255,0)');ctx.fillStyle=gr;ctx.fillRect(ox-30,oy-30,60,60);}
+    const hit=f>34?Math.min(1,(f-34)/8):0,knock=f>34&&f<60?Math.round(Math.sin((f-34)/26*Math.PI)*10):0;
+    ctx.save();ctx.translate(knock,0);
+    w0DrawPilgrim(ctx,W0B.pX,W0B.feetY,0);
+    if(f>34&&f<52){const a=0.55*(1-(f-34)/18),cx=W0B.pX,cy=W0B.feetY-28;const gr=ctx.createRadialGradient(cx,cy,4,cx,cy,44);gr.addColorStop(0,`rgba(255,60,60,${a})`);gr.addColorStop(1,'rgba(255,40,40,0)');ctx.fillStyle=gr;ctx.fillRect(cx-46,cy-46,92,92);}
+    ctx.restore();
+    if(f>14&&f<=34){
+      const t=(f-14)/20,x=ox+(tx-ox)*t,y=oy+(ty-oy)*t-Math.sin(t*Math.PI)*60;
+      ctx.font='bold 26px monospace';ctx.textAlign='center';ctx.textBaseline='middle';
+      ctx.fillStyle='rgba(80,30,120,0.7)';ctx.fillText('?',x+2,y+2);ctx.fillStyle='#d8b0ff';ctx.fillText('?',x,y);ctx.textBaseline='alphabetic';
+    }
+    if(f===35){tone(160,0.1,'sawtooth',0.18);setTimeout(()=>tone(110,0.14,'sawtooth',0.14),70);}
+    if(hit>0){
+      const a=Math.min(1,(80-f)/15),hy=W0B.feetY-90-(f-34)*0.8;
+      ctx.save();ctx.globalAlpha=Math.max(0,a);ctx.font='bold 20px monospace';ctx.textAlign='center';ctx.lineWidth=4;ctx.strokeStyle='#300';
+      ctx.strokeText('-1 ♥',W0B.pX+30,hy);ctx.fillStyle='#ff6060';ctx.fillText('-1 ♥',W0B.pX+30,hy);ctx.restore();
+    }
+    if(f>4&&f<70){ctx.fillStyle='rgba(16,6,26,0.9)';ctx.fillRect(W0B.bossX+40,56,150,28);ctx.strokeStyle='#b080ff';ctx.lineWidth=2;ctx.strokeRect(W0B.bossX+40,56,150,28);ctx.fillStyle='#e0c0ff';ctx.font='bold 13px monospace';ctx.textAlign='center';ctx.fillText('"Are you sure?"',W0B.bossX+115,75);}
+    w0DrawHUD(ctx);
+    if(f>=80){W0B.anim=false;bq.style.display='block';onDone();return;}
+    raf60(step);
+  })();
+}
+
 function w0Victory(){
   const bq=document.getElementById('bqDlg');bq.style.display='none';
   W0B.anim=true;W0B.idle++;
@@ -3859,7 +3894,7 @@ function startBossBattle(){
     G.bossQ=bossQ;
     G.bossBlanks=bossBlanks;
     G.bossDisplayStr=buildBossDisplayStr(bossQ.full,bossBlanks);
-    G.bossBlankIdx=0;G.bossFilledBlanks=[];G.bossTyped='';G.bossSel=0;_di.value='';
+    G.bossBlankIdx=0;G.bossFilledBlanks=[];G.bossTyped='';G.bossSel=0;_di.value='';G.bossMiss=null;
     G.bossMaxBlanks=bossBlanks.length;
     if(G.diff==='young'){G.bossWB=buildBossWordBank(bossBlanks,0);}
     document.getElementById('bqDlg').style.display='block';
@@ -4185,13 +4220,14 @@ function renderBQDlg(){
   ctx.imageSmoothingEnabled=false;ctx.clearRect(0,0,640,230);
   ctx.fillStyle='rgba(0,0,12,0.97)';ctx.fillRect(0,0,640,230);ctx.fillStyle='#e03030';ctx.fillRect(0,0,640,3);
   ctx.fillStyle='#ff6060';ctx.font='bold 13px monospace';ctx.textAlign='left';ctx.fillText('⚔ BOSS QUESTION — fill every blank!',10,18);
-  ctx.fillStyle='#ffb0b0';ctx.font='bold 11px monospace';ctx.textAlign='right';ctx.fillText('Blank '+(G.bossBlankIdx+1)+' of '+((G.bossBlanks||G.bossQ.blanks).length)+'  •  one wrong word = the boss wins',630,18);
+  ctx.fillStyle='#ffb0b0';ctx.font='bold 11px monospace';ctx.textAlign='right';ctx.fillText('Blank '+(G.bossBlankIdx+1)+' of '+((G.bossBlanks||G.bossQ.blanks).length)+'  •  wrong word = lose a heart',630,18);
   ctx.fillStyle='#202050';ctx.fillRect(0,28,640,1);ctx.fillStyle='#ffe0e0';ctx.font='bold 16px monospace';wrapText(ctx,G.bossQ.q,10,52,620,18);
   ctx.fillStyle='#202050';ctx.fillRect(0,72,640,1);ctx.fillStyle='#ff8080';ctx.font='bold 12px monospace';ctx.textAlign='left';ctx.fillText('ANSWER:',10,88);
   const _bqObj={dp:G.bossDisplayStr||G.bossQ.dp,blanks:G.bossBlanks||G.bossQ.blanks};
   renderBlankDisplay(ctx,_bqObj,G.bossFilledBlanks,G.bossBlankIdx,10,104,620);
   if(G.diff==='young')renderWB(ctx,G.bossWB,G.bossSel,10,150);else renderTypeBox(ctx,G.bossTyped,10,150);
-  ctx.fillStyle='#303055';ctx.font='9px monospace';ctx.textAlign='right';ctx.fillText('ALL blanks must be correct to defeat the boss',630,224);
+  if(G.bossMiss){ctx.fillStyle='#ff8080';ctx.font='bold 13px monospace';ctx.textAlign='left';ctx.fillText('✗ "'+G.bossMiss+'" isn\'t right — try again!',10,222);}
+  else{ctx.fillStyle='#505080';ctx.font='11px monospace';ctx.textAlign='right';ctx.fillText('Fill every blank to defeat the boss',630,222);}
 }
 
 // iOS dictation support — sync real input ↔ canvas type boxes
@@ -4353,11 +4389,22 @@ function submitBossBlank(answer){
   const correct=(G.bossBlanks||G.bossQ.blanks)[G.bossBlankIdx];
   const ok=answer.toLowerCase().trim()===correct.toLowerCase().trim();
   if(ok){
-    sfxBossHit();flash('#f8c840',0.22);G.bossFilledBlanks.push(answer);G.bossBlankIdx++;
+    G.bossMiss=null;sfxBossHit();flash('#f8c840',0.22);G.bossFilledBlanks.push(answer);G.bossBlankIdx++;
     const dmgPer=Math.floor(100/G.bossMaxBlanks);G.bossHP=Math.max(0,G.bossHP-dmgPer);showBossDamageNumber(dmgPer);
     if(G.bossBlankIdx>=G.bossMaxBlanks){G.bossHP=0;G.score+=200;G.correct++;G.totalAnswered++;bossDefeatAnimation();}
     else{G.bossTyped='';G.bossSel=0;_di.value='';if(G.diff==='young')G.bossWB=buildBossWordBank(G.bossBlanks||G.bossQ.blanks,G.bossBlankIdx);triggerBossAttackAnim(()=>{renderBQDlg();});}
-  }else{sfxLose();flash('#ff0000',0.4);G.lives=Math.max(0,G.lives-1);G.wrong++;G.totalAnswered++;bossWinsAnimation();}
+  }else{
+    sfxLose();flash('#ff0000',0.3);G.lives=Math.max(0,G.lives-1);G.wrong++;G.totalAnswered++;
+    if(G.lives<=0){G.bossLost=true;bossWinsAnimation();return;}
+    G.bossMiss=answer;G.bossTyped='';_di.value='';
+    if(G.diff==='young'){G.bossWB=G.bossWB.filter(w=>w!==answer);G.bossSel=0;}
+    triggerBossCounter(()=>renderBQDlg());
+  }
+}
+
+function triggerBossCounter(onDone){
+  if(G.wIdx===0){w0CounterAnim(onDone);return;}
+  triggerBossShudder();onDone();
 }
 
 // ===========================================================
@@ -4637,6 +4684,8 @@ function bossWinsAnimation(){
 
 function endWorld(won){
   stopLoop();G.win=won;
+  if(!won&&G.bossLost){G.lives=3;}
+  G.bossLost=false;G.bossMiss=null;
   const w=WORLDS[G.wIdx];
   if(won){
     if(!G.worldsDone.includes(G.wIdx)){G.worldsDone.push(G.wIdx);G.score+=300;}
