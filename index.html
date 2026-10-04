@@ -437,7 +437,11 @@ let G={
   correct:0,wrong:0,streak:0,
   worldsDone:[],armorEarned:[],
   totalAnswered:0,paused:false,
-  // map
+  // zelda overworld
+  px:320,py:380,dir:'down',frame:0,
+  burden:100,altarsLit:0,altarData:[],nearAltar:null,activeAltarIdx:-1,
+  companion:{px:320,py:400,frame:0,animT:0},
+  // compat
   coins:[],pathData:[],pillar:{pathIdx:0,px:0,py:0,frame:0},
   phase:'walk',// walk|question|bossIntro|boss|result
   // question state
@@ -450,6 +454,23 @@ let G={
 };
 let sel={g:'boy',d:'young'};
 let loopId=null,mapFrame=0;
+// Held movement keys
+const keys={up:false,down:false,left:false,right:false};
+window.addEventListener('keydown',e=>{
+  if(G.phase!=='walk')return;
+  if(e.key==='ArrowUp'||e.key==='w'||e.key==='W'){keys.up=true;e.preventDefault();}
+  if(e.key==='ArrowDown'||e.key==='s'||e.key==='S'){keys.down=true;e.preventDefault();}
+  if(e.key==='ArrowLeft'){keys.left=true;e.preventDefault();}
+  if(e.key==='ArrowRight'){keys.right=true;e.preventDefault();}
+  if(e.key==='d'||e.key==='D'){keys.right=true;}
+  if(e.key==='a'&&G.phase==='walk'&&!G.nearAltar){keys.left=true;}
+});
+window.addEventListener('keyup',e=>{
+  if(e.key==='ArrowUp'||e.key==='w'||e.key==='W')keys.up=false;
+  if(e.key==='ArrowDown'||e.key==='s'||e.key==='S')keys.down=false;
+  if(e.key==='ArrowLeft'||e.key==='a')keys.left=false;
+  if(e.key==='ArrowRight'||e.key==='d'||e.key==='D')keys.right=false;
+});
 let soundOn=localStorage.getItem('cqSound')!=='off';
 
 // ===============================
@@ -1234,27 +1255,26 @@ function beginWorld(wIdx){
   const r=WRANGES[wIdx];
   G.wQs=[];for(let i=r[0];i<=r[1];i++)G.wQs.push(i);
   G.qIdx=0;G.correct=0;G.wrong=0;G.streak=0;G.bossHP=100;
-  // place coins on path
+  G.altarsLit=0;G.nearAltar=null;G.activeAltarIdx=-1;
+  // Setup altars — assign questions round-robin from non-boss range
+  const positions=ALTAR_POSITIONS[wIdx]||ALTAR_POSITIONS[0];
+  const nonBossQs=G.wQs.slice(0,G.wQs.length-1); // last Q reserved for boss
+  G.altarData=positions.map((pos,i)=>({
+    tx:pos[1],ty:pos[0],
+    x:pos[1]*16+8,y:pos[0]*16+8,
+    qIdx:nonBossQs[i%nonBossQs.length],
+    lit:false,animT:0,required:i<10
+  }));
+  // Shuffle altar question order so adjacent altars ask different questions
+  const shuffledQs=shuffle(nonBossQs);
+  G.altarData.forEach((a,i)=>{a.qIdx=shuffledQs[i%shuffledQs.length];});
+  // Player starts near bottom center of map
+  G.px=320;G.py=376;G.dir='up';G.frame=0;
+  if(wIdx===0)G.burden=100; // reset burden only at start of game, not per world
+  G.companion={px:320,py:396,frame:0,animT:0};
+  // Keep path data for tile rendering (path tiles render as cobblestone)
   const path=PATHS[wIdx]||PATHS[0];
-  G.pathData=path;
-  G.coins=[];
-  const numQ=G.wQs.length;
-  const bossQIdx=G.wQs[numQ-1];// last Q is boss Q
-  const regularQs=G.wQs.slice(0,numQ-1);
-  // Evenly distribute coins across the usable path (index 2 to path.length-6)
-  const pathStart=2,pathEnd=path.length-6;
-  const usable=pathEnd-pathStart;
-  regularQs.forEach((qi,i)=>{
-    const frac=regularQs.length<=1?0.5:i/(regularQs.length-1);
-    const pi=Math.round(pathStart+frac*usable);
-    const safeIdx=Math.max(pathStart,Math.min(pathEnd,pi));
-    G.coins.push({row:path[safeIdx][0],col:path[safeIdx][1],qIdx:qi,collected:false,animT:0,isBoss:false});
-  });
-  // boss coin near end
-  const bp=path[path.length-3];
-  G.coins.push({row:bp[0],col:bp[1],qIdx:bossQIdx,collected:false,animT:0,isBoss:true});
-  // pilgrim start
-  G.pillar={pathIdx:0,px:path[0][1]*16,py:path[0][0]*16,frame:0};
+  G.pathData=path;G.coins=[];G.pillar={pathIdx:0,px:path[0][1]*16,py:path[0][0]*16,frame:0};
   G.phase='walk';
   document.getElementById('qDlg').style.display='none';
   document.getElementById('bqDlg').style.display='none';
@@ -1367,6 +1387,16 @@ const WORLD_BUSHES={
   5:[[4,18],[8,6],[12,28],[16,12],[20,24],[22,4]]
 };
 
+// ── Per-world altar tile positions [row, col] — 12 per world (10 required + 2 optional) ──
+const ALTAR_POSITIONS={
+  0:[[3,10],[3,30],[6,16],[7,35],[9,6],[11,22],[14,4],[15,34],[17,14],[19,26],[21,8],[23,20]],
+  1:[[3,10],[3,30],[5,18],[7,5],[8,33],[11,20],[13,6],[14,35],[17,12],[19,24],[21,8],[23,30]],
+  2:[[4,8],[4,32],[6,20],[8,4],[10,16],[12,35],[14,8],[15,26],[18,12],[20,30],[22,6],[24,20]],
+  3:[[3,12],[4,30],[6,6],[7,24],[9,35],[12,10],[14,26],[16,4],[17,33],[20,14],[22,26],[24,8]],
+  4:[[3,8],[4,28],[6,16],[7,35],[10,6],[11,22],[14,12],[15,30],[18,4],[19,26],[21,14],[23,33]],
+  5:[[3,10],[3,28],[5,18],[7,6],[8,35],[10,20],[12,8],[13,30],[16,14],[17,33],[20,10],[22,24]]
+};
+
 let tiles=[];
 
 // ===============================
@@ -1380,42 +1410,55 @@ function startMapLoop(){
   const owCv=document.getElementById('owCv'),spCv=document.getElementById('spCv');
   const owCtx=owCv.getContext('2d'),spCtx=spCv.getContext('2d');
   owCtx.imageSmoothingEnabled=false;spCtx.imageSmoothingEnabled=false;
-  const T=16,SPEED=1.6,w=WORLDS[G.wIdx];
+  const T=16,SPEED=2.2,w=WORLDS[G.wIdx];
+  // Clear held keys on start
+  keys.up=keys.down=keys.left=keys.right=false;
   function loop(){
     loopId=requestAnimationFrame(loop);
     if(G.paused)return;
     mapFrame++;
     if(G.phase==='walk'){
-      const path=G.pathData;
-      const ti=G.pillar.pathIdx;
-      if(ti<path.length){
-        const tr=path[ti][0],tc=path[ti][1];
-        const tx=tc*T,ty=tr*T;
-        const dx=tx-G.pillar.px,dy=ty-G.pillar.py;
-        const dist=Math.sqrt(dx*dx+dy*dy);
-        if(dist<SPEED+0.5){
-          G.pillar.px=tx;G.pillar.py=ty;
-          const hit=G.coins.find(c=>!c.collected&&c.row===tr&&c.col===tc);
-          if(hit){
-            sfxCoin();hit.collected=true;
-            if(hit.isBoss){G.phase='bossIntro';stopLoop();triggerBossIntro();return;}
-            else{G.phase='question';openQuestion(hit.qIdx);return;}
-          }
-          G.pillar.pathIdx=Math.min(ti+1,path.length-1);
-          if(mapFrame%10===0)sfxStep();
-        }else{
-          G.pillar.px+=dx/dist*SPEED;G.pillar.py+=dy/dist*SPEED;
-          G.pillar.frame=Math.floor(mapFrame/8)%4;
-        }
+      // Movement
+      const dx=(keys.right?1:0)-(keys.left?1:0);
+      const dy=(keys.down?1:0)-(keys.up?1:0);
+      if(dx!==0||dy!==0){
+        const len=Math.sqrt(dx*dx+dy*dy);
+        const mx=dx/len*SPEED,my=dy/len*SPEED;
+        // X axis movement with collision
+        const nx=G.px+mx;
+        if(!isSolid(nx,G.py,T))G.px=nx;
+        // Y axis movement with collision
+        const ny=G.py+my;
+        if(!isSolid(G.px,ny,T))G.py=ny;
+        // Direction from dominant axis
+        if(Math.abs(dy)>Math.abs(dx))G.dir=dy>0?'down':'up';
+        else G.dir=dx>0?'right':'left';
+        G.frame=Math.floor(mapFrame/8)%4;
+        if(mapFrame%16===0)sfxStep();
+      }else{G.frame=0;}
+      // Clamp to map
+      G.px=Math.max(10,Math.min(630,G.px));
+      G.py=Math.max(36,Math.min(408,G.py));
+      updateCompanion();
+      checkAltarProximity();
+      // Boss gate trigger: altarsLit >= 10 and walk to top
+      if(G.altarsLit>=10&&G.py<40){
+        G.phase='bossIntro';stopLoop();triggerBossIntro();return;
       }
     }
-    const camX=Math.max(0,Math.min(G.pillar.px-300,640-640));
-    const camY=Math.max(0,Math.min(G.pillar.py-220,480-480));
+    // Camera: map is 640×416, viewport 640×480, center map vertically (+32)
+    const camX=0,camY=-32;
+    owCtx.clearRect(0,0,640,480);
     drawTiles(owCtx,w,camX,camY,T);
-    drawCoinsOnMap(owCtx,camX,camY,T);
+    drawAltarsOnMap(owCtx,camX,camY);
+    drawBossGate(owCtx,camX,camY);
     spCtx.clearRect(0,0,640,480);
-    drawMapHUD(spCtx);
-    drawPilgrimMap(spCtx,G.pillar.px-camX+4,G.pillar.py-camY-22,G.armorEarned,G.pillar.frame);
+    drawMapHUDNew(spCtx);
+    drawCompanionSprite(spCtx,G.companion.px-camX,G.companion.py-camY);
+    drawPilgrimMapDir(spCtx,G.px-camX,G.py-camY,G.armorEarned,G.frame,G.dir,G.burden);
+    if(G.nearAltar&&!G.nearAltar.lit)drawAltarHint(spCtx,G.nearAltar.x-camX,G.nearAltar.y-camY);
+    // Companion hint near unlit altar
+    if(G.nearAltar&&!G.nearAltar.lit)drawCompanionHint(spCtx,G.companion.px-camX,G.companion.py-camY);
   }
   loop();
 }
@@ -1848,35 +1891,82 @@ function tLandmarkPillar(ctx,x,y,T){
   ctx.fillStyle='rgba(255,255,180,0.6)';ctx.fillRect(cx+22,cy-5,2,2);
 }
 
-function drawCoinsOnMap(ctx,cx,cy,T){
-  G.coins.forEach(coin=>{
-    if(coin.collected)return;
-    const sx=coin.col*T-cx+2,sy=coin.row*T-cy-2;
-    coin.animT=(coin.animT||0)+0.1;
-    const bob=Math.sin(coin.animT)*3;
-    if(coin.isBoss){
-      ctx.fillStyle='#c03030';ctx.beginPath();ctx.arc(sx+6,sy+7+bob,7,0,Math.PI*2);ctx.fill();
-      ctx.fillStyle='#ff5050';ctx.beginPath();ctx.arc(sx+6,sy+6+bob,6,0,Math.PI*2);ctx.fill();
-      ctx.fillStyle='#fff';ctx.font='9px serif';ctx.textAlign='center';ctx.fillText('💀',sx+6,sy+11+bob);
+// --- NEW: Altar rendering, HUD, player drawing ---
+
+function drawAltarsOnMap(ctx,camX,camY){
+  G.altarData.forEach((alt,i)=>{
+    if(!alt)return;
+    const sx=alt.x-camX,sy=alt.y-camY;
+    if(sx<-40||sx>680||sy<-40||sy>520)return;
+    alt.animT=(alt.animT||0)+0.06;
+    const bob=Math.sin(alt.animT)*2;
+    // Glow
+    if(alt.lit){
+      ctx.fillStyle='rgba(255,255,100,0.3)';ctx.beginPath();ctx.arc(sx,sy-6+bob,20,0,Math.PI*2);ctx.fill();
+      ctx.fillStyle='rgba(255,255,180,0.15)';ctx.beginPath();ctx.arc(sx,sy-6+bob,28,0,Math.PI*2);ctx.fill();
     }else{
-      ctx.fillStyle='#c89820';ctx.beginPath();ctx.arc(sx+6,sy+6+bob,7,0,Math.PI*2);ctx.fill();
-      ctx.fillStyle='#f8c840';ctx.beginPath();ctx.arc(sx+6,sy+5+bob,6,0,Math.PI*2);ctx.fill();
-      ctx.fillStyle='#ffe860';ctx.beginPath();ctx.arc(sx+6,sy+4+bob,4,0,Math.PI*2);ctx.fill();
-      ctx.fillStyle='#a07010';ctx.font='bold 8px monospace';ctx.textAlign='center';ctx.fillText('?',sx+6,sy+9+bob);
+      const g=0.3+Math.sin(alt.animT*1.4)*0.15;
+      ctx.fillStyle=`rgba(180,160,60,${g})`;ctx.beginPath();ctx.arc(sx,sy-4+bob,12,0,Math.PI*2);ctx.fill();
     }
+    // Stone base
+    ctx.fillStyle=alt.lit?'#b09030':'#706050';ctx.fillRect(sx-8,sy,16,6);
+    ctx.fillStyle=alt.lit?'#d8b840':'#90807a';ctx.fillRect(sx-7,sy,14,3);
+    // Candle/flame
+    ctx.fillStyle='#d0c0a0';ctx.fillRect(sx-2,sy-10+bob,4,10);// candle
+    if(alt.lit){
+      ctx.fillStyle=`rgba(255,${140+Math.floor(Math.sin(alt.animT*3)*60)},0,0.9)`;
+      ctx.beginPath();ctx.arc(sx,sy-12+bob,5,0,Math.PI*2);ctx.fill();
+      ctx.fillStyle='#ffe080';ctx.beginPath();ctx.arc(sx,sy-13+bob,3,0,Math.PI*2);ctx.fill();
+    }else{
+      ctx.fillStyle='#c08040';ctx.fillRect(sx-1,sy-11+bob,2,2);// unlit wick
+    }
+    // Number badge
+    const isNear=(G.nearAltar===alt);
+    ctx.fillStyle=alt.lit?'rgba(0,50,0,0.9)':isNear?'rgba(20,20,80,0.9)':'rgba(0,0,30,0.75)';
+    ctx.beginPath();ctx.arc(sx+10,sy-13,7,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle=alt.lit?'#60ff60':isNear?'#a0c0ff':'#8080b0';
+    ctx.font='bold 7px monospace';ctx.textAlign='center';
+    ctx.fillText(alt.lit?'✓':(i+1),sx+10,sy-11);
   });
 }
 
-function drawMapHUD(ctx){
-  const H=30;// taller bar
-  // Background
-  ctx.fillStyle='rgba(0,0,14,0.95)';ctx.fillRect(0,0,640,H);
-  // Gold top border line
-  ctx.fillStyle='#f8c840';ctx.fillRect(0,H-2,640,2);
-  // Dark inner line
-  ctx.fillStyle='#202050';ctx.fillRect(0,H-3,640,1);
+function drawBossGate(ctx,camX,camY){
+  // Boss gate at top-center of map (row 0-2, col 18-22)
+  const gx=18*16-camX,gy=0-camY;
+  const open=G.altarsLit>=10;
+  const gw=4*16,gh=2*16;
+  if(open){
+    // Open golden gate with glow
+    ctx.fillStyle='rgba(255,230,50,0.25)';ctx.fillRect(gx-8,gy,gw+16,gh+16);
+    ctx.fillStyle='#f8c840';ctx.fillRect(gx,gy,4,gh);// left pillar
+    ctx.fillStyle='#d0a820';ctx.fillRect(gx+2,gy+2,2,gh-4);
+    ctx.fillStyle='#f8c840';ctx.fillRect(gx+gw-4,gy,4,gh);// right pillar
+    ctx.fillStyle='#d0a820';ctx.fillRect(gx+gw-4,gy+2,2,gh-4);
+    ctx.fillStyle='#f8c840';ctx.fillRect(gx,gy,gw,4);// top arch
+    ctx.fillStyle='rgba(255,240,80,0.6)';ctx.beginPath();ctx.arc(gx+gw/2,gy+2,12,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#fff';ctx.font='8px monospace';ctx.textAlign='center';
+    ctx.fillText('ENTER',gx+gw/2,gy+gh/2+3);
+  }else{
+    // Closed iron gate
+    ctx.fillStyle='#404040';ctx.fillRect(gx,gy,gw,gh);
+    ctx.fillStyle='#505050';
+    for(let gbi=0;gbi<4;gbi++)ctx.fillRect(gx+gbi*16+6,gy,3,gh);// bars
+    ctx.fillStyle='#606060';ctx.fillRect(gx,gy+gh/2-2,gw,4);// crossbar
+    ctx.fillStyle='#303030';ctx.fillRect(gx,gy,gw,4);ctx.fillRect(gx,gy+gh-4,gw,4);
+    // Lock
+    ctx.fillStyle='#d0a020';ctx.beginPath();ctx.arc(gx+gw/2,gy+gh/2,6,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#000';ctx.beginPath();ctx.arc(gx+gw/2,gy+gh/2-2,3,Math.PI,0);ctx.stroke();
+    ctx.fillStyle='#c0b0a0';ctx.font='7px monospace';ctx.textAlign='center';
+    ctx.fillText((10-G.altarsLit)+' MORE',gx+gw/2,gy+gh+10);
+  }
+}
 
-  // ── LIVES (hearts, left) ──────────────────────────────────
+function drawMapHUDNew(ctx){
+  const H=30;
+  ctx.fillStyle='rgba(0,0,14,0.95)';ctx.fillRect(0,0,640,H);
+  ctx.fillStyle='#f8c840';ctx.fillRect(0,H-2,640,2);
+  ctx.fillStyle='#202050';ctx.fillRect(0,H-3,640,1);
+  // Hearts
   for(let i=0;i<3;i++){
     const hx=12+i*22,hy=15;
     ctx.fillStyle=i<G.lives?'#e03030':'#302020';
@@ -1884,32 +1974,136 @@ function drawMapHUD(ctx){
     ctx.beginPath();ctx.moveTo(hx-7,hy-2);ctx.lineTo(hx,hy+5);ctx.lineTo(hx+7,hy-2);ctx.closePath();ctx.fill();
     if(i<G.lives){ctx.fillStyle='rgba(255,120,120,0.6)';ctx.beginPath();ctx.arc(hx-1,hy-4,2,0,Math.PI*2);ctx.fill();}
   }
-
-  // ── SCORE (left of center) ───────────────────────────────
-  ctx.fillStyle='#f8c840';ctx.font='bold 11px monospace';ctx.textAlign='left';
-  ctx.fillText('★ '+G.score,76,18);
-
-  // ── WORLD NAME + Q COUNTER (center) ──────────────────────
-  ctx.fillStyle='#e0e0ff';ctx.textAlign='center';ctx.font='bold 11px monospace';
+  ctx.fillStyle='#f8c840';ctx.font='bold 10px monospace';ctx.textAlign='left';ctx.fillText('★'+G.score,76,19);
+  // World name + altar counter (center)
+  ctx.fillStyle='#e0e0ff';ctx.textAlign='center';ctx.font='bold 10px monospace';
   ctx.fillText(WORLDS[G.wIdx].name.toUpperCase(),320,12);
-  ctx.fillStyle='#8080c0';ctx.font='9px monospace';
-  ctx.fillText('Q '+(G.qIdx+1)+' / '+G.wQs.length,320,24);
-
-  // ── COIN COUNTER (right) ──────────────────────────────────
-  const coll=G.coins.filter(c=>c.collected&&!c.isBoss).length;
-  const total=G.wQs.length-1;
-  // Gold coin icon (drawn, not emoji — more reliable)
-  ctx.fillStyle='#c89820';ctx.beginPath();ctx.arc(608,15,8,0,Math.PI*2);ctx.fill();
-  ctx.fillStyle='#f8c840';ctx.beginPath();ctx.arc(608,14,7,0,Math.PI*2);ctx.fill();
-  ctx.fillStyle='#ffe060';ctx.beginPath();ctx.arc(607,13,5,0,Math.PI*2);ctx.fill();
-  ctx.fillStyle='#a07010';ctx.font='bold 7px monospace';ctx.textAlign='center';ctx.fillText('?',608,17);
-  ctx.fillStyle='#f8c840';ctx.font='bold 11px monospace';ctx.textAlign='right';
-  ctx.fillText(coll+'/'+total,600,18);
+  ctx.fillStyle=G.altarsLit>=10?'#60ff60':'#8080c0';ctx.font='9px monospace';
+  ctx.fillText('⊕ '+G.altarsLit+'/10'+(G.altarsLit>=10?' — GATE OPEN!':''),320,24);
+  // Burden bar (right, worlds 0-2 only)
+  if(G.wIdx<=2&&G.burden>0){
+    const bx=530,by=8,bw=100;
+    ctx.fillStyle='rgba(0,0,0,0.6)';ctx.fillRect(bx,by,bw,10);
+    const burdenCol=G.burden>60?'#7a4010':G.burden>30?'#b06020':'#d09040';
+    ctx.fillStyle=burdenCol;ctx.fillRect(bx,by,Math.round(bw*G.burden/100),10);
+    ctx.strokeStyle='#604020';ctx.lineWidth=1;ctx.strokeRect(bx,by,bw,10);
+    ctx.fillStyle='#c09060';ctx.font='7px monospace';ctx.textAlign='left';ctx.fillText('BURDEN',bx,by+20);
+  }else if(G.altarsLit>=10){
+    ctx.fillStyle='#f8c840';ctx.font='8px monospace';ctx.textAlign='right';ctx.fillText('▲ GO NORTH FOR BOSS',630,19);
+  }
 }
 
-function drawPilgrimMap(ctx, x, y, armor, frame) {
-  drawPilgrimCanvas(ctx, x - 8, y - 12, armor, 1.8, frame);
+function drawPilgrimMapDir(ctx,x,y,armor,frame,dir,burden){
+  ctx.save();
+  // Burden pack behind player (drawn first)
+  if(burden>0&&G.wIdx<=2){
+    const bp=burden/100;
+    const pw=Math.round(8*bp)+3,ph=Math.round(9*bp)+3;
+    const isRight=(dir==='right'||dir==='down');
+    const packX=isRight?x-pw-3:x+1;
+    const packY=y-20;
+    ctx.fillStyle='rgba(0,0,0,0.3)';ctx.fillRect(packX+1,packY+1,pw,ph);
+    ctx.fillStyle=bp>0.6?'#7a3a10':bp>0.3?'#9a5020':'#b07040';
+    ctx.fillRect(packX,packY,pw,ph);
+    ctx.fillStyle='rgba(255,255,255,0.2)';ctx.fillRect(packX,packY,pw,2);
+    // straps
+    ctx.fillStyle='#604010';
+    ctx.fillRect(packX-1,packY-1,2,ph+3);ctx.fillRect(packX+pw-1,packY-1,2,ph+3);
+    // buckle dot
+    ctx.fillStyle='#d0a030';ctx.fillRect(packX+Math.floor(pw/2)-1,packY+Math.floor(ph/2)-1,3,3);
+  }
+  drawPilgrimCanvas(ctx,x-8,y-20,armor,1.8,frame);
+  ctx.restore();
 }
+
+function drawCompanionSprite(ctx,x,y){
+  const comp=G.companion;
+  const bob=Math.sin(comp.animT*0.08)*1;
+  const cx=Math.round(x),cy=Math.round(y-20+bob);
+  // Shadow
+  ctx.fillStyle='rgba(0,0,0,0.3)';ctx.beginPath();ctx.ellipse(cx+7,cy+28,8,3,0,0,Math.PI*2);ctx.fill();
+  // Robe (dark blue-grey)
+  ctx.fillStyle='#303860';ctx.fillRect(cx,cy+12,14,16);
+  ctx.fillStyle='#404880';ctx.fillRect(cx+1,cy+12,12,8);
+  // Head
+  ctx.fillStyle='#c8a888';ctx.beginPath();ctx.arc(cx+7,cy+6,7,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#ffffff';ctx.fillRect(cx+2,cy+4,10,5);// beard
+  ctx.fillStyle='#d0c8b8';ctx.fillRect(cx+3,cy+5,8,6);
+  // Hood/hat
+  ctx.fillStyle='#252855';ctx.fillRect(cx,cy-2,14,8);
+  ctx.fillStyle='#303a70';ctx.fillRect(cx+1,cy-3,12,6);
+  ctx.fillStyle='#404888';ctx.fillRect(cx+3,cy-4,8,4);
+  // Eyes
+  ctx.fillStyle='#1a1a40';ctx.fillRect(cx+4,cy+4,2,2);ctx.fillRect(cx+9,cy+4,2,2);
+  // Staff
+  ctx.fillStyle='#7a5020';ctx.fillRect(cx-4,cy-4,3,32);
+  ctx.fillStyle='#d8a040';ctx.fillRect(cx-5,cy-6,4,4);// staff top
+}
+
+function drawCompanionHint(ctx,cx,cy){
+  if(!G.nearAltar)return;
+  const hint=QS[G.nearAltar.qIdx]?'"'+QS[G.nearAltar.qIdx].q.substring(0,28)+'..."':'Approach and pray!';
+  const bx=cx-60,by=cy-50,bw=120,bh=30;
+  ctx.fillStyle='rgba(0,0,40,0.88)';ctx.fillRect(bx,by,bw,bh);
+  ctx.strokeStyle='#4060c0';ctx.lineWidth=1.5;ctx.strokeRect(bx,by,bw,bh);
+  ctx.fillStyle='#c0d0ff';ctx.font='7px monospace';ctx.textAlign='center';
+  ctx.fillText('Evangelist:',cx,by+11);
+  ctx.fillStyle='#8090cc';ctx.font='6px monospace';
+  ctx.fillText(hint.substring(0,32),cx,by+23);
+  // Arrow down
+  ctx.fillStyle='#4060c0';ctx.beginPath();ctx.moveTo(cx-5,by+bh);ctx.lineTo(cx+5,by+bh);ctx.lineTo(cx,by+bh+6);ctx.closePath();ctx.fill();
+}
+
+function drawAltarHint(ctx,ax,ay){
+  ctx.fillStyle='rgba(0,0,20,0.88)';ctx.fillRect(ax-44,ay-48,88,18);
+  ctx.strokeStyle='#f8c840';ctx.lineWidth=1.5;ctx.strokeRect(ax-44,ay-48,88,18);
+  ctx.fillStyle='#f8c840';ctx.font='bold 8px monospace';ctx.textAlign='center';
+  ctx.fillText('[ SPACE ] to pray',ax,ay-37);
+}
+
+function checkAltarProximity(){
+  const RANGE=24;
+  let nearest=null,nearDist=RANGE*RANGE;
+  G.altarData.forEach(alt=>{
+    if(alt.lit)return;
+    const dx=G.px-alt.x,dy=G.py-alt.y;
+    const d=dx*dx+dy*dy;
+    if(d<nearDist){nearDist=d;nearest=alt;}
+  });
+  G.nearAltar=nearest;
+}
+
+function isSolid(px,py,T){
+  const mapRows=26,mapCols=40,hw=7;
+  const checks=[[px-hw,py-hw],[px+hw,py-hw],[px-hw,py+hw],[px+hw,py+hw]];
+  for(const [cx,cy] of checks){
+    const col=Math.floor(cx/T),row=Math.floor(cy/T);
+    if(col<0||col>=mapCols||row<0||row>=mapRows)return true;
+    const t=tiles[row]?.[col];
+    if(t==='R')return true;// river/lava = solid
+  }
+  return false;
+}
+
+function updateCompanion(){
+  const comp=G.companion;
+  comp.animT++;
+  // Target: ~40px behind player (relative to direction)
+  let tx=G.px,ty=G.py+40;// default: below player
+  const dx=G.px-comp.px,dy=G.py-comp.py;
+  const d=Math.sqrt(dx*dx+dy*dy);
+  if(d>48){// only move if too far
+    const sp=Math.min(1.8,d*0.06);
+    comp.px+=dx/d*sp;comp.py+=dy/d*sp;
+  }
+  comp.px=Math.max(10,Math.min(630,comp.px));
+  comp.py=Math.max(36,Math.min(408,comp.py));
+}
+
+// Legacy functions kept for compatibility
+function drawCoinsOnMap(ctx,cx,cy,T){drawAltarsOnMap(ctx,cx,cy);}
+function drawMapHUD(ctx){drawMapHUDNew(ctx);}
+function drawPilgrimMap(ctx,x,y,armor,frame){drawPilgrimMapDir(ctx,x,y,armor,frame,'right',G.burden);}
 
 // ===============================
 // QUESTION SYSTEM
@@ -2122,6 +2316,16 @@ function showQFeedback(good){
   setTimeout(()=>{
     document.getElementById('qDlg').style.display='none';
     G.activeQ=null;G.filledBlanks=[];G.blankIdx=0;
+    // Mark altar lit on correct answer
+    if(good&&G.activeAltarIdx>=0){
+      const alt=G.altarData[G.activeAltarIdx];
+      if(alt&&!alt.lit){
+        alt.lit=true;
+        G.altarsLit=Math.min(10,G.altarsLit+1);
+        if(G.wIdx<=2)G.burden=Math.max(0,Math.round(G.burden-100/30));
+      }
+      G.activeAltarIdx=-1;
+    }
     if(!good&&G.lives<=0){endWorld(false);return;}
     G.phase='walk';startMapLoop();
   },delay);
@@ -2136,6 +2340,13 @@ document.addEventListener('keydown',e=>{
     G.wIdx=wi;const r=WRANGES[wi];G.wQs=[];for(let i=r[0];i<=r[1];i++)G.wQs.push(i);
     G.qIdx=0;G.correct=0;G.wrong=0;G.streak=0;G.bossHP=100;
     stopLoop();show('bossBattleScr');startBossBattle();return;
+  }
+  // Space key — interact with altar
+  if((e.key===' '||e.key==='Enter')&&G.phase==='walk'&&G.nearAltar&&!G.nearAltar.lit){
+    e.preventDefault();
+    G.activeAltarIdx=G.altarData.indexOf(G.nearAltar);
+    openQuestion(G.nearAltar.qIdx);
+    return;
   }
   // P key toggles pause (any phase except title/name/result)
   if((e.key==='p'||e.key==='P')&&['walk','question','boss'].includes(G.phase)){
@@ -2981,6 +3192,44 @@ document.getElementById('qCv').addEventListener('touchstart',()=>{
 document.getElementById('bqCv').addEventListener('touchstart',()=>{
   if(G.phase==='boss'&&G.bossQ&&G.diff!=='young'&&document.getElementById('bqDlg').style.display!=='none'){_di.value=G.bossTyped;_di.focus();}
 },{passive:true});
+
+// Touch controls for overworld — joystick-style drag to move, tap altar to pray
+(function(){
+  let touchStart=null,moveJoy=null;
+  const ow=document.getElementById('owScr');
+  ow.addEventListener('touchstart',e=>{
+    if(G.phase!=='walk')return;
+    const t=e.touches[0];
+    const rect=ow.getBoundingClientRect();
+    const scale=640/rect.width;
+    const tx=(t.clientX-rect.left)*scale,ty=(t.clientY-rect.top)*scale;
+    touchStart={x:tx,y:ty};
+    moveJoy={x:tx,y:ty};
+    e.preventDefault();
+  },{passive:false});
+  ow.addEventListener('touchmove',e=>{
+    if(G.phase!=='walk'||!touchStart)return;
+    const t=e.touches[0];
+    const rect=ow.getBoundingClientRect();
+    const scale=640/rect.width;
+    moveJoy={x:(t.clientX-rect.left)*scale,y:(t.clientY-rect.top)*scale};
+    const dx=moveJoy.x-touchStart.x,dy=moveJoy.y-touchStart.y;
+    keys.up=dy<-12;keys.down=dy>12;keys.left=dx<-12;keys.right=dx>12;
+    e.preventDefault();
+  },{passive:false});
+  ow.addEventListener('touchend',e=>{
+    keys.up=keys.down=keys.left=keys.right=false;
+    // Tap near altar = interact
+    if(touchStart&&moveJoy){
+      const dx=moveJoy.x-touchStart.x,dy=moveJoy.y-touchStart.y;
+      if(Math.abs(dx)<12&&Math.abs(dy)<12&&G.nearAltar&&!G.nearAltar.lit){
+        G.activeAltarIdx=G.altarData.indexOf(G.nearAltar);
+        openQuestion(G.nearAltar.qIdx);
+      }
+    }
+    touchStart=null;moveJoy=null;
+  },{passive:true});
+})();
 
 document.getElementById('bqCv').addEventListener('click',e=>{
   if(G.phase!=='boss'||!G.bossQ||G.diff!=='young')return;
