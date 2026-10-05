@@ -1135,7 +1135,7 @@ function drawWM(){
   ctx.textAlign='left';ctx.fillStyle=WM_COL[i];ctx.font='bold 17px monospace';ctx.fillText('WORLD '+(i+1)+' · '+w.name.toUpperCase(),14,428);
   ctx.fillStyle='#d8c8a8';ctx.font='bold 12px monospace';
   {let t=un?('Boss: '+(BOSSW[i]?BOSSW[i].hudName:w.boss.name)+(DENSE[i]&&DENSE[i].item?'  •  '+DENSE[i].item.name:'')):'Finish the world before it to unlock.';
-   while(ctx.measureText(t).width>350&&t.length>8)t=t.slice(0,-2);if(ctx.measureText(t).width>=349)t=t.trimEnd()+'…';ctx.fillText(t,14,448);}
+   if(ctx.measureText(t).width>350){while(ctx.measureText(t+'…').width>350)t=t.slice(0,-1);t=t.trimEnd()+'…';}ctx.fillText(t,14,448);}
   // armour collected
   ctx.fillStyle='#a89878';ctx.font='bold 10px monospace';ctx.fillText('TREASURES',14,468);
   [0,1,2,3,4,6,7,8].forEach((k,n)=>{const x=100+n*30,y=464;pcirc(ctx,x,y,11,'#2a1a0e');if(G.armorEarned.includes(k))wmRewardIcon(k,ctx,x,y,1);else{ctx.save();ctx.globalAlpha=0.25;wmRewardIcon(k,ctx,x,y,1);ctx.restore();}});
