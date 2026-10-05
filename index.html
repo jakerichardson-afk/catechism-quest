@@ -525,66 +525,102 @@ function save(){
 // SCREENS
 // ===============================
 function flash(col,op){const f=document.getElementById('flash');f.style.background=col;f.style.opacity=op;setTimeout(()=>f.style.opacity=0,120);}
+
 // ===============================
-// TITLE MUSIC — Zelda-style upbeat fanfare
+// MUSIC — a small looping chiptune player. Each song is 8 bars of eighth
+// notes: a melody line plus one chord per bar, which drives the bass and
+// a soft arpeggio. All melodies are original.
 // ===============================
-let titleMusicPlaying=false;
-function playTitleMusic(){
-  if(titleMusicPlaying)return;
-  titleMusicPlaying=true;
-  try{
-    const c=ac();
-    // Zelda-inspired melody: upbeat, heroic
-    const melody=[
-      [392,0.12],[440,0.12],[494,0.12],[523,0.25],[0,0.08],
-      [523,0.12],[587,0.12],[659,0.12],[698,0.25],[0,0.08],
-      [784,0.18],[698,0.12],[659,0.12],[587,0.12],[523,0.25],[0,0.1],
-      [494,0.12],[523,0.12],[587,0.18],[523,0.12],[440,0.12],[392,0.35],[0,0.15],
-      [523,0.1],[523,0.1],[587,0.1],[659,0.2],[0,0.06],
-      [659,0.1],[698,0.1],[784,0.1],[880,0.3],[0,0.1],
-      [784,0.1],[698,0.1],[659,0.1],[587,0.1],[523,0.1],[440,0.1],[392,0.4]
-    ];
-    // Bass line
-    const bass=[
-      [196,0.5],[220,0.5],[247,0.5],[261,0.5],
-      [294,0.5],[261,0.5],[220,0.5],[196,1.0]
-    ];
-    let t=c.currentTime+0.1;
-    melody.forEach(([freq,dur])=>{
-      if(freq>0){
-        const o=c.createOscillator(),g=c.createGain();
-        o.connect(g);g.connect(c.destination);
-        o.type='square';o.frequency.value=freq;
-        g.gain.setValueAtTime(0,t);
-        g.gain.linearRampToValueAtTime(0.09,t+0.01);
-        g.gain.exponentialRampToValueAtTime(0.001,t+dur*0.9);
-        o.start(t);o.stop(t+dur);
-        // Harmony (fifth below)
-        const o2=c.createOscillator(),g2=c.createGain();
-        o2.connect(g2);g2.connect(c.destination);
-        o2.type='triangle';o2.frequency.value=freq*0.667;
-        g2.gain.setValueAtTime(0,t);
-        g2.gain.linearRampToValueAtTime(0.04,t+0.01);
-        g2.gain.exponentialRampToValueAtTime(0.001,t+dur*0.9);
-        o2.start(t);o2.stop(t+dur);
-      }
-      t+=dur;
-    });
-    // Bass
-    let tb=c.currentTime+0.1;
-    bass.forEach(([freq,dur])=>{
-      const o=c.createOscillator(),g=c.createGain();
-      o.connect(g);g.connect(c.destination);
-      o.type='triangle';o.frequency.value=freq;
-      g.gain.setValueAtTime(0.06,tb);
-      g.gain.exponentialRampToValueAtTime(0.001,tb+dur*0.8);
-      o.start(tb);o.stop(tb+dur);
-      tb+=dur;
-    });
-    // Schedule next loop
-    setTimeout(()=>{titleMusicPlaying=false;if(document.getElementById('titleScr').classList.contains('on'))playTitleMusic();},t*1000-c.currentTime*1000+200);
-  }catch(e){titleMusicPlaying=false;}
+const SONGS={
+  title:{bpm:132,chords:'C G Am F C F G C',bass:'pulse',arp:1,mel:`
+    C5 - E5 G5 C6 - B5 A5 | G5 - - D5 G5 - F5 E5 | E5 - A5 - C6 - B5 A5 | A5 - G5 F5 F5 - . .
+    E5 F5 G5 - C6 - G5 E5 | F5 - A5 - C6 - A5 F5 | G5 - B5 - D6 - B5 G5 | C6 - - - C5 - . .`},
+  map:{bpm:108,chords:'G D Em C G C D G',bass:'pulse',arp:1,mel:`
+    D5 - B4 - G4 - B4 D5 | F#5 - E5 D5 A4 - . . | G5 - E5 - B4 - E5 G5 | E5 - D5 C5 C5 - . .
+    B4 C5 D5 - G5 - D5 B4 | C5 - E5 - G5 - E5 C5 | D5 - F#5 - A5 - F#5 D5 | G5 - - - G4 - . .`},
+  house:{bpm:84,chords:'G C G D G C D G',bass:'hold',arp:1,lead:'triangle',mel:`
+    B4 - - - D5 - - - | E5 - - - D5 - C5 - | B4 - - - G4 - A4 B4 | A4 - - - - - . .
+    B4 - - - D5 - G5 - | G5 - - - E5 - C5 - | B4 - A4 - D5 - F#4 - | G4 - - - - - . .`},
+  w0:{bpm:124,chords:'Am Am F G Am Dm E Am',bass:'drive',arp:0,mel:`
+    A4 - C5 E5 A5 - G5 E5 | F5 E5 D5 - C5 - B4 . | A4 - C5 - F5 - E5 D5 | D5 - B4 - G4 - . .
+    A4 - E5 - A5 - G5 F5 | F5 - D5 - A4 - D5 F5 | E5 - G#5 - B5 - G#5 E5 | A5 - - - A4 - . .`},
+  w1:{bpm:84,chords:'Dm Dm Gm A Dm Bb C Dm',bass:'hold',arp:1,lead:'triangle',mel:`
+    D5 - - - F5 - E5 D5 | D5 - - - . . . . | Bb4 - - - D5 - C5 Bb4 | A4 - - - . . . .
+    F5 - - - A5 - G5 F5 | F5 - D5 - . . . . | E5 - - - G5 - F5 E5 | D5 - - - . . . .`},
+  w2:{bpm:88,chords:'G C G D G C D G',bass:'hold',arp:1,lead:'triangle',mel:`
+    B4 - - - D5 - - - | E5 - - - D5 - C5 - | B4 - - - G4 - A4 B4 | A4 - - - - - . .
+    B4 - - - D5 - G5 - | G5 - - - E5 - C5 - | B4 - A4 - D5 - F#4 - | G4 - - - - - . .`},
+  w3:{bpm:112,chords:'F C Dm Bb F Bb C F',bass:'pulse',arp:1,mel:`
+    C5 - F5 - A5 - G5 F5 | E5 - G5 - C5 - . . | D5 - F5 - A5 - G5 F5 | F5 - D5 - Bb4 - . .
+    A4 C5 F5 - A5 - C6 A5 | Bb5 - F5 - D5 - Bb4 D5 | C5 - E5 - G5 - Bb5 G5 | F5 - - - F4 - . .`},
+  w4:{bpm:104,chords:'D G D A D G A D',bass:'pulse',arp:1,lead:'triangle',mel:`
+    A4 - D5 - F#5 - E5 D5 | B4 - D5 - G5 - F#5 E5 | F#5 - A5 - F#5 - D5 - | E5 - - - C#5 - . .
+    A4 - D5 F#5 A5 - F#5 D5 | G5 - B5 - G5 - D5 B4 | C#5 - E5 - A5 - G5 E5 | D5 - - - D4 - . .`},
+  w5:{bpm:72,chords:'Em C Am B Em C B Em',bass:'hold',arp:1,lead:'triangle',mel:`
+    E5 - - - . . G5 - | E5 - - - . . . . | C5 - - - E5 - D#5 - | B4 - - - . . . .
+    G5 - - - F#5 - E5 - | E5 - - - C5 - . . | D#5 - - - F#5 - - - | E5 - - - . . . .`},
+  w6:{bpm:150,chords:'C F G C C F G C',bass:'oompah',arp:0,mel:`
+    C5 E5 G5 E5 C5 . G4 . | A4 C5 F5 C5 A4 . F4 . | B4 D5 G5 D5 B4 D5 F5 E5 | E5 - C5 - G5 - . .
+    C6 B5 A5 G5 A5 G5 E5 C5 | F5 E5 D5 C5 A4 - C5 . | D5 - G4 - D5 E5 F5 D5 | C5 - G4 - C5 - . .`},
+  w7:{bpm:92,chords:'Cm Cm Ab G Cm Fm G Cm',bass:'drive',arp:0,mel:`
+    C5 - C5 . Eb5 - C5 . | G5 - - - F5 Eb5 D5 . | Eb5 - C5 . Ab4 - C5 . | D5 - - - B4 - . .
+    C5 - Eb5 - G5 - Ab5 G5 | F5 - Ab5 - C6 - Ab5 F5 | G5 - F5 - Eb5 - D5 B4 | C5 - - - C4 - . .`},
+  w8:{bpm:100,chords:'D A Bm G D G A D',bass:'pulse',arp:1,mel:`
+    F#5 - - A5 D6 - - A5 | C#6 - - B5 A5 - E5 - | F#5 - - D5 B5 - A5 F#5 | G5 - - - B4 - . .
+    A5 - F#5 - D5 - F#5 A5 | B5 - G5 - D6 - B5 G5 | A5 - C#6 - E6 - C#6 A5 | D6 - - - D5 - . .`},
+  boss:{bpm:152,chords:'Em Em C D Em Am B B',bass:'drive',arp:0,mel:`
+    E5 E5 . E5 G5 . E5 . | B5 - A5 G5 F#5 - E5 . | C5 C5 . C5 E5 . G5 . | F#5 - E5 D5 A4 - D5 .
+    E5 - G5 - B5 - A5 G5 | A5 - C6 - B5 A5 G5 E5 | F#5 - D#5 - B4 - D#5 F#5 | B5 - - - B4 - . .`}
+};
+const MUS={cur:null,gain:null,timer:null,step:0,nextT:0,song:null};
+function noteMidi(n){const m=n.match(/^([A-G])([#b]?)(\d)$/);return(+m[3]+1)*12+{C:0,D:2,E:4,F:5,G:7,A:9,B:11}[m[1]]+(m[2]==='#'?1:m[2]==='b'?-1:0);}
+function midiHz(m){return 440*Math.pow(2,(m-69)/12);}
+function chordTones(ch){const m=ch.match(/^([A-G][#b]?)(m|dim)?$/),r=noteMidi(m[1]+'3');return(m[2]==='m'?[0,3,7]:m[2]==='dim'?[0,3,6]:[0,4,7]).map(x=>r+x);}
+function prepSong(sg){if(sg.steps)return sg;sg.steps=sg.mel.trim().split(/\s+/).filter(t=>t!=='|');sg.ch=sg.chords.split(' ').map(chordTones);return sg;}
+function mVoice(type,hz,t,dur,vol){
+  const c=ac(),o=c.createOscillator(),g=c.createGain();o.type=type;o.frequency.value=hz;
+  g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(vol,t+0.012);g.gain.setValueAtTime(vol,t+Math.max(0.02,dur*0.6));g.gain.exponentialRampToValueAtTime(0.0008,t+dur*0.95);
+  o.connect(g);g.connect(MUS.gain);o.start(t);o.stop(t+dur);
 }
+function musSchedule(){
+  const c=ac(),sg=MUS.song,sd=60/sg.bpm/2;
+  while(MUS.nextT<c.currentTime+0.3){
+    const k=MUS.step%sg.steps.length,t=MUS.nextT,tok=sg.steps[k],bar=Math.floor(k/8),beat=k%8,ch=sg.ch[bar%sg.ch.length];
+    if(tok!=='-'&&tok!=='.'){let n=1;while(sg.steps[(k+n)%sg.steps.length]==='-'&&n<16)n++;
+      mVoice(sg.lead||'square',midiHz(noteMidi(tok)),t,n*sd*0.95,sg.lead==='triangle'?0.16:0.06);}
+    const root=ch[0]-12;
+    if(sg.bass==='pulse'&&beat%4===0)mVoice('triangle',midiHz(root),t,sd*3.6,0.16);
+    if(sg.bass==='pulse'&&beat===6)mVoice('triangle',midiHz(ch[2]-12),t,sd*1.8,0.12);
+    if(sg.bass==='hold'&&beat===0)mVoice('triangle',midiHz(root),t,sd*7.5,0.14);
+    if(sg.bass==='drive')mVoice('triangle',midiHz(beat%2?root+12:root),t,sd*0.8,0.15);
+    if(sg.bass==='oompah')mVoice('triangle',midiHz(beat%2?ch[1]:root),t,sd*0.7,beat%2?0.09:0.16);
+    if(sg.arp)mVoice('square',midiHz(ch[[0,1,2,1][beat%4]]+12),t,sd*0.5,0.018);
+    MUS.step++;MUS.nextT+=sd;
+  }
+}
+function playMusic(name){
+  if(!name||!SONGS[name]){stopMusic();return;}
+  let c;try{c=ac();}catch(e){return;}
+  if(c.state==='suspended')c.resume().catch(()=>{});
+  if(MUS.cur===name)return;
+  stopMusic();if(!soundOn)return;
+  MUS.cur=name;MUS.song=prepSong(SONGS[name]);MUS.step=0;MUS.nextT=c.currentTime+0.12;
+  MUS.gain=c.createGain();MUS.gain.gain.value=0.0001;MUS.gain.gain.linearRampToValueAtTime(0.55,c.currentTime+0.4);MUS.gain.connect(c.destination);
+  musSchedule();MUS.timer=setInterval(()=>{try{musSchedule();}catch(e){}},60);
+}
+function stopMusic(){
+  if(MUS.timer){clearInterval(MUS.timer);MUS.timer=null;}
+  if(MUS.gain){const g=MUS.gain,c=ac();try{g.gain.cancelScheduledValues(c.currentTime);g.gain.setValueAtTime(g.gain.value,c.currentTime);g.gain.linearRampToValueAtTime(0.0001,c.currentTime+0.15);}catch(e){}setTimeout(()=>{try{g.disconnect();}catch(e){}},250);MUS.gain=null;}
+  MUS.cur=null;
+}
+// which song belongs to which screen
+function screenSong(id){
+  return{titleScr:'title',nameScr:'title',parentScr:'title',lbScr:'title',wmScr:'map',ihScr:'house',
+    owScr:'w'+(G.wIdx||0),bossBattleScr:'boss'}[id]||null;
+}
+document.addEventListener('pointerdown',()=>{try{if(AC&&AC.state==='suspended')AC.resume();}catch(e){}},true);
+let titleMusicPlaying=false;
+function playTitleMusic(){const on=document.querySelector('.scr.on');playMusic(screenSong(on?on.id:'titleScr'));}
 
 function goTitle(){
   stopLoop();
@@ -1065,6 +1101,7 @@ function show(id){
   if(id!=='wmScr'&&wmLoopId){cancelAnimationFrame(wmLoopId);wmLoopId=null;}
   document.querySelectorAll('.scr').forEach(s=>s.classList.remove('on'));
   document.getElementById(id).classList.add('on');
+  playMusic(screenSong(id));
   const pb=document.getElementById('pauseBtn');
   if(pb)pb.style.display=(id==='owScr')?'block':'none';
 }
@@ -4399,7 +4436,7 @@ function w0Victory(){
   const word=W0B.finalWord,full=G.bossQ?G.bossQ.full:'';
   const ctx=document.getElementById('bbCv').getContext('2d');
   let f=0,parts=null,done=false;
-  const finish=()=>{if(done)return;done=true;document.removeEventListener('keydown',kh);ctx.canvas.removeEventListener('click',finish);W0B.anim=false;setTimeout(()=>W0B.ending?W0B.ending(()=>endWorld(true)):endWorld(true),150);};
+  const finish=()=>{if(done)return;done=true;document.removeEventListener('keydown',kh);ctx.canvas.removeEventListener('click',finish);W0B.anim=false;setTimeout(()=>{if(W0B.ending){playMusic('w8');W0B.ending(()=>endWorld(true));}else endWorld(true);},150);};
   const kh=e=>{if((e.key==='Enter'||e.key===' ')&&f>200){e.preventDefault();finish();}};
   document.addEventListener('keydown',kh);ctx.canvas.addEventListener('click',()=>{if(f>200)finish();});
   const bossBox={x:0,y:0,W:0,H:0};
@@ -5074,6 +5111,7 @@ function pauseQuitTitle(){
 function toggleSound(){
   soundOn=!soundOn;
   localStorage.setItem('cqSound',soundOn?'on':'off');
+  if(!soundOn)stopMusic();else{const on=document.querySelector('.scr.on');playMusic(screenSong(on?on.id:''));}
   _updateSoundBtn();
 }
 
