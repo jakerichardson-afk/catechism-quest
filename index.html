@@ -178,6 +178,7 @@ canvas{display:block;image-rendering:pixelated;}
   <button class="pbtn" onclick="pauseQuitWM()">🗺 WORLD MAP</button>
   <button class="pbtn bl" onclick="pauseQuitTitle()">← TITLE</button>
   <button class="pbtn" id="soundBtn" onclick="toggleSound()" style="background:#1a1a3a;color:#c0c0ff;border:2px solid #4040a0;margin-top:8px;"></button>
+  <button class="pbtn" id="readBtn" onclick="toggleRead()" style="background:#1a1a3a;color:#c0c0ff;border:2px solid #4040a0;"></button>
 </div>
 </div>
 
@@ -614,6 +615,77 @@ function stopMusic(){
   if(MUS.gain){const g=MUS.gain,c=ac();try{g.gain.cancelScheduledValues(c.currentTime);g.gain.setValueAtTime(g.gain.value,c.currentTime);g.gain.linearRampToValueAtTime(0.0001,c.currentTime+0.15);}catch(e){}setTimeout(()=>{try{g.disconnect();}catch(e){}},250);MUS.gain=null;}
   MUS.cur=null;
 }
+
+// ===============================
+// READ ALOUD — questions, word-bank words and answers are spoken, so
+// children who can't read yet can still play. Uses the device's own voice.
+// ===============================
+const SPK={voice:null,lastQ:''};
+function readAloudOn(){const v=localStorage.getItem('cqRead');return v?v==='on':G.diff!=='older';}
+function canSpeak(){return'speechSynthesis'in window&&soundOn;}
+function pickVoice(){
+  const vs=speechSynthesis.getVoices().filter(v=>/^en/i.test(v.lang));
+  for(const n of['Samantha','Ava','Allison','Karen','Daniel','Google US English','Microsoft Aria','Microsoft Jenny','Alex']){const v=vs.find(v=>v.name.includes(n));if(v)return v;}
+  return vs.find(v=>v.lang==='en-US')||vs[0]||null;
+}
+if('speechSynthesis'in window)speechSynthesis.onvoiceschanged=()=>{SPK.voice=pickVoice();};
+function musDuck(on){if(!MUS.gain)return;try{const c=ac();MUS.gain.gain.cancelScheduledValues(c.currentTime);MUS.gain.gain.setValueAtTime(MUS.gain.gain.value,c.currentTime);MUS.gain.gain.linearRampToValueAtTime(on?0.12:0.55,c.currentTime+0.2);}catch(e){}}
+// queue=true waits for whatever is being said; otherwise it interrupts
+function say(text,queue){
+  if(!canSpeak()||!text)return;
+  try{
+    if(!queue)speechSynthesis.cancel();
+    const u=new SpeechSynthesisUtterance(text);
+    SPK.voice=SPK.voice||pickVoice();if(SPK.voice)u.voice=SPK.voice;
+    u.lang='en-US';u.rate=G.diff==='older'?0.95:0.85;u.pitch=1.05;
+    musDuck(true);u.onend=u.onerror=()=>{if(!speechSynthesis.speaking&&!speechSynthesis.pending)musDuck(false);};
+    speechSynthesis.speak(u);
+  }catch(e){}
+}
+function speechText(q,dp){return q.q+' ... '+(dp||q.dp).replace(/_{2,}/g,'blank');}
+// George's recorded clips (audio/, made by tools/voice_build.py). The device
+// voice is only a fallback for a clip that is missing or fails to load.
+const VO={buf:{},pending:{},gain:null,srcs:[],endT:0,token:0,duckT:null};
+function voSlug(w){return String(w).toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');}
+function voLoad(path){
+  if(VO.buf[path])return Promise.resolve(VO.buf[path]);
+  if(!VO.pending[path])VO.pending[path]=fetch(path).then(r=>{if(!r.ok)throw new Error(path);return r.arrayBuffer();})
+    .then(b=>new Promise((res,rej)=>ac().decodeAudioData(b,res,rej))).then(b=>(VO.buf[path]=b))
+    .catch(e=>{delete VO.pending[path];throw e;});
+  return VO.pending[path];
+}
+function voPrefetch(paths){paths.forEach(p=>voLoad(p).catch(()=>{}));}
+function voStop(){VO.token++;VO.srcs.forEach(x=>{try{x.stop();}catch(e){}});VO.srcs=[];VO.endT=0;try{speechSynthesis.cancel();}catch(e){}}
+// queue=true plays after whatever is already playing; otherwise it interrupts
+async function voPlay(paths,queue,fallback){
+  if(!soundOn)return;
+  if(!queue)voStop();const token=VO.token;
+  let bufs;try{bufs=await Promise.all(paths.map(voLoad));}catch(e){if(token===VO.token)say(fallback,queue);return;}
+  if(token!==VO.token)return;
+  const c=ac();if(c.state==='suspended')c.resume().catch(()=>{});
+  if(!VO.gain){VO.gain=c.createGain();VO.gain.gain.value=1;VO.gain.connect(c.destination);}
+  let t=Math.max(c.currentTime+0.03,queue?VO.endT:0);
+  bufs.forEach((b,k)=>{const x=c.createBufferSource();x.buffer=b;x.connect(VO.gain);x.start(t);VO.srcs.push(x);t+=b.duration+(k<bufs.length-1?0.35:0);});
+  VO.endT=t;musDuck(true);clearTimeout(VO.duckT);VO.duckT=setTimeout(()=>musDuck(false),(t-c.currentTime)*1000+200);
+}
+function qClips(q){const i=QS.indexOf(q);return i<0?null:i;}
+function sayQuestion(q,dp,manual){if(!(manual||readAloudOn()))return;const i=qClips(q);if(i==null)return say(speechText(q,dp),!manual);voPlay(['audio/q/'+i+'.mp3','audio/f/'+i+'.mp3'],!manual,speechText(q,dp));}
+function sayWord(w){if(readAloudOn())voPlay(['audio/w/'+voSlug(w)+'.mp3'],false,w);}
+function sayFull(q){if(!readAloudOn()||!q)return;const i=qClips(q);if(i==null)return say(q.full);voPlay(['audio/a/'+i+'.mp3'],false,q.full);}
+function sayCard(q,flip){const i=qClips(q);voPlay(['audio/'+(flip?'a':'q')+'/'+i+'.mp3'],false,flip?q.full:q.q);}
+function prefetchWorldVoice(w){const r=WRANGES[w];const a=[];for(let i=r[0];i<=r[1];i++)a.push('audio/q/'+i+'.mp3','audio/f/'+i+'.mp3','audio/a/'+i+'.mp3');voPrefetch(a);}
+function toggleRead(){localStorage.setItem('cqRead',readAloudOn()?'off':'on');if(!readAloudOn())voStop();_updateSoundBtn();}
+// a small pixel speaker button
+function drawSpeaker(ctx,x,y,w,h,col){
+  ctx.fillStyle='rgba(255,255,255,0.08)';ctx.fillRect(x,y,w,h);ctx.strokeStyle=col;ctx.lineWidth=2;ctx.strokeRect(x+1,y+1,w-2,h-2);
+  const cx=x+w/2-5,cy=y+h/2;ctx.fillStyle=col;ctx.fillRect(cx-6,cy-3,4,6);
+  ctx.beginPath();ctx.moveTo(cx-2,cy-3);ctx.lineTo(cx+3,cy-8);ctx.lineTo(cx+3,cy+8);ctx.lineTo(cx-2,cy+3);ctx.closePath();ctx.fill();
+  ctx.strokeStyle=col;ctx.lineWidth=2;let sp=false;try{sp=(AC&&VO.endT>AC.currentTime)||('speechSynthesis'in window&&speechSynthesis.speaking);}catch(e){}
+  [5,9].forEach((r,k)=>{if(k&&!sp&&(Date.now()>>9)%2)return;ctx.beginPath();ctx.arc(cx+4,cy,r,-0.8,0.8);ctx.stroke();});
+}
+// iPad only lets a page talk after a tap: say nothing once, on the first tap
+document.addEventListener('pointerdown',function prime(){try{if('speechSynthesis'in window){const u=new SpeechSynthesisUtterance(' ');u.volume=0;speechSynthesis.speak(u);}}catch(e){}document.removeEventListener('pointerdown',prime,true);},true);
+
 // which song belongs to which screen
 function screenSong(id){
   return{titleScr:'title',nameScr:'title',parentScr:'title',lbScr:'title',wmScr:'map',ihScr:'house',
@@ -1103,6 +1175,7 @@ function show(id){
   document.querySelectorAll('.scr').forEach(s=>s.classList.remove('on'));
   document.getElementById(id).classList.add('on');
   playMusic(screenSong(id));
+  if(['titleScr','nameScr','wmScr','resultScr','gameOverScr','parentScr','lbScr'].includes(id))voStop();
   const pb=document.getElementById('pauseBtn');
   if(pb)pb.style.display=(id==='owScr')?'block':'none';
 }
@@ -1146,6 +1219,7 @@ function beginWorld(wIdx){
   document.getElementById('bqDlg').style.display='none';
   show('owScr');
   startMapLoop();
+  prefetchWorldVoice(wIdx);
   if(!warmDone){
     warmDone=true;const wq=warmupQs(wIdx);
     if(wq.length>=2){
@@ -3188,6 +3262,8 @@ function openQuestion(qIdx){
   G.phase='question';
   document.getElementById('qDlg').style.display='block';
   renderQDlg();
+  sayQuestion(G.activeQ);
+  voPrefetch(G.wordBank.map(w=>'audio/w/'+voSlug(w)+'.mp3'));
 }
 
 function renderQDlg(){
@@ -3197,8 +3273,7 @@ function renderQDlg(){
   ctx.fillStyle='rgba(0,0,12,0.97)';ctx.fillRect(0,0,640,230);
   ctx.fillStyle='#f8c840';ctx.fillRect(0,0,640,3);
   // coin icon
-  ctx.fillStyle='#f8c840';ctx.beginPath();ctx.arc(20,22,12,0,Math.PI*2);ctx.fill();
-  ctx.fillStyle='#000';ctx.font='bold 12px monospace';ctx.textAlign='center';ctx.fillText('?',20,26);
+  drawSpeaker(ctx,2,4,32,28,'#f8c840');
   // Q label
   ctx.fillStyle='#f8c840';ctx.font='bold 11px monospace';ctx.textAlign='left';
   const qNum=G.activeQIdx+1;
@@ -3342,6 +3417,7 @@ function submitBlank(answer){
       // next blank
       G.wbSel=0;G.wbTap=-1;G.typedAns='';_di.value='';
       G.wordBank=buildWordBank(G.activeQ.blanks,G.blankIdx);
+      voPrefetch(G.wordBank.map(w=>'audio/w/'+voSlug(w)+'.mp3'));
       renderQDlg();
     }
   }else{
@@ -3355,6 +3431,7 @@ function submitBlank(answer){
 
 function showQFeedback(good){
   G.phase='feedback';
+  sayFull(G.activeQ);
   markMastery(G.activeQIdx,good);
   const cv=document.getElementById('qCv'),ctx=cv.getContext('2d');
   ctx.imageSmoothingEnabled=false;
@@ -3479,10 +3556,11 @@ document.addEventListener('keydown',e=>{
 
 document.getElementById('qCv').addEventListener('click',e=>{
   if(G.phase!=='question'||!G.activeQ)return;
-  if(G.diff!=='young')return;
   const rect=e.target.getBoundingClientRect();
   const mx=(e.clientX-rect.left)*(640/rect.width);
   const my=(e.clientY-rect.top)*(230/rect.height);
+  if(mx<40&&my<36){sayQuestion(G.activeQ,null,true);return;}
+  if(G.diff!=='young')return;
   // detect layout
   const ctx=document.getElementById('qCv').getContext('2d');
   ctx.font='11px monospace';
@@ -3493,13 +3571,13 @@ document.getElementById('qCv').addEventListener('click',e=>{
     for(let i=0;i<G.wordBank.length;i++){
       const col=i%2,row=Math.floor(i/2);
       const bx=sx+col*(bw+gap),by=sy+row*(bh+gap);
-      if(mx>=bx&&mx<=bx+bw&&my>=by&&my<=by+bh){if(G.wbTap===i){G.wbTap=-1;submitBlank(G.wordBank[i]);}else{G.wbTap=i;G.wbSel=i;sfxMenu();renderQDlg();}break;}
+      if(mx>=bx&&mx<=bx+bw&&my>=by&&my<=by+bh){if(G.wbTap===i){G.wbTap=-1;submitBlank(G.wordBank[i]);}else{G.wbTap=i;G.wbSel=i;sfxMenu();sayWord(G.wordBank[i]);renderQDlg();}break;}
     }
   }else{
     const bw=142,gap=6,sx=10;
     if(my>=154&&my<=188){
       const i=Math.floor((mx-sx)/(bw+gap));
-      if(i>=0&&i<G.wordBank.length){if(G.wbTap===i){G.wbTap=-1;submitBlank(G.wordBank[i]);}else{G.wbTap=i;G.wbSel=i;sfxMenu();renderQDlg();}}
+      if(i>=0&&i<G.wordBank.length){if(G.wbTap===i){G.wbTap=-1;submitBlank(G.wordBank[i]);}else{G.wbTap=i;G.wbSel=i;sfxMenu();sayWord(G.wordBank[i]);renderQDlg();}}
     }
   }
 });
@@ -4781,7 +4859,8 @@ function renderBQDlg(){
   const cv=document.getElementById('bqCv'),ctx=cv.getContext('2d');
   ctx.imageSmoothingEnabled=false;ctx.clearRect(0,0,640,230);
   ctx.fillStyle='rgba(0,0,12,0.97)';ctx.fillRect(0,0,640,230);ctx.fillStyle='#e03030';ctx.fillRect(0,0,640,3);
-  ctx.fillStyle='#ff6060';ctx.font='bold 13px monospace';ctx.textAlign='left';ctx.fillText('⚔ BOSS — QUESTION '+((G.bossQi||0)+1)+' OF '+((G.bossQs||[1]).length),10,18);
+  drawSpeaker(ctx,2,1,34,26,'#ff9090');ctx.fillStyle='#ff6060';ctx.font='bold 13px monospace';ctx.textAlign='left';ctx.fillText('⚔ BOSS — QUESTION '+((G.bossQi||0)+1)+' OF '+((G.bossQs||[1]).length),42,18);
+  {const k=G.bossQi+'|'+G.bossQIdx;if(SPK.lastQ!==k&&document.getElementById('bqDlg').style.display!=='none'){SPK.lastQ=k;sayQuestion(G.bossQ,G.bossDisplayStr);}}
   ctx.fillStyle='#ffb0b0';ctx.font='bold 11px monospace';ctx.textAlign='right';ctx.fillText('Q'+(G.bossQIdx+1)+' '+starStr(mastery(G.bossQIdx).s)+'   •   Blank '+(G.bossBlankIdx+1)+' of '+G.bossBlanks.length+'   •   wrong word = lose a heart',630,18);
   ctx.fillStyle='#202050';ctx.fillRect(0,28,640,1);ctx.fillStyle='#ffe0e0';ctx.font='bold 16px monospace';wrapText(ctx,G.bossQ.q,10,52,620,18);
   ctx.fillStyle='#202050';ctx.fillRect(0,72,640,1);ctx.fillStyle='#ff8080';ctx.font='bold 12px monospace';ctx.textAlign='left';ctx.fillText('ANSWER:',10,88);
@@ -4854,8 +4933,10 @@ document.getElementById('bqCv').addEventListener('touchstart',()=>{
 })();
 
 document.getElementById('bqCv').addEventListener('click',e=>{
-  if(G.phase!=='boss'||!G.bossQ||G.diff!=='young')return;
+  if(G.phase!=='boss'||!G.bossQ)return;
   const rect=e.target.getBoundingClientRect();const mx=(e.clientX-rect.left)*(640/rect.width),my=(e.clientY-rect.top)*(230/rect.height);
+  if(mx<40&&my<30){sayQuestion(G.bossQ,G.bossDisplayStr,true);return;}
+  if(G.diff!=='young')return;
   const ctx2=document.getElementById('bqCv').getContext('2d');
   ctx2.font='11px monospace';
   const maxW=Math.max(...G.bossWB.map(w=>ctx2.measureText(w).width));
@@ -4865,10 +4946,10 @@ document.getElementById('bqCv').addEventListener('click',e=>{
     for(let i=0;i<G.bossWB.length;i++){
       const col=i%2,row=Math.floor(i/2);
       const bx=sx+col*(bw+gap),by=sy+row*(bh+gap);
-      if(mx>=bx&&mx<=bx+bw&&my>=by&&my<=by+bh){if(G.bossTap===i){G.bossTap=-1;submitBossBlank(G.bossWB[i]);}else{G.bossTap=i;G.bossSel=i;sfxMenu();renderBQDlg();}break;}
+      if(mx>=bx&&mx<=bx+bw&&my>=by&&my<=by+bh){if(G.bossTap===i){G.bossTap=-1;submitBossBlank(G.bossWB[i]);}else{G.bossTap=i;G.bossSel=i;sfxMenu();sayWord(G.bossWB[i]);renderBQDlg();}break;}
     }
   }else{
-    if(my>=154&&my<=188){const bw=142,gap=6,sx=10;const i=Math.floor((mx-sx)/(bw+gap));if(i>=0&&i<G.bossWB.length){if(G.bossTap===i){G.bossTap=-1;submitBossBlank(G.bossWB[i]);}else{G.bossTap=i;G.bossSel=i;sfxMenu();renderBQDlg();}}}
+    if(my>=154&&my<=188){const bw=142,gap=6,sx=10;const i=Math.floor((mx-sx)/(bw+gap));if(i>=0&&i<G.bossWB.length){if(G.bossTap===i){G.bossTap=-1;submitBossBlank(G.bossWB[i]);}else{G.bossTap=i;G.bossSel=i;sfxMenu();sayWord(G.bossWB[i]);renderBQDlg();}}}
   }
 });
 
@@ -4877,11 +4958,12 @@ document.getElementById('bqCv').addEventListener('click',e=>{
 function triggerBossAttackAnim(onDone){useBoss();w0AttackAnim(onDone);}
 
 function loadBossQ(){
+  if(!G.bossQi)SPK.lastQ='';
   const q=G.bossQs[G.bossQi];G.bossQIdx=q;G.bossQ=QS[q];
   G.bossBlanks=G.bossQ.blanks.slice();G.bossDisplayStr=G.bossQ.dp;
   G.bossBlankIdx=0;G.bossFilledBlanks=[];G.bossTyped='';G.bossSel=0;G.bossTap=-1;_di.value='';G.bossMiss=null;G.bossQMissed=false;
   G.bossMaxBlanks=G.bossBlanks.length;
-  if(G.diff==='young')G.bossWB=buildBossWordBank(G.bossBlanks,0);
+  if(G.diff==='young'){G.bossWB=buildBossWordBank(G.bossBlanks,0);voPrefetch(G.bossWB.map(w=>'audio/w/'+voSlug(w)+'.mp3'));}
 }
 function submitBossBlank(answer){
   if(G.diff!=='young'&&!normAns(answer))return;
@@ -4892,10 +4974,10 @@ function submitBossBlank(answer){
     G.bossMiss=null;sfxBossHit();flash('#f8c840',0.22);G.bossFilledBlanks.push(answer);G.bossBlankIdx++;G.bossDone++;
     const hp=Math.max(0,Math.round(100*(1-G.bossDone/G.bossTotal)));G.lastDmg=G.bossHP-hp;G.bossHP=hp;
     const qDone=G.bossBlankIdx>=G.bossBlanks.length;
-    if(qDone){markMastery(G.bossQIdx,!G.bossQMissed);G.correct++;G.totalAnswered++;}
+    if(qDone){markMastery(G.bossQIdx,!G.bossQMissed);G.correct++;G.totalAnswered++;sayFull(G.bossQ);}
     if(qDone&&G.bossQi>=G.bossQs.length-1){G.bossHP=0;G.score+=200;bossDefeatAnimation();return;}
     G.bossTyped='';G.bossSel=0;_di.value='';
-    triggerBossAttackAnim(()=>{if(qDone){G.bossQi++;loadBossQ();}else if(G.diff==='young')G.bossWB=buildBossWordBank(G.bossBlanks,G.bossBlankIdx);renderBQDlg();});
+    triggerBossAttackAnim(()=>{if(qDone){G.bossQi++;loadBossQ();}else if(G.diff==='young'){G.bossWB=buildBossWordBank(G.bossBlanks,G.bossBlankIdx);voPrefetch(G.bossWB.map(w=>'audio/w/'+voSlug(w)+'.mp3'));}renderBQDlg();});
   }else{
     sfxLose();flash('#ff0000',0.3);G.lives=Math.max(0,G.lives-1);G.wrong++;G.totalAnswered++;
     if(!G.bossQMissed){G.bossQMissed=true;markMastery(G.bossQIdx,false);}
@@ -5080,6 +5162,7 @@ function goLeaderboard(fromGameOver){
 function _updateSoundBtn(){
   const b=document.getElementById('soundBtn');
   if(b)b.textContent=(soundOn?'🔊':'🔇')+' SOUND: '+(soundOn?'ON':'OFF');
+  const r=document.getElementById('readBtn');if(r)r.textContent='🗣 READ ALOUD: '+(readAloudOn()?'ON':'OFF');
 }
 function pauseGame(){
   if(G.phase==='bossIntro')return;
@@ -5112,7 +5195,7 @@ function pauseQuitTitle(){
 function toggleSound(){
   soundOn=!soundOn;
   localStorage.setItem('cqSound',soundOn?'on':'off');
-  if(!soundOn)stopMusic();else{const on=document.querySelector('.scr.on');playMusic(screenSong(on?on.id:''));}
+  if(!soundOn){stopMusic();voStop();}else{const on=document.querySelector('.scr.on');playMusic(screenSong(on?on.id:''));}
   _updateSoundBtn();
 }
 
@@ -5128,26 +5211,8 @@ function startJourney(){
   G.name=n;G.gender=sel.g;G.diff=sel.d;
   G.score=0;G.lives=3;G.worldsDone=[];G.armorEarned=[];G.totalAnswered=0;G.qIdx=0;G.correct=0;G.wrong=0;G.mastery={};G.sealed=[];
   sfxMenu();save();goWM();
-  if(isAndroid())androidTax();
 }
 
-// Just for fun: Android players start in the hole. (?android forces it for testing.)
-function isAndroid(){
-  return /android/i.test(navigator.userAgent)||navigator.userAgentData?.platform==='Android'||/[?&]android\b/.test(location.search);
-}
-function androidTax(){
-  G.score=-100;save();
-  sfxBad();flash('#40d040',0.35);
-  const d=document.createElement('div');
-  d.style.cssText='position:absolute;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.6);';
-  d.innerHTML=`<div style="width:420px;background:#000;border:4px solid #f8c840;box-shadow:0 0 0 4px #000,0 0 0 8px #40d040;padding:18px 20px;text-align:center;">
-    <div style="font-size:30px;margin-bottom:6px;">📱</div>
-    <div style="font-size:14px;color:#40d040;letter-spacing:2px;text-shadow:3px 3px 0 #000;margin-bottom:10px;">ANDROID DETECTED</div>
-    <div style="font-size:8px;color:#c0c0ff;line-height:1.9;margin-bottom:12px;">Every pilgrim faces trials. Yours is an Android phone,<br>so you begin your journey with <span style="color:#f8c840;">-100 points</span>.<br>Offer it up and press on, pilgrim!<br><span style="color:#8080c0;">(The iPhone pilgrims will never let you forget it.)</span></div>
-    <button class="pbtn gr" style="width:200px;margin:0 auto;">PRESS ON →</button></div>`;
-  d.querySelector('button').onclick=()=>{sfxMenu();d.remove();};
-  document.getElementById('gc').appendChild(d);
-}
 
 function doLoad(){
   const saves=JSON.parse(localStorage.getItem('cq3s')||'{}');
@@ -5317,6 +5382,8 @@ function drawIH(){
     ihBtn(ctx,330,400,160,44,'BACK','#5a4020',()=>{sfxMenu();IH.mode='list';IH.msg=null;},true);
     return;
   }
+  {const k=IH.w+'|'+IH.ci+'|'+IH.flip+'|'+IH.deck.length;if(IH.spoken!==k){IH.spoken=k;if(readAloudOn())sayCard(q,IH.flip);}}
+  drawSpeaker(ctx,52,64,36,28,'#8a6a3a');IH.btns.push({x:52,y:64,w:36,h:28,act:()=>sayCard(q,IH.flip)});
   ctx.fillText(WORLDS[IH.w].name.toUpperCase()+'  •  CARD '+(IH.ci+1)+' OF '+IH.deck.length+'  •  Q'+(IH.deck[IH.ci]+1)+'  '+starStr(mastery(IH.deck[IH.ci]).s),320,82);
   ctx.fillStyle='#3a2410';ctx.font='bold 20px monospace';ihWrap(ctx,q.q,320,126,500,26);
   ctx.fillStyle='#c8b088';ctx.fillRect(80,214,480,2);
