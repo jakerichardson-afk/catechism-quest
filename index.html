@@ -36,7 +36,7 @@ canvas{display:block;image-rendering:pixelated;}
 <div id="titleScr" class="scr on">
 <canvas id="titleCv" width="640" height="480" style="position:absolute;top:0;left:0;"></canvas>
 <div style="position:relative;z-index:2;width:100%;height:100%;display:flex;flex-direction:column;align-items:flex-start;justify-content:flex-end;padding-bottom:48px;padding-left:24px;">
-  <div style="background:rgba(0,0,20,0.88);border:3px solid #f8c840;padding:16px 20px;width:220px;box-shadow:4px 4px 0 #000,0 0 24px rgba(248,200,64,0.3);">
+  <div style="background:rgba(58,34,14,0.92);border:3px solid #f8c840;padding:16px 20px;width:220px;box-shadow:4px 4px 0 #2a1a08,0 0 24px rgba(248,200,64,0.3);">
     <button class="pbtn" onclick="goName()">▶  NEW JOURNEY</button>
     <button class="pbtn bl" onclick="doLoad()">📂  CONTINUE</button>
     <button class="pbtn" onclick="goLeaderboard(false)" style="background:#1a1a00;color:#f8c840;border:2px solid #f8c840;">🏆  LEADERBOARD</button>
@@ -49,43 +49,43 @@ canvas{display:block;image-rendering:pixelated;}
 <div id="nameScr" class="scr">
 <canvas id="nameBgCv" width="640" height="480" style="position:absolute;top:0;left:0;"></canvas>
 <div style="position:absolute;top:0;left:0;width:100%;height:100%;display:flex;align-items:center;justify-content:center;z-index:2;">
-  <div id="nameBook" style="width:572px;background:rgba(0,18,0,0.93);border:3px solid #40d040;box-shadow:4px 4px 0 #000,0 0 36px rgba(64,208,64,0.35);position:relative;">
+  <div id="nameBook" style="width:572px;background:rgba(58,34,14,0.95);border:3px solid #f8c840;box-shadow:4px 4px 0 #000,0 0 36px rgba(248,200,64,0.3);position:relative;">
     <!-- Header bar -->
-    <div style="background:rgba(0,40,0,0.97);border-bottom:3px solid #40d040;padding:10px 18px;text-align:center;">
-      <div style="font-size:13px;color:#60ff60;letter-spacing:3px;text-shadow:0 0 14px rgba(96,255,96,0.7);">⚔  CREATE YOUR PILGRIM  ⚔</div>
+    <div style="background:rgba(30,16,6,0.97);border-bottom:3px solid #f8c840;padding:10px 18px;text-align:center;">
+      <div style="font-size:13px;color:#f8e0a0;letter-spacing:3px;text-shadow:0 0 14px rgba(248,200,64,0.6);">⚔  CREATE YOUR PILGRIM  ⚔</div>
     </div>
     <div style="padding:14px 18px 16px;">
       <div style="display:flex;gap:16px;">
         <!-- Left: name + character select -->
         <div style="flex:1;">
-          <div style="font-size:9px;color:#60ff60;margin-bottom:5px;letter-spacing:2px;">YOUR NAME:</div>
-          <input class="pinp" id="nameInp" maxlength="12" placeholder="Enter name..." style="margin-bottom:12px;font-size:11px;padding:7px 8px;border-color:#40d040;color:#80ff80;"/>
-          <div style="font-size:9px;color:#60ff60;margin-bottom:7px;letter-spacing:2px;">YOUR HERO:</div>
+          <div style="font-size:9px;color:#f8e0a0;margin-bottom:5px;letter-spacing:2px;">YOUR NAME:</div>
+          <input class="pinp" id="nameInp" maxlength="12" placeholder="Enter name..." style="margin-bottom:12px;font-size:11px;padding:7px 8px;border-color:#f8c840;color:#fff4d8;"/>
+          <div style="font-size:9px;color:#f8e0a0;margin-bottom:7px;letter-spacing:2px;">YOUR HERO:</div>
           <div style="display:flex;gap:10px;">
-            <div id="gBoy" onclick="selG('boy')" style="flex:1;cursor:pointer;text-align:center;border:2px solid #40d040;padding:10px 6px;background:rgba(0,28,0,0.85);">
+            <div id="gBoy" onclick="selG('boy')" style="flex:1;cursor:pointer;text-align:center;border:2px solid #f8c840;padding:10px 6px;background:rgba(30,16,6,0.7);">
               <canvas id="pilBoyPrev" width="56" height="66" style="display:block;margin:0 auto;image-rendering:pixelated;"></canvas>
-              <div style="font-size:9px;color:#60ff60;margin-top:5px;letter-spacing:1px;">BOY</div>
+              <div style="font-size:9px;color:#f8e0a0;margin-top:5px;letter-spacing:1px;">BOY</div>
             </div>
-            <div id="gGirl" onclick="selG('girl')" style="flex:1;cursor:pointer;text-align:center;border:2px solid #404040;padding:10px 6px;background:rgba(0,28,0,0.85);">
+            <div id="gGirl" onclick="selG('girl')" style="flex:1;cursor:pointer;text-align:center;border:2px solid #5a4020;padding:10px 6px;background:rgba(30,16,6,0.7);">
               <canvas id="pilGirlPrev" width="56" height="66" style="display:block;margin:0 auto;image-rendering:pixelated;"></canvas>
-              <div style="font-size:9px;color:#60ff60;margin-top:5px;letter-spacing:1px;">GIRL</div>
+              <div style="font-size:9px;color:#f8e0a0;margin-top:5px;letter-spacing:1px;">GIRL</div>
             </div>
           </div>
         </div>
         <!-- Right: difficulty + begin -->
         <div style="flex:1;display:flex;flex-direction:column;">
-          <div style="font-size:9px;color:#60ff60;margin-bottom:7px;letter-spacing:2px;">DIFFICULTY:</div>
-          <div id="dYoung" onclick="selD('young')" style="cursor:pointer;text-align:center;border:2px solid #40d040;padding:12px 8px;background:rgba(0,28,0,0.85);margin-bottom:10px;">
-            <div style="font-size:12px;color:#60ff60;font-weight:bold;">⚔ YOUNG</div>
-            <div style="font-size:8px;color:#80d080;margin-top:4px;">Ages 4-7 · Word Bank</div>
+          <div style="font-size:9px;color:#f8e0a0;margin-bottom:7px;letter-spacing:2px;">DIFFICULTY:</div>
+          <div id="dYoung" onclick="selD('young')" style="cursor:pointer;text-align:center;border:2px solid #f8c840;padding:12px 8px;background:rgba(30,16,6,0.7);margin-bottom:10px;">
+            <div style="font-size:12px;color:#f8e0a0;font-weight:bold;">⚔ YOUNG</div>
+            <div style="font-size:8px;color:#d8c090;margin-top:4px;">Ages 4-7 · Word Bank</div>
           </div>
-          <div id="dOlder" onclick="selD('older')" style="cursor:pointer;text-align:center;border:2px solid #404040;padding:12px 8px;background:rgba(0,28,0,0.85);margin-bottom:16px;">
-            <div style="font-size:12px;color:#60ff60;font-weight:bold;">🗡 OLDER</div>
-            <div style="font-size:8px;color:#80d080;margin-top:4px;">Ages 8+ · Type Answer</div>
+          <div id="dOlder" onclick="selD('older')" style="cursor:pointer;text-align:center;border:2px solid #5a4020;padding:12px 8px;background:rgba(30,16,6,0.7);margin-bottom:16px;">
+            <div style="font-size:12px;color:#f8e0a0;font-weight:bold;">🗡 OLDER</div>
+            <div style="font-size:8px;color:#d8c090;margin-top:4px;">Ages 8+ · Type Answer</div>
           </div>
           <div style="flex:1;"></div>
           <button class="pbtn gr" onclick="startJourney()" style="font-size:11px;padding:12px 8px;margin-bottom:7px;background:#1a8020;box-shadow:3px 3px 0 #000,0 0 14px rgba(26,128,32,0.55);">▶  BEGIN JOURNEY  ▶</button>
-          <button class="pbtn sm" onclick="goTitle()" style="background:rgba(0,18,0,0.85);color:#60ff60;border:2px solid #208020;font-size:9px;padding:6px;">← BACK</button>
+          <button class="pbtn sm" onclick="goTitle()" style="background:rgba(30,16,6,0.85);color:#f8e0a0;border:2px solid #a07020;font-size:9px;padding:6px;">← BACK</button>
         </div>
       </div>
     </div>
@@ -604,78 +604,7 @@ function goWM(){stopLoop();DRILL=null;document.getElementById('qDlg').style.disp
 function drawNameBg(){
   const cv=document.getElementById('nameBgCv');if(!cv)return;
   const ctx=cv.getContext('2d');ctx.imageSmoothingEnabled=false;
-  const W=640,H=480;
-  // Bright blue sky
-  const skyGr=ctx.createLinearGradient(0,0,0,320);
-  skyGr.addColorStop(0,'#38b8f8');skyGr.addColorStop(0.4,'#50c8ff');
-  skyGr.addColorStop(0.75,'#78d8ff');skyGr.addColorStop(1,'#a0e8f8');
-  ctx.fillStyle=skyGr;ctx.fillRect(0,0,W,340);
-  // Sun (top-left)
-  const sx=80,sy=70;
-  ctx.fillStyle='rgba(255,240,120,0.18)';ctx.beginPath();ctx.arc(sx,sy,80,0,Math.PI*2);ctx.fill();
-  ctx.fillStyle='rgba(255,240,120,0.28)';ctx.beginPath();ctx.arc(sx,sy,56,0,Math.PI*2);ctx.fill();
-  ctx.fillStyle='#ffe840';ctx.beginPath();ctx.arc(sx,sy,40,0,Math.PI*2);ctx.fill();
-  ctx.fillStyle='#fff060';ctx.beginPath();ctx.arc(sx-2,sy-2,33,0,Math.PI*2);ctx.fill();
-  ctx.fillStyle='#ffffa0';ctx.beginPath();ctx.arc(sx-4,sy-4,22,0,Math.PI*2);ctx.fill();
-  for(let i=0;i<8;i++){const a=i*Math.PI/4;ctx.save();ctx.translate(sx,sy);ctx.rotate(a);ctx.fillStyle='rgba(255,240,100,0.45)';ctx.fillRect(-3,48,6,18);ctx.restore();}
-  // Clouds
-  function cloud(cx,cy,sc){
-    ctx.fillStyle='rgba(255,255,255,0.96)';
-    [[0,0,28],[20,-8,22],[-20,-8,22],[36,-2,18],[-36,-2,18],[0,-14,18]].forEach(([dx,dy,r])=>{ctx.beginPath();ctx.arc(cx+dx*sc,cy+dy*sc,r*sc,0,Math.PI*2);ctx.fill();});
-    ctx.fillStyle='rgba(200,230,255,0.5)';ctx.beginPath();ctx.arc(cx+10*sc,cy-5*sc,12*sc,0,Math.PI*2);ctx.fill();
-  }
-  cloud(230,72,0.9);cloud(420,52,1.15);cloud(565,88,0.8);cloud(310,100,0.6);
-  // Distant green hills
-  ctx.fillStyle='#5ac840';
-  ctx.beginPath();ctx.moveTo(0,315);
-  [[0,295],[80,262],[160,282],[240,252],[320,268],[400,250],[480,264],[560,248],[640,260],[640,315]].forEach(([x,y])=>ctx.lineTo(x,y));
-  ctx.closePath();ctx.fill();
-  ctx.fillStyle='#78e060';
-  ctx.beginPath();ctx.moveTo(0,296);
-  [[80,263],[240,253],[400,251],[560,249],[640,261],[640,296],[0,296]].forEach(([x,y])=>ctx.lineTo(x,y));
-  ctx.closePath();ctx.fill();
-  ctx.fillStyle='#40a030';
-  ctx.beginPath();ctx.moveTo(0,336);
-  [[0,318],[70,302],[150,320],[230,298],[310,312],[390,300],[470,316],[550,302],[640,310],[640,336]].forEach(([x,y])=>ctx.lineTo(x,y));
-  ctx.closePath();ctx.fill();
-  ctx.fillStyle='#58c048';
-  ctx.beginPath();ctx.moveTo(0,319);
-  [[80,303],[240,299],[400,301],[560,303],[640,311],[640,319],[0,319]].forEach(([x,y])=>ctx.lineTo(x,y));
-  ctx.closePath();ctx.fill();
-  // Ground
-  ctx.fillStyle='#38a028';ctx.fillRect(0,334,W,146);
-  ctx.fillStyle='#48b838';ctx.fillRect(0,334,W,7);
-  ctx.fillStyle='#30901e';
-  for(let x=0;x<W;x+=12){ctx.fillRect(x,338,6,3);}
-  for(let x=6;x<W;x+=12){ctx.fillRect(x,344,5,3);}
-  // Path (centered road vanishing into horizon)
-  ctx.fillStyle='#d0a848';
-  ctx.beginPath();ctx.moveTo(248,480);ctx.lineTo(296,342);ctx.lineTo(356,342);ctx.lineTo(400,480);ctx.closePath();ctx.fill();
-  ctx.fillStyle='#e8c060';ctx.fillRect(296,342,60,5);
-  ctx.fillStyle='rgba(255,255,200,0.45)';
-  for(let y=365;y<480;y+=26){ctx.fillRect(320,y,8,16);}
-  // Trees — lush, both sides
-  function pxTree(tx,ty,sc,c1,c2,c3){
-    c1=c1||'#1a8010';c2=c2||'#28b018';c3=c3||'#50d030';
-    ctx.fillStyle='#804020';ctx.fillRect(tx+4*sc,ty+14*sc,5*sc,10*sc);
-    ctx.fillStyle=c1;ctx.beginPath();ctx.moveTo(tx,ty+14*sc);ctx.lineTo(tx+6*sc,ty);ctx.lineTo(tx+12*sc,ty+14*sc);ctx.closePath();ctx.fill();
-    ctx.fillStyle=c2;ctx.beginPath();ctx.moveTo(tx+1*sc,ty+10*sc);ctx.lineTo(tx+6*sc,ty-4*sc);ctx.lineTo(tx+11*sc,ty+10*sc);ctx.closePath();ctx.fill();
-    ctx.fillStyle=c3;ctx.beginPath();ctx.moveTo(tx+2*sc,ty+7*sc);ctx.lineTo(tx+6*sc,ty-8*sc);ctx.lineTo(tx+10*sc,ty+7*sc);ctx.closePath();ctx.fill();
-  }
-  pxTree(6,292,4.5);pxTree(74,308,3.8,'#208018','#30a828','#60d840');pxTree(150,320,3.2);
-  pxTree(488,296,4.5,'#1a7010','#28a018','#48c828');pxTree(555,310,3.8);pxTree(610,316,3.0,'#208018','#38b028','#58d838');
-  // Flowers (bright, numerous)
-  [[28,356,'#ff4080'],[92,362,'#ffcc00'],[172,353,'#ff6040'],[212,366,'#ff80c0'],
-   [428,355,'#ff4080'],[478,363,'#80ff40'],[542,357,'#ffcc00'],[598,364,'#ff80c0']].forEach(([fx,fy,fc])=>{
-    ctx.fillStyle='#208010';ctx.fillRect(fx,fy,3,8);
-    ctx.fillStyle=fc;ctx.beginPath();ctx.arc(fx+1,fy,5,0,Math.PI*2);ctx.fill();
-    ctx.fillStyle='#fff080';ctx.beginPath();ctx.arc(fx+1,fy,2,0,Math.PI*2);ctx.fill();
-  });
-  // Sparkles
-  [[68,198],[178,155],[462,170],[534,196],[320,242]].forEach(([sx2,sy2])=>{
-    ctx.fillStyle='rgba(255,240,80,0.9)';
-    ctx.fillRect(sx2,sy2,3,3);ctx.fillRect(sx2+1,sy2-2,1,7);ctx.fillRect(sx2-2,sy2+1,7,1);
-  });
+  drawTitleScene(ctx,titleF,false);ctx.fillStyle='rgba(10,16,40,0.45)';ctx.fillRect(0,0,640,480);
 }
 
 // Draw pixel-art pilgrim previews for boy/girl selectors
@@ -697,155 +626,117 @@ function drawPilgrimPreviews(){
 // TITLE
 // ===============================
 // TITLE SCREEN — bright Zelda daytime
-function drawTitle(){
-  const cv=document.getElementById('titleCv'),ctx=cv.getContext('2d');
-  ctx.imageSmoothingEnabled=false;
-  const W=640,H=480;
-
-  // ── BRIGHT BLUE SKY ──────────────────────────────────────
-  const skyGr=ctx.createLinearGradient(0,0,0,320);
-  skyGr.addColorStop(0,'#38b8f8');skyGr.addColorStop(0.4,'#50c8ff');
-  skyGr.addColorStop(0.75,'#78d8ff');skyGr.addColorStop(1,'#a0e8f8');
-  ctx.fillStyle=skyGr;ctx.fillRect(0,0,W,340);
-
-  // ── SUN ──────────────────────────────────────────────────
-  ctx.fillStyle='rgba(255,240,120,0.18)';ctx.beginPath();ctx.arc(560,72,80,0,Math.PI*2);ctx.fill();
-  ctx.fillStyle='rgba(255,240,120,0.28)';ctx.beginPath();ctx.arc(560,72,56,0,Math.PI*2);ctx.fill();
-  ctx.fillStyle='#ffe840';ctx.beginPath();ctx.arc(560,72,40,0,Math.PI*2);ctx.fill();
-  ctx.fillStyle='#fff060';ctx.beginPath();ctx.arc(558,70,33,0,Math.PI*2);ctx.fill();
-  ctx.fillStyle='#ffffa0';ctx.beginPath();ctx.arc(556,68,22,0,Math.PI*2);ctx.fill();
-  for(let i=0;i<8;i++){const a=i*Math.PI/4;ctx.save();ctx.translate(560,72);ctx.rotate(a);ctx.fillStyle='rgba(255,240,100,0.45)';ctx.fillRect(-3,48,6,18);ctx.restore();}
-
-  // ── CLOUDS ───────────────────────────────────────────────
-  function cloud(cx,cy,sc){
-    ctx.fillStyle='rgba(255,255,255,0.96)';
-    [[0,0,28],[20,-8,22],[-20,-8,22],[36,-2,18],[-36,-2,18],[0,-14,18]].forEach(([dx,dy,r])=>{ctx.beginPath();ctx.arc(cx+dx*sc,cy+dy*sc,r*sc,0,Math.PI*2);ctx.fill();});
-    ctx.fillStyle='rgba(200,230,255,0.5)';ctx.beginPath();ctx.arc(cx+10*sc,cy-5*sc,12*sc,0,Math.PI*2);ctx.fill();
-  }
-  cloud(105,82,1);cloud(295,58,1.2);cloud(468,94,0.85);cloud(62,118,0.7);
-
-  // ── DISTANT GREEN HILLS ──────────────────────────────────
-  ctx.fillStyle='#5ac840';
-  ctx.beginPath();ctx.moveTo(0,315);
-  [[0,295],[80,262],[160,282],[240,252],[320,268],[400,250],[480,264],[560,248],[640,260],[640,315]].forEach(([x,y])=>ctx.lineTo(x,y));
-  ctx.closePath();ctx.fill();
-  ctx.fillStyle='#78e060';
-  ctx.beginPath();ctx.moveTo(0,296);
-  [[80,263],[240,253],[400,251],[560,249],[640,261],[640,296],[0,296]].forEach(([x,y])=>ctx.lineTo(x,y));
-  ctx.closePath();ctx.fill();
-  ctx.fillStyle='#40a030';
-  ctx.beginPath();ctx.moveTo(0,336);
-  [[0,318],[70,302],[150,320],[230,298],[310,312],[390,300],[470,316],[550,302],[640,310],[640,336]].forEach(([x,y])=>ctx.lineTo(x,y));
-  ctx.closePath();ctx.fill();
-  ctx.fillStyle='#58c048';
-  ctx.beginPath();ctx.moveTo(0,319);
-  [[80,303],[240,299],[400,301],[560,303],[640,311],[640,319],[0,319]].forEach(([x,y])=>ctx.lineTo(x,y));
-  ctx.closePath();ctx.fill();
-
-  // ── GROUND ───────────────────────────────────────────────
-  ctx.fillStyle='#38a028';ctx.fillRect(0,334,W,146);
-  ctx.fillStyle='#48b838';ctx.fillRect(0,334,W,7);
-  ctx.fillStyle='#30901e';
-  for(let x=0;x<W;x+=12){ctx.fillRect(x,338,6,3);}
-  for(let x=6;x<W;x+=12){ctx.fillRect(x,344,5,3);}
-
-  // ── PATH ─────────────────────────────────────────────────
-  ctx.fillStyle='#d0a848';
-  ctx.beginPath();ctx.moveTo(338,480);ctx.lineTo(386,342);ctx.lineTo(446,342);ctx.lineTo(490,480);ctx.closePath();ctx.fill();
-  ctx.fillStyle='#e8c060';ctx.fillRect(386,342,60,5);
-  ctx.fillStyle='rgba(255,255,200,0.45)';
-  for(let y=365;y<480;y+=26){ctx.fillRect(410,y,8,16);}
-
-  // ── CASTLE (bright stone) ────────────────────────────────
-  const cOx=428,cOy=225;
-  function cb(x,y,w,h,col){ctx.fillStyle=col;ctx.fillRect(cOx+x,cOy+y,w,h);}
-  cb(20,42,100,122,'#d8c898');cb(22,44,96,118,'#e8d8a8');cb(24,46,92,4,'#f0e0b0');
-  cb(34,58,18,20,'#90c8ff');cb(88,58,18,20,'#90c8ff');
-  cb(36,59,14,16,'#b8e0ff');cb(90,59,14,16,'#b8e0ff');
-  [0,16,32,48,64,80,96].forEach(bx=>cb(20+bx,30,12,14,'#b8a878'));
-  cb(-22,60,46,104,'#c8b888');cb(-20,62,42,100,'#d8c898');
-  [0,14,28].forEach(bx=>cb(-22+bx,48,10,14,'#b8a878'));
-  cb(116,60,46,104,'#c8b888');cb(118,62,42,100,'#d8c898');
-  [0,14,28].forEach(bx=>cb(116+bx,48,10,14,'#b8a878'));
-  cb(52,90,36,72,'#2a1808');cb(57,92,26,70,'#180e04');
-  cb(52,86,36,6,'#2a1808');cb(54,82,32,6,'#2a1808');cb(58,78,24,6,'#2a1808');
-  cb(67,18,4,22,'#604010');cb(71,18,18,12,'#e03020');cb(71,19,16,10,'#ff4030');cb(73,19,5,5,'#ffff40');
-  cb(-10,42,3,16,'#604010');cb(-7,42,12,8,'#2040c0');
-  cb(130,42,3,16,'#604010');cb(133,42,12,8,'#208030');
-
-  // ── TREES ────────────────────────────────────────────────
-  function pxTree(tx,ty,sc,c1,c2,c3){
-    c1=c1||'#1a8010';c2=c2||'#28b018';c3=c3||'#50d030';
-    ctx.fillStyle='#804020';ctx.fillRect(tx+4*sc,ty+14*sc,5*sc,10*sc);
-    ctx.fillStyle=c1;ctx.beginPath();ctx.moveTo(tx,ty+14*sc);ctx.lineTo(tx+6*sc,ty);ctx.lineTo(tx+12*sc,ty+14*sc);ctx.closePath();ctx.fill();
-    ctx.fillStyle=c2;ctx.beginPath();ctx.moveTo(tx+1*sc,ty+10*sc);ctx.lineTo(tx+6*sc,ty-4*sc);ctx.lineTo(tx+11*sc,ty+10*sc);ctx.closePath();ctx.fill();
-    ctx.fillStyle=c3;ctx.beginPath();ctx.moveTo(tx+2*sc,ty+7*sc);ctx.lineTo(tx+6*sc,ty-8*sc);ctx.lineTo(tx+10*sc,ty+7*sc);ctx.closePath();ctx.fill();
-  }
-  pxTree(14,302,4);pxTree(76,312,3.5);pxTree(138,320,3,'#208018','#30a828','#60d840');
-  pxTree(526,307,4,'#1a7010','#28a018','#48c828');pxTree(590,314,3.5);
-
-  // ── FLOWERS ──────────────────────────────────────────────
-  [[50,350,'#ff4080'],[210,355,'#ffcc00'],[420,352,'#ff6040'],[580,358,'#ff80c0'],[170,360,'#80ff40']].forEach(([fx,fy,fc])=>{
-    ctx.fillStyle='#208010';ctx.fillRect(fx,fy,3,8);
-    ctx.fillStyle=fc;ctx.beginPath();ctx.arc(fx+1,fy,5,0,Math.PI*2);ctx.fill();
-    ctx.fillStyle='#fff080';ctx.beginPath();ctx.arc(fx+1,fy,2,0,Math.PI*2);ctx.fill();
+// ===============================
+// TITLE — a morning road to the Celestial City
+// ===============================
+const PFONT={C:['.###.','#...#','#....','#....','#....','#...#','.###.'],A:['.###.','#...#','#...#','#####','#...#','#...#','#...#'],
+T:['#####','..#..','..#..','..#..','..#..','..#..','..#..'],E:['#####','#....','#....','####.','#....','#....','#####'],
+H:['#...#','#...#','#...#','#####','#...#','#...#','#...#'],I:['.###.','..#..','..#..','..#..','..#..','..#..','.###.'],
+S:['.####','#....','#....','.###.','....#','....#','####.'],M:['#...#','##.##','#.#.#','#.#.#','#...#','#...#','#...#'],
+Q:['.###.','#...#','#...#','#...#','#.#.#','#..#.','.##.#'],U:['#...#','#...#','#...#','#...#','#...#','#...#','.###.']};
+// big gold pixel letters with a dark outline and a light sweeping across them
+function pixelWord(ctx,word,cx,y,sc,f){
+  const w=word.length*6*sc-sc,x0=Math.round(cx-w/2),cells=[];
+  [...word].forEach((ch,k)=>(PFONT[ch]||[]).forEach((row,r)=>[...row].forEach((c,col)=>{if(c==='#')cells.push([x0+(k*6+col)*sc,y+r*sc,r]);})));
+  ctx.fillStyle='#3a1a04';cells.forEach(([x,yy])=>ctx.fillRect(x-sc*0.5,yy-sc*0.5,sc*2,sc*2));
+  ctx.fillStyle='rgba(0,0,0,0.35)';cells.forEach(([x,yy])=>ctx.fillRect(x+sc*0.6,yy+sc*1.2,sc,sc));
+  const sweep=((f*3)%(w+400))-200+x0;
+  cells.forEach(([x,yy,r])=>{
+    ctx.fillStyle=r<2?'#fff0a0':r<5?'#f8c840':'#d88a10';ctx.fillRect(x,yy,sc,sc);
+    if(r===0){ctx.fillStyle='#ffffff';ctx.fillRect(x,yy,sc,Math.max(1,Math.round(sc/4)));}
+    const d=Math.abs(x+(yy-y)*0.5-sweep);if(d<sc*3){ctx.fillStyle=`rgba(255,255,230,${0.75*(1-d/(sc*3))})`;ctx.fillRect(x,yy,sc,sc);}
   });
-
-  // ── PILGRIM ───────────────────────────────────────────────
-  drawPilgrimCanvas(ctx,383,375,G.armorEarned,2.5);
-
-  // ── SPARKLES ─────────────────────────────────────────────
-  [[75,200],[172,158],[458,172],[538,198]].forEach(([sx,sy])=>{
-    ctx.fillStyle='rgba(255,240,80,0.9)';
-    ctx.fillRect(sx,sy,3,3);ctx.fillRect(sx+1,sy-2,1,7);ctx.fillRect(sx-2,sy+1,7,1);
+}
+let titleBgCv=null,titleLoop=null,titleF=0;
+function titleBuildBg(){
+  const cv=document.createElement('canvas');cv.width=640;cv.height=480;const g=cv.getContext('2d');
+  // banded morning sky
+  const sky=['#3a78e0','#4a88ea','#5a98f0','#6aa8f4','#7ab8f8','#90c8fa','#a8d8fc','#c0e4fc','#d8ecf4','#f0f0dc','#fff0c0'];
+  sky.forEach((c,k)=>{g.fillStyle=c;g.fillRect(0,k*22,640,22);});
+  g.fillStyle='#fff0c0';g.fillRect(0,242,640,40);
+  // far mountains
+  const ridge=(base,amp,seed,col,snow)=>{for(let x=0;x<640;x+=2){const h=Math.abs(Math.sin(x*0.011+seed)*amp+Math.sin(x*0.031+seed*2)*amp*0.4);g.fillStyle=col;g.fillRect(x,base-h,2,h+60);if(snow&&h>amp*0.95){g.fillStyle='#f4f8ff';g.fillRect(x,base-h,2,5);}}};
+  ridge(250,46,1.3,'#8a9ad8',true);ridge(262,30,4.1,'#7a8cc8',false);
+  // the Celestial City on its hill
+  g.fillStyle='#6aa860';for(let x=380;x<640;x+=2){const h=Math.max(0,46-Math.pow((x-520)/9,2)*0.5);g.fillRect(x,262-h,2,h+10);}
+  const cx=520,cy=218;
+  g.fillStyle='rgba(255,240,170,0.35)';g.beginPath();g.arc(cx,cy-20,70,0,Math.PI*2);g.fill();
+  g.fillStyle='#e8c050';g.fillRect(cx-62,cy-14,124,30);g.fillStyle='#f8dc78';g.fillRect(cx-62,cy-14,124,4);
+  for(let k=0;k<9;k++){g.fillStyle='#e8c050';g.fillRect(cx-62+k*15,cy-20,7,6);}
+  [[-54,40],[-30,58],[0,74],[30,58],[54,40]].forEach(([dx,h])=>{
+    g.fillStyle='#f0cc58';g.fillRect(cx+dx-8,cy-14-h,16,h);g.fillStyle='#fff0a0';g.fillRect(cx+dx-8,cy-14-h,4,h);
+    g.fillStyle='#d8a838';for(let r=0;r<10;r++)g.fillRect(cx+dx-8+r*0.8,cy-14-h-r*1.4,16-r*1.6,2);
+    g.fillStyle='#fffbe0';g.fillRect(cx+dx-2,cy-h+2,4,6);
   });
-
-  // ── TITLE BANNER ─────────────────────────────────────────
-  ctx.fillStyle='rgba(0,60,0,0.35)';ctx.fillRect(62,42,528,128);
-  const banGr=ctx.createLinearGradient(60,42,60,168);
-  banGr.addColorStop(0,'#28186a');banGr.addColorStop(0.4,'#1a1050');banGr.addColorStop(1,'#0e0830');
-  ctx.fillStyle=banGr;ctx.fillRect(60,42,528,126);
-  ctx.fillStyle='#f8c840';
-  ctx.fillRect(60,42,528,5);ctx.fillRect(60,163,528,5);
-  ctx.fillRect(60,42,5,126);ctx.fillRect(583,42,5,126);
-  ctx.fillStyle='#ffe870';
-  ctx.fillRect(67,49,514,2);ctx.fillRect(67,157,514,2);
-  ctx.fillRect(67,49,2,110);ctx.fillRect(579,49,2,110);
-  [[60,42],[583,42],[60,163],[583,163]].forEach(([cx,cy])=>{
-    ctx.fillStyle='#f8c840';ctx.fillRect(cx-3,cy-3,11,11);
-    ctx.fillStyle='#ffe060';ctx.fillRect(cx-1,cy-1,7,7);
-    ctx.fillStyle='#ffffff';ctx.fillRect(cx+1,cy+1,3,3);
-  });
-  ctx.font='20px serif';ctx.textAlign='center';
-  ctx.fillStyle='#f8c840';ctx.fillText('\u2694',96,104);ctx.fillText('\u2694',548,104);
-  ctx.textAlign='center';
-  ctx.font='bold 34px Courier New';
-  ctx.fillStyle='rgba(0,0,0,0.85)';ctx.fillText('CATECHISM  QUEST',325,100);
-  ctx.fillStyle='#5a3000';ctx.fillText('CATECHISM  QUEST',324,99);
-  ctx.fillStyle='#9a6010';ctx.fillText('CATECHISM  QUEST',323,98);
-  ctx.fillStyle='#d09020';ctx.fillText('CATECHISM  QUEST',322,97);
-  ctx.fillStyle='#f8c840';ctx.fillText('CATECHISM  QUEST',321,96);
-  ctx.save();ctx.beginPath();ctx.rect(60,42,528,48);ctx.clip();
-  ctx.fillStyle='rgba(255,255,200,0.22)';ctx.fillText('CATECHISM  QUEST',321,96);
-  ctx.restore();
-  ctx.fillStyle='#c8e8ff';ctx.font='bold 12px Courier New';ctx.textAlign='center';
-  ctx.fillText('\u2726  PILGRIM\'S JOURNEY  \u2726',320,120);
-  ctx.fillStyle='rgba(180,215,255,0.9)';ctx.font='9px monospace';
-  ctx.fillText('A CATECHISM FOR BOYS AND GIRLS',320,140);
-  ctx.fillStyle='rgba(0,20,60,0.88)';ctx.fillRect(0,456,W,24);
-  ctx.fillStyle='#f8c840';ctx.fillRect(0,456,W,2);
-  // High score (left side) \u2014 from Firebase if available, else localStorage
+  g.fillStyle='#fff8d0';g.fillRect(cx-9,cy-2,18,18);g.fillStyle='#ffffff';g.fillRect(cx-5,cy+1,10,15);
+  // rolling green hills
+  for(let x=0;x<640;x+=2){const h=Math.sin(x*0.009+0.6)*16+Math.sin(x*0.023)*6;g.fillStyle='#58a848';g.fillRect(x,282-h,2,h+90);g.fillStyle='#6cbc58';g.fillRect(x,282-h,2,3);}
+  for(let x=0;x<640;x+=2){const h=Math.sin(x*0.012+2.2)*12+Math.sin(x*0.04)*4;g.fillStyle='#4a9a3c';g.fillRect(x,314-h,2,h+200);g.fillStyle='#64b450';g.fillRect(x,314-h,2,3);}
+  // the Cross on a little hill (left, behind the menu card's top)
+  g.fillStyle='#5aa448';g.beginPath();g.ellipse(332,300,46,14,0,Math.PI,0);g.fill();
+  g.fillStyle='#6a4020';g.fillRect(329,256,6,40);g.fillRect(318,266,28,5);g.fillStyle='#8a5a30';g.fillRect(329,256,2,40);
+  // near meadow with dither
+  g.fillStyle='#5cb84a';g.fillRect(0,330,640,150);
+  for(let y=330;y<480;y+=2)for(let x=(y/2)%2*2;x<640;x+=4)if(((x*7+y*13)%17)<3){g.fillStyle='#4ea83e';g.fillRect(x,y,2,2);}
+  // the road, winding up to the gate
+  const road=y=>{const t=(480-y)/(480-232);return[ 410+Math.sin(t*3.2)*48+t*60, 4+90*Math.pow(1-t,1.6)];};
+  for(let y=232;y<480;y+=2){const[c,w]=road(y);g.fillStyle='#d8b878';g.fillRect(Math.round(c-w/2),y,Math.round(w),2);g.fillStyle='#b89458';g.fillRect(Math.round(c-w/2),y,2,2);g.fillRect(Math.round(c+w/2)-2,y,2,2);
+    if(y>300&&((y*31)%23)<3){g.fillStyle='#c4a468';g.fillRect(Math.round(c-w/4+((y*17)%Math.max(1,Math.round(w/2)))),y,4,2);}}
+  // the wicket gate across the road
+  {const y=318,[c,w]=road(y);g.fillStyle='#6a4020';g.fillRect(c-w/2-8,y-30,6,32);g.fillRect(c+w/2+2,y-30,6,32);g.fillRect(c-w/2-10,y-34,w+20,6);
+   g.fillStyle='#8a5a30';g.fillRect(c-w/2-10,y-34,w+20,2);g.fillStyle='#f8e070';g.fillRect(c-3,y-44,6,8);g.fillRect(c-1,y-48,2,4);}
+  // trees
+  const tree=(x,y,s,dark)=>{g.fillStyle='rgba(0,0,0,0.2)';g.beginPath();g.ellipse(x,y+2,14*s,4*s,0,0,Math.PI*2);g.fill();
+    g.fillStyle='#6a4220';g.fillRect(x-3*s,y-14*s,6*s,14*s);
+    [[0,-30,16],[-9,-22,12],[9,-22,12],[0,-40,10]].forEach(([dx,dy,r])=>{g.fillStyle=dark?'#2e7a2e':'#3a8a34';g.beginPath();g.arc(x+dx*s,y+dy*s,r*s,0,Math.PI*2);g.fill();});
+    [[-4,-36,6],[-11,-25,4]].forEach(([dx,dy,r])=>{g.fillStyle='#5aaa48';g.beginPath();g.arc(x+dx*s,y+dy*s,r*s,0,Math.PI*2);g.fill();});};
+  tree(610,300,0.8,1);tree(360,292,0.6,1);tree(250,318,0.7,1);tree(590,470,1.5,0);tree(318,440,1.1,0);
+  // flowers
+  for(let k=0;k<70;k++){const x=(k*97)%640,y=340+((k*53)%130);const[c]=road(y);if(Math.abs(x-c)<60)continue;g.fillStyle=['#ffffff','#ffe040','#ff8090','#c0a0ff'][k%4];g.fillRect(x,y,2,2);g.fillRect(x-2,y+2,2,2);g.fillRect(x+2,y+2,2,2);g.fillRect(x,y+4,2,2);g.fillStyle='#f8c020';g.fillRect(x,y+2,2,2);}
+  titleBgCv={cv,road};return titleBgCv;
+}
+function drawTitleScene(ctx,f,full){
+  if(!titleBgCv)titleBuildBg();
+  ctx.drawImage(titleBgCv.cv,0,0);
+  // glory from the city
+  ctx.save();ctx.translate(520,190);for(let k=0;k<10;k++){ctx.rotate(Math.PI/5);ctx.fillStyle=`rgba(255,244,190,${0.10+0.06*Math.sin(f*0.04+k)})`;ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(-10,-150);ctx.lineTo(10,-150);ctx.closePath();ctx.fill();}ctx.restore();
+  for(let k=0;k<8;k++){if((f+k*37)%120>60)continue;const a=k*0.8+f*0.01;ctx.fillStyle='#fffbe0';ctx.fillRect(Math.round(520+Math.cos(a)*(50+k*6)),Math.round(170+Math.sin(a)*30),2,2);}
+  // drifting clouds
+  const cloud=(x,y,s)=>{ctx.fillStyle='#ffffff';[[0,0,24,10],[8,-8,26,10],[30,-4,22,12],[-12,4,60,8]].forEach(([dx,dy,w,h])=>ctx.fillRect(Math.round(x+dx*s),Math.round(y+dy*s),Math.round(w*s),Math.round(h*s)));ctx.fillStyle='#dceaf8';ctx.fillRect(Math.round(x-12*s),Math.round(y+10*s),Math.round(60*s),Math.round(2*s));};
+  cloud(((f*0.25)%800)-100,70,1.4);cloud(((f*0.15+420)%800)-100,120,1.0);cloud(((f*0.35+250)%800)-100,190,0.8);
+  // birds
+  for(let k=0;k<3;k++){const x=((f*0.8+k*70)%760)-60,y=60+k*14+Math.sin(f*0.05+k)*4,up=((f>>3)+k)%2;ctx.fillStyle='#2a3a5a';ctx.fillRect(x,y,2,2);ctx.fillRect(x-4,y+(up?-2:2),4,2);ctx.fillRect(x+2,y+(up?-2:2),4,2);}
+  // the pilgrim walking up the road, burden on his back
+  {const y=404,[c]=titleBgCv.road(y),fr=Math.floor(f/9)%4;
+   drawPilgrimCanvas(ctx,c-31,y-62,G.armorEarned||[],2.5,fr,'up');
+   const b=fr%2;ctx.fillStyle='#4a2a0e';ctx.fillRect(c-12,y-49+b,24,20);ctx.fillStyle='#8a4414';ctx.fillRect(c-10,y-47+b,20,16);ctx.fillStyle='#a85a24';ctx.fillRect(c-10,y-47+b,20,3);ctx.fillStyle='#5a2a0a';ctx.fillRect(c-10,y-38+b,20,2);ctx.fillStyle='#d0a030';ctx.fillRect(c-2,y-41+b,4,4);}
+  if(!full)return;
+  // logo
+  pixelWord(ctx,'CATECHISM',230,26,6,f);
+  pixelWord(ctx,'QUEST',230,80,9,f+40);
+  // ribbon
+  const rx=230,ry=154;ctx.fillStyle='#8a1a1a';ctx.fillRect(rx-128,ry+4,14,18);ctx.fillRect(rx+114,ry+4,14,18);
+  ctx.fillStyle='#c83030';ctx.fillRect(rx-116,ry,232,22);ctx.fillStyle='#e04848';ctx.fillRect(rx-116,ry,232,3);ctx.fillStyle='#8a1a1a';ctx.fillRect(rx-116,ry+20,232,2);
+  ctx.fillStyle='#fff4d8';ctx.font='bold 13px monospace';ctx.textAlign='center';ctx.fillText("A PILGRIM'S JOURNEY",rx,ry+16);
+  ctx.fillStyle='#1a3a7a';ctx.font='bold 11px monospace';ctx.fillText('134 QUESTIONS  •  9 WORLDS  •  1 ROAD HOME',rx,ry+40);
+  // bottom bar
+  ctx.fillStyle='rgba(10,20,50,0.85)';ctx.fillRect(0,458,640,22);ctx.fillStyle='#f8c840';ctx.fillRect(0,458,640,2);
   const _best=_fbTopScore||(JSON.parse(localStorage.getItem('cq3lb')||'[]')[0]||null);
-  if(_best){
-    ctx.fillStyle='#f8c840';ctx.font='bold 8px monospace';ctx.textAlign='left';
-    ctx.fillText('\u2605 BEST: '+_best.score+' \u2014 '+_best.name.toUpperCase()+(_best.date?' \u2022 '+_best.date:''),10,472);
-  }
-  // Sound icon (right side) \u2014 just a label, actual toggle is in pause menu
-  ctx.fillStyle=soundOn?'#90d0ff':'#606080';ctx.font='9px monospace';ctx.textAlign='right';
-  ctx.fillText(soundOn?'\ud83d\udd0a SOUND ON':'\ud83d\udd07 SOUND OFF',630,472);
-  // Center tagline
-  ctx.fillStyle='#90d0ff';ctx.font='8px monospace';ctx.textAlign='center';
-  ctx.fillText('134 QUESTIONS  \u2022  9 WORLDS  \u2022  ARMOR OF GOD  \u2022  FILL IN THE BLANKS',320,472);
+  if(_best){ctx.fillStyle='#f8c840';ctx.font='bold 10px monospace';ctx.textAlign='left';ctx.fillText('★ BEST: '+_best.score+' — '+String(_best.name).toUpperCase().slice(0,12),10,473);}
+  ctx.fillStyle=soundOn?'#90d0ff':'#8080a0';ctx.font='bold 10px monospace';ctx.textAlign='right';ctx.fillText(soundOn?'♪ SOUND ON':'♪ SOUND OFF',630,473);
+}
+function drawTitle(){
+  const scr=document.getElementById('titleScr');
+  const render=()=>{const ctx=document.getElementById('titleCv').getContext('2d');ctx.imageSmoothingEnabled=false;drawTitleScene(ctx,titleF,true);};
+  render();
+  if(titleLoop)return;
+  let last=0;
+  const loop=now=>{
+    if(!scr.classList.contains('on')){titleLoop=null;return;}
+    titleLoop=requestAnimationFrame(loop);
+    if(now&&now-last<32)return;last=now||0;titleF+=2;render();
+  };
+  titleLoop=requestAnimationFrame(loop);
 }
 
 
@@ -5189,8 +5080,8 @@ function toggleSound(){
 // ===============================
 // NAME / GENDER / DIFF SELECTORS
 // ===============================
-function selG(g){sel.g=g;['boy','girl'].forEach(x=>document.getElementById('g'+x.charAt(0).toUpperCase()+x.slice(1)).style.borderColor=g===x?'#40d040':'#404040');sfxMenu();}
-function selD(d){sel.d=d;['young','older'].forEach(x=>document.getElementById('d'+x.charAt(0).toUpperCase()+x.slice(1)).style.borderColor=d===x?'#40d040':'#404040');sfxMenu();}
+function selG(g){sel.g=g;['boy','girl'].forEach(x=>document.getElementById('g'+x.charAt(0).toUpperCase()+x.slice(1)).style.borderColor=g===x?'#f8c840':'#5a4020');sfxMenu();}
+function selD(d){sel.d=d;['young','older'].forEach(x=>document.getElementById('d'+x.charAt(0).toUpperCase()+x.slice(1)).style.borderColor=d===x?'#f8c840':'#5a4020');sfxMenu();}
 
 function startJourney(){
   const n=document.getElementById('nameInp').value.trim();
