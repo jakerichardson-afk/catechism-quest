@@ -239,7 +239,7 @@ const WORLDS=[
   {id:0,name:"City of Destruction",icon:"🏛",sky:["#38b0f8","#78d0ff"],ground:"#3a8a20",path:"#c8a050",water:"#2070d0",boss:{name:"The Doubter",sp:"👿",sub:"'Is God even real?' — Answer with TRUTH!",bg:["#1a2a5a","#0a1a3a"]}},
   {id:1,name:"Slough of Despond",icon:"🌑",sky:["#0a0018","#180030"],ground:"#1a1208",path:"#3a2510",water:"#101028",boss:{name:"Old Serpent",sp:"🐍",sub:"'Sin doesn't matter!' — Answer with JUSTICE!",bg:["#0a0005","#150010"]}},
   {id:2,name:"House Beautiful",icon:"✝",sky:["#f0a030","#f8d060"],ground:"#4a7020",path:"#d0a848",water:"#3080c0",boss:{name:"The Accuser",sp:"👹",sub:"'You can never be saved!' — Answer with FAITH!",bg:["#200a00","#380a00"]}},
-  {id:3,name:"Mount Sinai",icon:"⛰",sky:["#7080a0","#90a0c0"],ground:"#6a5a30",path:"#b09050",water:"#4060a0",boss:{name:"The Idol King",sp:"🗿",sub:"'Make your own rules!' — Answer with GOD'S LAW!",bg:["#1a1000","#2a1800"]}},
+  {id:3,name:"Valley of the Shadow",icon:"⛰",sky:["#7080a0","#90a0c0"],ground:"#6a5a30",path:"#b09050",water:"#4060a0",boss:{name:"The Idol King",sp:"🗿",sub:"'Make your own rules!' — Answer with GOD'S LAW!",bg:["#1a1000","#2a1800"]}},
   {id:4,name:"The Living Waters",icon:"💧",sky:["#30a870","#60d890"],ground:"#206830",path:"#b89840",water:"#1060c0",boss:{name:"The Deceiver",sp:"🦹",sub:"'Religion is just ritual!' — Answer with TRUTH!",bg:["#001a10","#002a18"]}},
   {id:5,name:"Celestial City",icon:"🌟",sky:["#f0d050","#fff080"],ground:"#60a030",path:"#e0c860",water:"#60b0e0",boss:{name:"Death & Despair",sp:"💀",sub:"'There is no hope!' — Answer with ETERNAL TRUTH!",bg:["#080618","#100c28"]}}
 ];
@@ -1433,6 +1433,16 @@ const DENSE={
     npc:{x:572,y:84,name:'Watchful',line:'"Fear not the lions — they are chained!"',robe:['#34508a','#4a68a8','#283c68']},
     item:{name:'SHOES OF PEACE',title:'Your burden is gone!',burdenTo:[302,418],short:'GO TO THE CROSS!',verse:'"He hath given me rest by His sorrow, and life by His death."',ref:'Christian at the Cross',hint:'You got the SHOES OF PEACE!',gateMsg:'"Go to the Cross first — off the highway, west!"',icon:(...a)=>drawShoesIcon(...a)},
     altars:[[81,30],[76,90],[70,20],[57,24],[56,80],[44,96],[58,46],[40,12],[27,74],[20,46],[33,38],[11,46]]
+  },
+  3:{
+    build:dvBuildValley,
+    start:[484,676],comp:[460,690],
+    gateY:62,
+    chest:Object.assign(dvChestPos(),{text:'A chest, glinting in the dark…'}),
+    gateLabel:'THE MORNING',light:(...a)=>dvDrawLight(...a),overlay:(...a)=>dvDarkness(...a),
+    npc:{x:532,y:96,name:'Faithful',line:'"I will fear no evil, for Thou art with me!"',robe:['#8a4a2a','#a85a34','#6a3420']},
+    item:{name:'SHIELD OF FAITH',short:'FIND THE SHIELD!',verse:'"Take up the shield of faith, to quench every fiery dart."',ref:'Ephesians 6:16',hint:'Use it against Apollyon!',gateMsg:'"Find the Shield first — in a cave off the path!"',icon:(...a)=>drawShieldIcon(...a)},
+    altars:dvAltarList()
   }
 };
 let DWS=null;
@@ -2273,6 +2283,139 @@ function dhBuildHill(){
   return{cols,rows,W,H,grid:g,solid,ground,objects,chimneys,water,smoke:[]};
 }
 
+
+// ===============================
+// WORLD 4 — THE VALLEY OF THE SHADOW
+// ===============================
+function dvC0(r){const raw=60+Math.round(Math.sin(r*0.13)*18+Math.sin(r*0.31)*6);const t=Math.max(0,Math.min(1,(r-8)/8,(60-r)/8));return Math.round(60+(raw-60)*t);}
+function dvHW(r){return 13+Math.round(vnoise(r,7,6)*6)+(r>54?(r-54)*3:0);}
+function dvAlcoves(){return[54,48,42,36,30,24,18,14].map((r,i)=>{const side=i%2?1:-1;return[r,dvC0(r)+side*(dvHW(r)+5),side];});}
+function dvAltarList(){const a=dvAlcoves();return[[82,40],[76,84],[68,46],...a.map(([r,c],i)=>i===3?[r+2,c-3]:[r,c]),[10,52]];}
+function dvChestPos(){const[r,c]=dvAlcoves()[3];return{x:c*8+4+14,y:r*8+2};}
+
+function drawShieldIcon(ctx,cx,cy,u=2){
+  const ox=Math.round(cx-9*u),oy=Math.round(cy-10*u);
+  const F=(x,y,w,h,c)=>{ctx.fillStyle=c;ctx.fillRect(ox+x*u,oy+y*u,w*u,h*u);};
+  const rows=[[1,16],[0,18],[0,18],[0,18],[0,18],[0,18],[0,18],[0,18],[1,16],[1,16],[2,14],[2,14],[3,12],[4,10],[5,8],[6,6],[7,4],[8,2]];
+  rows.forEach(([x,w],y)=>{F(x,y,w,1,'#e8b838');if(w>2)F(x+1,y,w-2,1,'#3a5aa0');});
+  rows.forEach(([x,w],y)=>{if(w>4)F(x+1,y,2,1,'#5a7ac0');});
+  F(1,0,16,1,'#fff0a0');F(8,2,2,13,'#e8b838');F(4,5,10,2,'#e8b838');F(8,2,1,13,'#fff0a0');
+}
+
+function dvPaintTile(ctx,g,c,r){
+  const ch=g[r][c],x=c*8,y=r*8,h=tHash(c,r),h2=tHash(c+977,r+311);
+  const R=(a,b,w,hh,col)=>{ctx.fillStyle=col;ctx.fillRect(x+a,y+b,w,hh);};
+  const sp=(n,col,hh)=>{for(let i=0;i<n;i++){R((hh>>(i*6))&7,(hh>>(i*6+3))&7,1,1,col);}};
+  const at=(dc,dr)=>(g[r+dr]&&g[r+dr][c+dc])||'';
+  switch(ch){
+    case 'X':{
+      if(at(0,1)!=='X'&&at(0,1)!==''){R(0,0,8,8,'#3e3848');for(let k=1;k<8;k+=3)R(0,k,8,1,'#2e2838');R(0,0,8,1,'#5a5268');sp(2,'#4e4860',h);R(0,6,8,2,'#1e1a26');}
+      else{R(0,0,8,8,'#4a4458');sp(3,'#5e5870',h);sp(3,'#3a3448',h2);if(h%5===0){R(2,3,3,1,'#2e2838');R(4,4,1,2,'#2e2838');}}
+      break;}
+    case 'v':{R(0,0,8,8,'#08060c');if(at(0,-1)!=='v'){R(0,0,8,2,'#3e3848');R(0,2,8,1,'#1a1420');}if(h%13===0)R(h%7,(h>>3)%7,1,1,'#2a1a3a');break;}
+    case 'o':{R(0,0,8,8,'#5a5450');sp(3,'#6e6862',h);sp(3,'#46403c',h2);if(h%7===0){R(2,2,3,2,'#7a746c');R(2,2,3,1,'#8e887e');}break;}
+    case 'd':{R(0,0,8,8,'#7a6a54');sp(3,'#6a5a46',h);sp(2,'#8e7e66',h2);
+      if(at(0,-1)==='f'||at(-1,0)==='f')R(0,0,1,1,'#5cab3c');break;}
+    case 'b':{R(0,0,8,8,'#3a2a1a');R(0,0,2,8,'#9a6834');R(3,0,2,8,'#8a5a2e');R(6,0,2,8,'#9a6834');R(0,0,8,1,at(0,-1)!=='b'?'#6a4424':'#3a2a1a');R(0,7,8,1,at(0,1)!=='b'?'#6a4424':'#3a2a1a');break;}
+    case 'm':case 's':dsPaintTile(ctx,g,c,r);break;
+    default:dwPaintTile(ctx,g,c,r);
+  }
+}
+
+function dvRocks(seed){const[cv,g]=mkCv(22,16);pcirc(g,8,11,6,'#3e3848');pcirc(g,7,10,5,'#5a5268');pcirc(g,15,12,4,'#3e3848');pcirc(g,14,11,3,'#5a5268');g.fillStyle='#6e6880';g.fillRect(5,7,3,1);g.fillRect(13,9,2,1);return cv;}
+function dvSpire(seed){const[cv,g]=mkCv(14,30);for(let y=0;y<30;y++){const w=Math.round(2+y*0.18);g.fillStyle=y%5?'#4a4458':'#3a3448';g.fillRect(7-w,y,w*2,1);g.fillStyle='#5e5870';g.fillRect(7-w,y,1,1);}return cv;}
+
+let _dark=null;
+function dvDarkness(ctx,camX,camY){
+  if(!_dark){_dark=document.createElement('canvas');_dark.width=640;_dark.height=480;}
+  const g=_dark.getContext('2d');g.globalCompositeOperation='source-over';g.clearRect(0,0,640,480);
+  const yS=r=>r*8-camY;
+  const gr=g.createLinearGradient(0,yS(5),0,yS(64));
+  gr.addColorStop(0,'rgba(6,4,14,0)');gr.addColorStop(0.1,'rgba(6,4,14,0.6)');gr.addColorStop(0.22,'rgba(6,4,14,0.92)');gr.addColorStop(0.86,'rgba(6,4,14,0.92)');gr.addColorStop(1,'rgba(6,4,14,0)');
+  g.fillStyle=gr;g.fillRect(0,0,640,480);
+  g.globalCompositeOperation='destination-out';
+  const hole=(x,y,rr,a=1)=>{if(x<-rr||x>640+rr||y<-rr||y>480+rr)return;const hg=g.createRadialGradient(x,y,rr*0.3,x,y,rr);hg.addColorStop(0,`rgba(0,0,0,${a})`);hg.addColorStop(1,'rgba(0,0,0,0)');g.fillStyle=hg;g.fillRect(x-rr,y-rr,rr*2,rr*2);};
+  hole(G.px-camX,G.py-camY-12,108+Math.sin(mapFrame*0.3)*3);
+  hole(G.companion.px-camX,G.companion.py-camY-12,40,0.6);
+  G.altarData.forEach(a=>hole(a.x-camX,a.y-camY-6,a.lit?96:28,a.lit?1:0.75));
+  if(CHEST&&!G.chestOpen&&G.altarsLit>=CHEST_NEED)hole(CHEST.x-camX,CHEST.y-camY-8,60,0.85);
+  const D=DENSE[G.wIdx];if(D.npc)hole(D.npc.x-camX,D.npc.y-camY-14,72,0.9);
+  g.globalCompositeOperation='source-over';
+  ctx.drawImage(_dark,0,0);
+  // eyes watching from the dark — they vanish when light comes near
+  DWS.eyes.forEach(([ex,ey],i)=>{
+    const x=ex-camX,y=ey-camY;if(x<0||x>640||y<0||y>480)return;
+    if(Math.hypot(ex-G.px,ey-G.py)<140)return;
+    if(G.altarData.some(a=>a.lit&&Math.hypot(a.x-ex,a.y-ey)<110))return;
+    if((mapFrame+i*53)%220<10)return;
+    const dx=Math.sign(G.px-ex);
+    ctx.fillStyle='#ffd040';ctx.fillRect(x-4,y,2,2);ctx.fillRect(x+3,y,2,2);
+    ctx.fillStyle='#3a2a00';ctx.fillRect(x-4+(dx>0?1:0),y+1,1,1);ctx.fillRect(x+3+(dx>0?1:0),y+1,1,1);
+  });
+}
+
+function dvDrawLight(ctx,camX,camY){
+  const lx=480-camX,ly=10-camY;
+  if(ly>-220){
+    const gr=ctx.createRadialGradient(lx,ly,6,lx,ly,220);
+    gr.addColorStop(0,'rgba(255,240,200,0.95)');gr.addColorStop(0.25,'rgba(255,200,150,0.45)');gr.addColorStop(1,'rgba(255,190,140,0)');
+    ctx.fillStyle=gr;ctx.fillRect(lx-240,ly-40,480,300);
+  }
+}
+
+function dvBuildValley(){
+  const cols=120,rows=88,W=cols*8,H=rows*8;
+  const g=[];for(let r=0;r<rows;r++)g.push(new Array(cols).fill('f'));
+  const inb=(c,r)=>r>=0&&r<rows&&c>=0&&c<cols;
+  const set=(c0,r0,c1,r1,ch)=>{for(let r=r0;r<=r1;r++)for(let c=c0;c<=c1;c++)if(inb(c,r))g[r][c]=ch;};
+  const disc=(cc,rr,rad,ch)=>{for(let r=rr-rad-2;r<=rr+rad+2;r++)for(let c=cc-rad-3;c<=cc+rad+3;c++){if(!inb(c,r))continue;const d=Math.hypot((c-cc)*0.85,r-rr)+(vnoise(c,r,3)-0.5)*1.4;if(d<=rad)g[r][c]=ch;}};
+  set(0,6,119,7,'X');set(57,6,62,7,'G');
+  for(let r=8;r<=60;r++){
+    for(let c=0;c<cols;c++)g[r][c]='X';
+    const c0=dvC0(r),hw=dvHW(r);
+    for(let c=c0-hw;c<=c0+hw;c++){
+      if(!inb(c,r))continue;
+      if(r<12||r>56)g[r][c]='o';
+      else if(c>=c0-1&&c<=c0+1)g[r][c]='d';
+      else if(c<c0-1)g[r][c]=c<=c0-hw+1?'o':'v';
+      else g[r][c]=c>=c0+hw-1?'o':'m';
+    }
+    set(c0-1,r,c0+1,r,'d');
+  }
+  for(let r=61;r<=87;r++){const o=Math.round(Math.sin(r*0.3)*2);set(58+o,r,61+o,r,'d');}
+  // side caves off the valley, reached by bridges over the ditch or stones across the quag
+  dvAlcoves().forEach(([r,ac,side],i)=>{
+    disc(ac,r,i===3?5:4,'o');
+    const c0=dvC0(r);
+    for(let c=c0+side*2;c!==ac;c+=side)for(let rr=r;rr<=r+1;rr++){const t=g[rr][c];if(t==='v')g[rr][c]='b';else if(t==='m')g[rr][c]='s';else if(t==='X')g[rr][c]='o';}
+  });
+
+  const solid=new Uint8Array(cols*rows);
+  const S=(c0,r0,c1,r1,v=1)=>{for(let r=r0;r<=r1;r++)for(let c=c0;c<=c1;c++)if(inb(c,r))solid[r*cols+c]=v;};
+  for(let r=0;r<rows;r++)for(let c=0;c<cols;c++){const t=g[r][c];if(t==='X'||t==='v')solid[r*cols+c]=1;}
+  S(0,0,119,5);S(57,6,62,7,2);
+
+  const[ground,gx]=mkCv(W,H);
+  for(let r=0;r<rows;r++)for(let c=0;c<cols;c++)dvPaintTile(gx,g,c,r);
+
+  const objects=[];
+  const add=(cv,x,y,base)=>objects.push({cv,x,y,base});
+  const treeAt=(c,r,cv)=>{add(cv,c*8+4-cv.width/2,(r+1)*8-cv.height,(r+1)*8);S(c,r,c,r);pcirc(gx,c*8+5,(r+1)*8,6,'rgba(0,0,0,0.18)');};
+  [[10,66],[24,72],[38,84],[80,66],[98,74],[112,64],[6,80],[106,84],[70,80],[30,64],[90,86],[50,74]].forEach(([c,r],i)=>treeAt(c,r,dwGreenTree(i)));
+  const rocks=dvRocks(1),spire=dvSpire(1);
+  for(let r=10;r<=58;r+=3){const c0=dvC0(r),hw=dvHW(r);[c0-hw,c0+hw].forEach((c,k)=>{if(g[r][c]==='o'&&tHash(c,r)%2===0){add(k?spire:rocks,c*8+4-(k?7:11),(r+1)*8-(k?30:16),(r+1)*8);S(c,r,c,r);}});}
+  const prop=(cv,c,r,wT=1)=>{add(cv,c*8+(wT*8-cv.width)/2,(r+1)*8-cv.height,(r+1)*8);S(c,r,c+wT-1,r);};
+  prop(dwSign('VALLEY OF HUMILIATION',100),48,83,4);
+  prop(dwSign('VALLEY OF THE SHADOW',96),64,63,4);
+  const cp=dvChestPos();S(Math.floor((cp.x-10)/8),Math.floor((cp.y-14)/8),Math.floor((cp.x+10)/8),Math.floor((cp.y-1)/8));
+  S(66,11,66,11);
+
+  const eyes=[];
+  for(let r=14;r<=55;r+=3){const c0=dvC0(r),hw=dvHW(r),side=(r/3)%2?1:-1,c=c0+side*(hw+1);if(inb(c,r)&&g[r][c]==='X')eyes.push([c*8+4,r*8+4]);}
+  const mud=[];for(let r=0;r<rows;r++)for(let c=0;c<cols;c++)if(g[r][c]==='m')mud.push([c,r]);
+  return{cols,rows,W,H,grid:g,solid,ground,objects,chimneys:[],water:[],mud,bubbles:[],smoke:[],eyes};
+}
+
 const CHEST_NEED=5;
 let CHEST=null;
 function dwHasBelt(){return G.armorEarned.includes(G.wIdx);}
@@ -2430,6 +2573,7 @@ function startDenseLoop(){
     list.push({base:G.py+0.5,draw:()=>dwDrawPlayer(spCtx,Math.round(G.px-camX),Math.round(G.py-camY))});
     list.sort((a,b)=>a.base-b.base).forEach(o=>o.draw());
     dwSmoke(spCtx,camX,camY);
+    if(D.overlay)D.overlay(spCtx,camX,camY);
     const psy=G.py-camY,touch='ontouchstart' in window;
     if(G.phase==='itemGet')dwDrawItemGet(spCtx,Math.round(G.px-camX),Math.round(psy),G.itemT);
     else if(G.nearAltar&&!G.nearAltar.lit)drawPrayPrompt(spCtx,psy);
@@ -2978,7 +3122,7 @@ function drawAltarAt(ctx,alt,i,sx,sy){
     ctx.beginPath();ctx.arc(sx+11,sy-14,9,0,Math.PI*2);ctx.fill();
     ctx.fillStyle=alt.lit?'#60ff60':isNear?'#ffffff':'#c0c8ff';
     ctx.font='bold 11px monospace';ctx.textAlign='center';
-    ctx.fillText(alt.lit?'✓':(i+1),sx+11,sy-10);
+    const lbl=alt.lit?'✓':(G.wIdx===3?['I','II','III','IV','V','VI','VII','VIII','IX','X','XI','XII'][i]:String(i+1));if(lbl.length>2)ctx.font='bold 8px monospace';ctx.fillText(lbl,sx+11,sy-10);
   }
 }
 
@@ -3799,6 +3943,83 @@ BOSSW[2]={name:'THE ACCUSER',hudName:'THE ACCUSER',gateX:190,horizon:134,bossX:1
   gloom:'60,16,24',gloom2:'30,6,10',aura:'120,20,30',mist:'120,40,50',orb:'255,120,120',hp:['#c03040','#ff7080'],accent:'#ff7080',accentLt:'#ffd4d4',accentDim:'#c08888',panel:'30,6,10',
   counterFrom:[60,-106],taunt1:'"You can never be saved!"',taunt2:'"Look at all your sins!"',introSub:'He accuses you at the gate. Stand in peace!',
   counterLine:'"GUILTY!"',laughLine:'"You can never be saved!"',victoryLine:'The Accuser is silenced!',itemName:'SHOES OF PEACE',finalWord:'FORGIVEN',
+  bg:null,cl:null,anim:false,idle:0,boss:null,bossG:null};
+
+
+// ── World 4 boss: Apollyon ───────────────────────────────
+function dvBuildBossBg(){
+  const[cv,g]=mkCv(640,480);
+  const F=(x,y,w,h,c)=>{g.fillStyle=c;g.fillRect(x,y,w,h);};
+  const HZ=W0B.horizon,GX=W0B.gateX;
+  const sk=g.createLinearGradient(0,0,0,HZ);
+  sk.addColorStop(0,'#2a2038');sk.addColorStop(0.6,'#6a4a5a');sk.addColorStop(1,'#f0a878');
+  g.fillStyle=sk;g.fillRect(0,0,640,HZ);
+  // valley floor
+  F(0,HZ,640,480-HZ,'#5a5450');
+  for(let y=HZ;y<480;y++){const depth=(y-HZ)/(480-HZ),sz=1+Math.floor(depth*2);for(let x=0;x<640;x+=2){const h=tHash(x,y);if(h%23===0)F(x,y,sz,sz,'#6e6862');else if(h%29===0)F(x,y,sz,sz,'#46403c');}}
+  for(let y=HZ;y<480;y++){const t=(y-HZ)/(480-HZ),cx=GX+(W0B.pX+10-GX)*Math.pow(t,1.15),hw=8+t*60,x0=Math.round(cx-hw),x1=Math.round(cx+hw);F(x0,y,x1-x0,1,'#7a6a54');for(let x=x0;x<x1;x+=2)if(tHash(x,y)%17===0)F(x,y,2,1,'#8e7e66');}
+  drawArenaGate(g,GX,HZ-18,'THE MORNING');
+  // towering cliffs on either side
+  const cliff=(pts,face,top)=>{g.fillStyle=face;g.beginPath();g.moveTo(pts[0][0],pts[0][1]);pts.forEach(([x,y])=>g.lineTo(x,y));g.closePath();g.fill();};
+  cliff([[0,0],[120,0],[96,60],[118,110],[88,170],[110,260],[60,330],[0,360]],'#3e3848');
+  cliff([[0,0],[90,0],[70,70],[86,140],[56,220],[0,250]],'#4a4458');
+  cliff([[640,0],[300,0],[330,40],[300,90],[350,128],[420,150],[470,240],[560,300],[640,320]],'#3e3848');
+  cliff([[640,0],[380,0],[400,60],[440,110],[520,170],[640,200]],'#4a4458');
+  for(let i=0;i<40;i++){const y=10+i*8,rw=110-(i%4)*8;F(0,y,80-(i%4)*6,1,'#2e2838');if(y<300)F(640-rw,y,rw,1,'rgba(46,40,56,0.7)');}
+  // rubble
+  const rocks=dvRocks(1);[[20,380],[580,360],[400,430],[140,300],[500,280]].forEach(([x,y])=>g.drawImage(rocks,x,y,44,32));
+  return cv;
+}
+
+function dvBossAnim(ctx){
+  for(let i=0;i<14;i++){const t=((mapFrame*0.7+i*37)%240)/240,x=(i*97)%640+Math.sin(mapFrame*0.03+i)*12,y=470-t*420;ctx.fillStyle=`rgba(255,${140+(i%3)*30},60,${0.7*(1-t)})`;ctx.fillRect(Math.round(x),Math.round(y),2,2);}
+}
+
+function dvDrawApollyon(g,f,hp){
+  const u=2,F=(x,y,w,h,c)=>{g.fillStyle=c;g.fillRect(Math.round(x*u),Math.round(y*u),Math.max(1,Math.round(w*u)),Math.max(1,Math.round(h*u)));};
+  const poly=(pts,c)=>{g.fillStyle=c;g.beginPath();g.moveTo(pts[0][0]*u,pts[0][1]*u);pts.forEach(([x,y])=>g.lineTo(x*u,y*u));g.closePath();g.fill();};
+  const line=(x0,y0,x1,y1,c,w=1)=>pline(g,Math.round(x0*u),Math.round(y0*u),Math.round(x1*u),Math.round(y1*u),c,w*u);
+  const flap=Math.sin(f*0.06)*3;
+  // dragon wings
+  poly([[24,28],[4,6-flap],[8,20],[1,28-flap],[9,33],[5,42-flap],[22,40]],'#5a3a5a');
+  poly([[40,28],[60,6-flap],[56,20],[63,28-flap],[55,33],[59,42-flap],[42,40]],'#5a3a5a');
+  line(24,28,4,6-flap,'#2e1e30',1);line(24,30,1,28-flap,'#2e1e30',1);line(24,34,5,42-flap,'#2e1e30',1);
+  line(40,28,60,6-flap,'#2e1e30',1);line(40,30,63,28-flap,'#2e1e30',1);line(40,34,59,42-flap,'#2e1e30',1);
+  // bear legs
+  F(20,52,8,14,'#4a3426');F(36,52,8,14,'#4a3426');F(20,52,2,14,'#5e4434');F(36,52,2,14,'#5e4434');
+  F(18,65,12,4,'#3a281c');F(34,65,12,4,'#3a281c');
+  for(let k=0;k<3;k++){F(19+k*4,68,2,2,'#e8e0d0');F(35+k*4,68,2,2,'#e8e0d0');}
+  // fish-scaled body
+  for(let dy=-16;dy<=16;dy++){const w=13*Math.sqrt(Math.max(0,1-(dy/16)**2));F(32-w-1,40+dy,w*2+2,1,'#1e304e');F(32-w,40+dy,w*2,1,'#3a5a8a');}
+  for(let ry=27;ry<55;ry+=4)for(let rx=20+((ry/4)%2)*2;rx<44;rx+=4){const inside=((rx-32)/13)**2+((ry-40)/16)**2<0.85;if(inside){F(rx,ry,3,1,'#5a7aaa');F(rx,ry+1,1,2,'#26406a');}}
+  // fire and smoke from his belly
+  const fl=Math.floor(f/4)%3;
+  F(28,46,8,6,'#7a2a10');F(29,47-fl,6,5+fl,'#ff8a20');F(31,48-fl,2,3+fl,'#ffd040');
+  if(f%50<30){F(30+Math.sin(f*0.2)*2,40-(f%50)*0.2,3,2,'rgba(90,90,100,0.6)');}
+  // arms: one raised with a fiery dart aimed at the pilgrim
+  F(44,30,4,4,'#3a5a8a');F(47,26,4,5,'#3a5a8a');F(50,22,4,5,'#3a5a8a');F(52,20,3,3,'#c08a5a');
+  line(53,21,62,17,'#6a4a2a',1);F(61,15,3,3,'#ff8a20');F(62,16,2,1,'#ffd040');F(63,14,1,1,'#ffd040');
+  F(16,32,4,8,'#3a5a8a');F(14,38,4,4,'#c08a5a');
+  // lion's head with horns
+  for(let dy=-10;dy<=10;dy++){const w=10*Math.sqrt(Math.max(0,1-(dy/10)**2));F(32-w,16+dy,w*2,1,'#8a3a1a');}
+  for(let dy=-8;dy<=8;dy+=2){const w=10*Math.sqrt(Math.max(0,1-(dy/10)**2));F(32-w,16+dy,1,1,'#6a2a12');F(31+w,16+dy,1,1,'#6a2a12');}
+  for(let dy=-6;dy<=6;dy++){const w=6.5*Math.sqrt(Math.max(0,1-(dy/6.5)**2));F(32-w,17+dy,w*2,1,'#c08a5a');}
+  line(26,9,22,2,'#d8d0c0',1);line(22,2,24,0,'#d8d0c0',1);line(38,9,42,2,'#d8d0c0',1);line(42,2,40,0,'#d8d0c0',1);
+  const blink=(f%170)<5;
+  if(blink){F(28,15,3,1,'#6a2a12');F(34,15,3,1,'#6a2a12');}else{F(28,14,3,2,'#ff9a20');F(34,14,3,2,'#ff9a20');F(29,14,1,2,'#3a0a0a');F(35,14,1,2,'#3a0a0a');}
+  F(27,12,4,1,'#6a2a12');F(33,12,4,1,'#6a2a12');
+  F(31,17,2,1,'#5a2a1a');
+  F(28,20,8,3,'#3a0a0a');F(29,20,1,2,'#ffffff');F(34,20,1,2,'#ffffff');F(28,23,8,1,'#a06a4a');
+}
+
+function dvDart(ctx,x,y,a,u=2){ctx.save();ctx.translate(Math.round(x),Math.round(y));ctx.rotate(a);ctx.fillStyle='#6a4a2a';ctx.fillRect(-5*u,-u/2,9*u,u);ctx.fillStyle='#ff8a20';ctx.fillRect(4*u,-u*1.5,3*u,3*u);ctx.fillStyle='#ffd040';ctx.fillRect(5*u,-u/2,2*u,u);ctx.fillStyle='rgba(255,140,40,0.35)';ctx.fillRect(2*u,-u*2,6*u,4*u);ctx.fillStyle='#d8d0c0';ctx.fillRect(-6*u,-u,2*u,2*u);ctx.restore();}
+function dvDartOrbit(ctx,f,n,cx,cy,r,alpha=1){ctx.save();ctx.globalAlpha=alpha;for(let i=0;i<n;i++){const a=f*0.025+i*(Math.PI*2/n);dvDart(ctx,cx+Math.cos(a)*r,cy+Math.sin(a)*r*0.45+Math.sin(f*0.07+i)*4,a+Math.PI/2,1.5);}ctx.restore();}
+
+BOSSW[3]={name:'APOLLYON',hudName:'APOLLYON',gateX:190,horizon:134,bossX:190,feetY:240,BS:1.3,pX:470,foeW:128,foeH:140,
+  buildBg:()=>dvBuildBossBg(),clouds:null,animBg:ctx=>dvBossAnim(ctx),drawFoe:(g,f,hp)=>dvDrawApollyon(g,f,hp),orbit:(...a)=>dvDartOrbit(...a),projectile:(c,x,y)=>dvDart(c,x,y,0.25,3),icon:(...a)=>drawShieldIcon(...a),
+  gloom:'30,16,40',gloom2:'14,6,20',aura:'160,60,20',mist:'90,40,30',orb:'255,160,60',hp:['#d06020','#ffa040'],accent:'#ffa040',accentLt:'#ffe0b0',accentDim:'#c09070',panel:'30,12,6',
+  counterFrom:[73,-133],taunt1:'"Make your own rules!"',taunt2:'"Turn back and serve me!"',introSub:'He straddles the way. Raise the Shield of Faith!',
+  counterLine:'"Feel my fiery darts!"',laughLine:'"Make your own rules!"',victoryLine:'Apollyon spreads his wings and flees!',itemName:'SHIELD OF FAITH',finalWord:'FAITH',
   bg:null,cl:null,anim:false,idle:0,boss:null,bossG:null};
 
 BOSSW[1]={name:'THE OLD SERPENT',hudName:'OLD SERPENT',gateX:190,horizon:134,bossX:190,feetY:240,BS:1.35,pX:470,foeW:104,foeH:136,
