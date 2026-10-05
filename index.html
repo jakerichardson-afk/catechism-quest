@@ -238,7 +238,7 @@ function _fmtDate(ts){
 const WORLDS=[
   {id:0,name:"City of Destruction",icon:"🏛",sky:["#38b0f8","#78d0ff"],ground:"#3a8a20",path:"#c8a050",water:"#2070d0",boss:{name:"The Doubter",sp:"👿",sub:"'Is God even real?' — Answer with TRUTH!",bg:["#1a2a5a","#0a1a3a"]}},
   {id:1,name:"Slough of Despond",icon:"🌑",sky:["#0a0018","#180030"],ground:"#1a1208",path:"#3a2510",water:"#101028",boss:{name:"Old Serpent",sp:"🐍",sub:"'Sin doesn't matter!' — Answer with JUSTICE!",bg:["#0a0005","#150010"]}},
-  {id:2,name:"The Cross Roads",icon:"✝",sky:["#f0a030","#f8d060"],ground:"#4a7020",path:"#d0a848",water:"#3080c0",boss:{name:"The Accuser",sp:"👹",sub:"'You can never be saved!' — Answer with FAITH!",bg:["#200a00","#380a00"]}},
+  {id:2,name:"House Beautiful",icon:"✝",sky:["#f0a030","#f8d060"],ground:"#4a7020",path:"#d0a848",water:"#3080c0",boss:{name:"The Accuser",sp:"👹",sub:"'You can never be saved!' — Answer with FAITH!",bg:["#200a00","#380a00"]}},
   {id:3,name:"Mount Sinai",icon:"⛰",sky:["#7080a0","#90a0c0"],ground:"#6a5a30",path:"#b09050",water:"#4060a0",boss:{name:"The Idol King",sp:"🗿",sub:"'Make your own rules!' — Answer with GOD'S LAW!",bg:["#1a1000","#2a1800"]}},
   {id:4,name:"The Living Waters",icon:"💧",sky:["#30a870","#60d890"],ground:"#206830",path:"#b89840",water:"#1060c0",boss:{name:"The Deceiver",sp:"🦹",sub:"'Religion is just ritual!' — Answer with TRUTH!",bg:["#001a10","#002a18"]}},
   {id:5,name:"Celestial City",icon:"🌟",sky:["#f0d050","#fff080"],ground:"#60a030",path:"#e0c860",water:"#60b0e0",boss:{name:"Death & Despair",sp:"💀",sub:"'There is no hope!' — Answer with ETERNAL TRUTH!",bg:["#080618","#100c28"]}}
@@ -1423,6 +1423,16 @@ const DENSE={
     npc:{x:516,y:92,name:'Help',line:'"Give me your hand! The steps lead out of the mire."'},
     item:{name:'BREASTPLATE OF RIGHTEOUSNESS',short:'FIND THE BREASTPLATE!',verse:'"Put on the breastplate of righteousness."',ref:'Ephesians 6:14',hint:'Use it against the Old Serpent!',gateMsg:'"Get the Breastplate first — it\'s on the big island!"',icon:(...a)=>drawBreastplateIcon(...a)},
     altars:[[80,40],[79,84],[61,30],[63,88],[43,18],[43,56],[39,100],[27,36],[23,82],[57,110],[11,30],[10,92]]
+  },
+  2:{
+    build:dhBuildHill,
+    start:[480,664],comp:[470,690],
+    gateY:62,slow:'k',
+    chest:{x:244,y:368,draw:(...a)=>dhDrawCross(...a),label:'The Cross',text:'Kneel here and lay down your burden…',action:'to kneel ▶',locked:'"Light 5 altars, then come to the Cross."'},
+    gateLabel:'HOUSE BEAUTIFUL',light:(...a)=>dhDrawLight(...a),
+    npc:{x:572,y:84,name:'Watchful',line:'"Fear not the lions — they are chained!"',robe:['#34508a','#4a68a8','#283c68']},
+    item:{name:'SHOES OF PEACE',title:'Your burden is gone!',burdenTo:[302,418],short:'GO TO THE CROSS!',verse:'"He hath given me rest by His sorrow, and life by His death."',ref:'Christian at the Cross',hint:'You got the SHOES OF PEACE!',gateMsg:'"Go to the Cross first — off the highway, west!"',icon:(...a)=>drawShoesIcon(...a)},
+    altars:[[81,30],[76,90],[70,20],[57,24],[56,80],[44,96],[58,46],[40,12],[27,74],[20,46],[33,38],[11,46]]
   }
 };
 let DWS=null;
@@ -1952,16 +1962,17 @@ function dsLog(){
   return cv;
 }
 
-function dwDrawHelp(ctx,x,y,f){
+function dwDrawHelp(ctx,x,y,f,robe){
+  const rb=robe||['#4a6a34','#5a7e3e','#3a5428'];
   const cx=Math.round(x)-7,cy=Math.round(y)-30+Math.round(Math.sin(f*0.07));
   ctx.fillStyle='rgba(0,0,0,0.3)';ctx.beginPath();ctx.ellipse(x,y,9,3,0,0,Math.PI*2);ctx.fill();
-  ctx.fillStyle='#4a6a34';ctx.fillRect(cx,cy+12,14,18);ctx.fillStyle='#5a7e3e';ctx.fillRect(cx+1,cy+12,12,8);ctx.fillStyle='#3a5428';ctx.fillRect(cx+11,cy+12,3,18);
+  ctx.fillStyle=rb[0];ctx.fillRect(cx,cy+12,14,18);ctx.fillStyle=rb[1];ctx.fillRect(cx+1,cy+12,12,8);ctx.fillStyle=rb[2];ctx.fillRect(cx+11,cy+12,3,18);
   ctx.fillStyle='#7a5430';ctx.fillRect(cx,cy+21,14,2);
   ctx.fillStyle='#d8b088';ctx.fillRect(cx+2,cy+2,10,10);
   ctx.fillStyle='#8a6a40';ctx.fillRect(cx+1,cy,12,4);ctx.fillRect(cx+1,cy+2,2,6);ctx.fillRect(cx+11,cy+2,2,6);
   ctx.fillStyle='#2a2a2a';ctx.fillRect(cx+4,cy+6,2,2);ctx.fillRect(cx+9,cy+6,2,2);
   ctx.fillStyle='#a06a4a';ctx.fillRect(cx+6,cy+9,3,1);
-  ctx.fillStyle='#5a7e3e';ctx.fillRect(cx-6,cy+15,7,4);ctx.fillStyle='#d8b088';ctx.fillRect(cx-9,cy+15,4,4);
+  ctx.fillStyle=rb[1];ctx.fillRect(cx-6,cy+15,7,4);ctx.fillStyle='#d8b088';ctx.fillRect(cx-9,cy+15,4,4);
   ctx.fillStyle='#4a3420';ctx.fillRect(cx+2,cy+30,4,2);ctx.fillRect(cx+8,cy+30,4,2);
 }
 
@@ -2061,6 +2072,207 @@ function dsBuildSlough(){
   return{cols,rows,W,H,grid:g,solid,ground,objects,chimneys:[],water,mud,bubbles:[],smoke:[],ripple:'150,190,160'};
 }
 
+
+// ===============================
+// WORLD 3 — THE CROSS & HOUSE BEAUTIFUL
+// ===============================
+function flipCv(cv){const[c,g]=mkCv(cv.width,cv.height);g.translate(cv.width,0);g.scale(-1,1);g.drawImage(cv,0,0);return c;}
+
+function drawShoesIcon(ctx,cx,cy,u=2){
+  const ox=Math.round(cx-10.5*u),oy=Math.round(cy-7*u);
+  const F=(x,y,w,h,c)=>{ctx.fillStyle=c;ctx.fillRect(ox+x*u,oy+y*u,w*u,h*u);};
+  const L='#9a6a34',H='#c08a4c',D='#5a3818',GD='#e8b838';
+  [0,11].forEach(dx=>{F(dx+2,0,5,8,L);F(dx+2,0,1,8,H);F(dx+2,0,5,1,H);F(dx+2,8,8,4,L);F(dx+2,8,8,1,H);F(dx+1,12,10,2,D);F(dx+3,2,3,1,GD);F(dx+3,4,3,1,GD);F(dx+3,6,3,1,GD);F(dx+7,9,2,1,GD);});
+  F(0,1,2,3,'#ffffff');F(19,1,2,3,'#ffffff');F(0,1,1,1,'#d8e8ff');F(20,1,1,1,'#d8e8ff');
+}
+
+function dhPaintTile(ctx,g,c,r){
+  const ch=g[r][c],x=c*8,y=r*8,h=tHash(c,r),h2=tHash(c+977,r+311);
+  const R=(a,b,w,hh,col)=>{ctx.fillStyle=col;ctx.fillRect(x+a,y+b,w,hh);};
+  const sp=(n,col,hh)=>{for(let i=0;i<n;i++){R((hh>>(i*6))&7,(hh>>(i*6+3))&7,1,1,col);}};
+  const at=(dc,dr)=>(g[r+dr]&&g[r+dr][c+dc])||'';
+  switch(ch){
+    case 'k':{R(0,0,8,8,'#4e9a36');if(h%4===0)R(0,4,8,4,'#46902f');sp(3,'#3e8028',h);sp(2,'#68b44a',h2);
+      if(h%6===0){R(1,5,3,2,'#9a948a');R(1,5,3,1,'#b4aea2');}if(h%3===0)R(0,7,8,1,'#447f2c');
+      if(h2%19===0){R(4,2,2,2,'#ffd040');}break;}
+    case 'S':{R(0,0,8,8,'#c8bea8');R(0,6,8,2,'#9a907a');R(0,0,8,1,'#ddd4c0');
+      if(at(-1,0)!=='S')R(0,0,1,8,'#8a8070');if(at(1,0)!=='S')R(7,0,1,8,'#8a8070');sp(2,'#b0a690',h);break;}
+    case 'L':{R(0,0,8,8,'#b8b0a0');R(0,0,8,2,'#d4ccbc');R(0,6,8,2,'#8a8274');R(3,2,1,4,'#9a9284');if(r%2)R(6,2,1,4,'#9a9284');if(h%7===0)R(1,6,2,1,'#6a9a4a');break;}
+    case 't':{R(0,0,8,8,'#3c5a24');R(0,3,8,4,'#2e4a1c');sp(3,'#22361a',h);
+      for(let i=0;i<3;i++){const px=(h>>(i*4))&7,py=(h>>(i*4+2))&7;R(px,py,1,1,'#b08a50');}if(h2%5===0)R(3,1,2,2,'#c02040');break;}
+    case 'B':{R(0,0,8,8,'#5a3a1e');R(0,0,8,3,'#a8743c');R(0,4,8,3,'#9a6834');R(0,0,8,1,'#bc8a4e');R(0,4,8,1,'#ae7c44');
+      if(at(-1,0)!=='B')R(0,0,2,8,'#6a4424');if(at(1,0)!=='B')R(6,0,2,8,'#6a4424');break;}
+    default:dwPaintTile(ctx,g,c,r);
+  }
+}
+
+function dhPalace(){
+  const W=320,H=120,[cv,g]=mkCv(W,H);
+  const F=(x,y,w,h,c)=>{g.fillStyle=c;g.fillRect(x,y,w,h);};
+  const st='#ece6da',sh='#d6cebe',dk='#b8b0a0',bl='#4a6ab0',bll='#6a8ad0',bld='#34508a';
+  // main wall
+  F(30,52,260,68,st);for(let y=58;y<114;y+=6)F(30,y,260,1,sh);for(let y=52;y<114;y+=12)for(let x=34+((y/6)%2)*8;x<290;x+=16)F(x,y,1,6,sh);
+  F(30,114,260,6,dk);F(30,52,260,2,'#fffaf0');
+  F(26,44,268,10,bl);F(26,44,268,2,bll);F(26,52,268,2,bld);
+  // towers
+  [[0,44],[276,44]].forEach(([x,w])=>{F(x,28,w,92,'#e4ded2');F(x,28,4,92,'#fffaf0');F(x+w-5,28,5,92,sh);for(let y=34;y<114;y+=6)F(x,y,w,1,sh);
+    for(let i=0;i<=22;i++){const ww=Math.round((w+8)*(i/22));F(x+w/2-ww/2,6+i,ww,1,i<3?bll:bl);}F(x+w/2-1,0,2,6,'#8a6a40');F(x+w/2+1,0,8,4,'#c03040');
+    [[x+10,60],[x+w-18,60],[x+10,88],[x+w-18,88]].forEach(([wx,wy])=>{F(wx,wy,8,12,'#6a5a40');F(wx+1,wy+2,6,10,'#ffe08a');F(wx+2,wy,4,2,'#ffe08a');F(wx+4,wy+2,1,10,'#c8a050');});});
+  // gatehouse
+  F(116,28,88,92,'#f2ece0');F(116,28,3,92,'#fffaf0');F(200,28,4,92,sh);for(let y=34;y<114;y+=6)F(116,y,88,1,sh);
+  for(let x=116;x<204;x+=12){F(x,20,8,10,'#f2ece0');F(x,20,8,2,'#fffaf0');}
+  F(128,44,64,6,bl);F(128,44,64,2,bll);
+  // arch around the gate
+  for(let y=0;y<46;y++){const t=y<14?Math.sqrt(1-((14-y)/14)**2):1,hw=Math.round(26*t);F(160-hw-4,74+y,4,1,'#c8b898');F(160+hw,74+y,4,1,'#c8b898');F(160-hw,74+y,hw*2,1,'#3a2a1a');}
+  F(150,60,20,10,'#e8b838');F(152,62,16,6,'#fff0a0');F(159,61,2,8,'#c08a20');F(155,64,10,2,'#c08a20');
+  // banners
+  [[124,58],[184,58]].forEach(([x,y])=>{F(x,y,12,30,'#c03040');F(x,y,12,2,'#e8b838');F(x+5,y+8,2,12,'#e8b838');F(x+2,y+12,8,2,'#e8b838');for(let i=0;i<6;i++)F(x+i*2,y+30,1,2+(i%2)*2,'#c03040');});
+  // windows on the main wall
+  for(let x=52;x<290;x+=26){if(x>106&&x<214)continue;F(x,70,10,16,'#6a5a40');F(x+1,72,8,14,'#ffe08a');F(x+2,70,6,2,'#ffe08a');F(x+5,72,1,14,'#c8a050');F(x+1,78,8,1,'#c8a050');
+    F(x-1,88,12,3,'#6a4426');F(x,87,2,1,'#e04848');F(x+4,87,2,1,'#f8d040');F(x+8,87,2,1,'#ff90c0');}
+  // ivy
+  for(let i=0;i<14;i++){const x=34+((i*37)%250),hgt=10+(i*7)%20;for(let y=0;y<hgt;y+=2)F(x+(y%4?1:0),114-y,2,2,i%2?'#4e8a34':'#5ea040');}
+  return cv;
+}
+
+function dhLion(){
+  const[cv,g]=mkCv(30,28);
+  const F=(x,y,w,h,c)=>{g.fillStyle=c;g.fillRect(x,y,w,h);};
+  F(5,4,2,20,'#6a6a74');F(4,3,4,2,'#8a8a94');
+  F(9,14,14,10,'#d89a50');F(9,14,14,2,'#e8b068');F(7,18,3,2,'#d89a50');F(5,16,3,3,'#8a5420');
+  F(11,22,4,5,'#d89a50');F(18,22,4,5,'#d89a50');F(11,26,4,1,'#7a5a3a');F(18,26,4,1,'#7a5a3a');
+  pcirc(g,20,10,9,'#a85a20');pcirc(g,19,9,7,'#c87a2a');pcirc(g,20,11,5,'#e8b068');
+  F(14,3,3,3,'#c87a2a');F(24,3,3,3,'#c87a2a');
+  F(17,9,2,2,'#2a1a10');F(22,9,2,2,'#2a1a10');F(17,9,1,1,'#ffffff');F(22,9,1,1,'#ffffff');
+  F(19,12,3,2,'#5a3020');F(18,14,2,1,'#8a5a3a');F(21,14,2,1,'#8a5a3a');
+  for(let i=0;i<6;i++)F(8+i*2-((i%2)?0:0),12+Math.round(i*0.6),1,1,'#9a9aa4');
+  F(14,16,8,2,'#7a7a84');
+  return cv;
+}
+
+function dhCrossCv(){
+  const[cv,g]=mkCv(30,54);const F=(x,y,w,h,c)=>{g.fillStyle=c;g.fillRect(x,y,w,h);};
+  pcirc(g,15,50,9,'#7a746a');pcirc(g,12,48,6,'#a09a8e');pcirc(g,20,49,4,'#8a847a');
+  F(12,4,6,44,'#7a5230');F(12,4,2,44,'#9a6a40');F(17,4,1,44,'#5a3a20');
+  F(2,13,26,6,'#7a5230');F(2,13,26,2,'#9a6a40');F(2,18,26,1,'#5a3a20');F(12,4,6,1,'#b07a48');
+  return cv;
+}
+let _crossCv=null;
+function dhDrawCross(ctx,cx,base,f){
+  const open=G.chestOpen,ready=!open&&G.altarsLit>=CHEST_NEED;
+  if(open||ready){
+    const p=open?0.55+Math.sin(f*0.05)*0.1:0.3+Math.sin(f*0.12)*0.2;
+    const gr=ctx.createRadialGradient(cx,base-30,4,cx,base-30,open?70:46);gr.addColorStop(0,`rgba(255,240,170,${p})`);gr.addColorStop(1,'rgba(255,230,140,0)');
+    ctx.fillStyle=gr;ctx.fillRect(cx-72,base-104,144,120);
+    if(open){ctx.save();ctx.translate(cx,base-36);ctx.rotate(f*0.004);ctx.fillStyle='rgba(255,246,200,0.16)';for(let i=0;i<8;i++){ctx.rotate(Math.PI/4);ctx.fillRect(-3,0,6,60);}ctx.restore();}
+  }
+  if(!_crossCv)_crossCv=dhCrossCv();
+  ctx.drawImage(_crossCv,Math.round(cx-15),Math.round(base-54));
+}
+function dhTomb(){
+  const[cv,g]=mkCv(46,34);const F=(x,y,w,h,c)=>{g.fillStyle=c;g.fillRect(x,y,w,h);};
+  pcirc(g,20,26,17,'#7a746a');pcirc(g,18,24,15,'#8e887e');pcirc(g,14,20,8,'#a09a8e');
+  F(0,30,40,4,'#6a645a');
+  for(let y=0;y<16;y++){const t=y<6?Math.sqrt(1-((6-y)/6)**2):1,hw=Math.round(7*t);F(20-hw,16+y,hw*2,1,'#2a2420');}
+  pcirc(g,38,27,7,'#6a645a');pcirc(g,37,26,6,'#a09a8e');pcirc(g,36,25,3,'#b8b2a6');
+  F(10,30,2,2,'#5aa048');F(30,31,3,2,'#5aa048');
+  return cv;
+}
+function dhArbor(){
+  const[cv,g]=mkCv(38,36);const F=(x,y,w,h,c)=>{g.fillStyle=c;g.fillRect(x,y,w,h);};
+  F(3,8,3,28,'#7a5230');F(32,8,3,28,'#7a5230');F(3,8,1,28,'#9a6a40');F(32,8,1,28,'#9a6a40');
+  F(0,4,38,4,'#8a6238');F(0,4,38,1,'#a8804c');for(let x=2;x<38;x+=5)F(x,1,2,4,'#7a5230');
+  for(let i=0;i<20;i++){const x=(i*7)%38,y=(i*5)%10;F(x,y,3,3,i%2?'#4e8a34':'#5ea040');}
+  for(let y=10;y<30;y+=3){F(4,y,2,2,'#5ea040');F(31,y+1,2,2,'#4e8a34');}
+  F(8,24,22,3,'#9a6a40');F(8,24,22,1,'#b8844a');F(9,27,2,9,'#7a5230');F(27,27,2,9,'#7a5230');
+  F(6,10,3,3,'#ff90c0');F(29,13,3,3,'#ffffff');
+  return cv;
+}
+function dhThorn(){
+  const[cv,g]=mkCv(18,16);
+  pcirc(g,9,10,6,'#2e4a1c');pcirc(g,7,9,4,'#3c5a24');
+  g.fillStyle='#b08a50';[[2,6],[14,7],[6,3],[12,4],[4,13],[15,12],[9,2]].forEach(([x,y])=>g.fillRect(x,y,1,2));
+  g.fillStyle='#c02040';g.fillRect(10,8,2,2);g.fillRect(5,11,2,2);
+  return cv;
+}
+
+function dhDrawLight(ctx,camX,camY){
+  const lx=480-camX,ly=10-camY;
+  if(ly>-220){
+    const gr=ctx.createRadialGradient(lx,ly,6,lx,ly,230);
+    gr.addColorStop(0,'rgba(255,250,215,0.85)');gr.addColorStop(0.25,'rgba(255,236,160,0.4)');gr.addColorStop(1,'rgba(255,230,140,0)');
+    ctx.fillStyle=gr;ctx.fillRect(lx-240,ly-40,480,300);
+  }
+  // butterflies
+  const B=[[120,560],[300,620],[820,500],[700,640],[160,300],[860,280],[420,240],[760,120]];
+  B.forEach(([bx,by],i)=>{
+    const t=mapFrame*0.02+i*1.7,x=Math.round(bx+Math.sin(t)*30+Math.sin(t*2.3)*8-camX),y=Math.round(by+Math.cos(t*1.3)*18-camY);
+    if(x<-10||x>650||y<-10||y>490)return;
+    const flap=Math.floor(mapFrame/5+i)%2,col=['#ffd040','#ff90c0','#90c8ff','#ffffff'][i%4];
+    ctx.fillStyle=col;if(flap){ctx.fillRect(x-3,y-2,3,3);ctx.fillRect(x+1,y-2,3,3);}else{ctx.fillRect(x-2,y-1,2,2);ctx.fillRect(x+1,y-1,2,2);}
+    ctx.fillStyle='#3a2a1a';ctx.fillRect(x,y-2,1,4);
+  });
+}
+
+function dhBuildHill(){
+  const cols=120,rows=88,W=cols*8,H=rows*8;
+  const g=[];for(let r=0;r<rows;r++)g.push(new Array(cols).fill('f'));
+  const inb=(c,r)=>r>=0&&r<rows&&c>=0&&c<cols;
+  const set=(c0,r0,c1,r1,ch)=>{for(let r=r0;r<=r1;r++)for(let c=c0;c<=c1;c++)if(inb(c,r))g[r][c]=ch;};
+  const disc=(cc,rr,rad,ch)=>{for(let r=rr-rad-2;r<=rr+rad+2;r++)for(let c=cc-rad-3;c<=cc+rad+3;c++){if(!inb(c,r))continue;const d=Math.hypot((c-cc)*0.85,r-rr)+(vnoise(c,r,3)-0.5)*1.6;if(d<=rad)g[r][c]=ch;}};
+  // Hill Difficulty
+  for(let r=12;r<=36;r++)for(let c=18;c<=102;c++){const d=((c-60)/40)**2+((r-24)/12)**2+(vnoise(c,r,5)-0.5)*0.5;if(d<1)g[r][c]='k';}
+  // palace courtyard and boundary
+  set(0,6,39,7,'h');set(80,6,119,7,'h');set(40,6,79,13,'p');set(57,6,62,7,'G');
+  // the highway, walled on either side (the wall called Salvation)
+  set(57,36,62,84,'c');
+  for(let r=36;r<=84;r++){if((r>=46&&r<=49)||(r>=79&&r<=82))continue;g[r][56]='L';g[r][63]='L';}
+  // stairs up Hill Difficulty
+  let topC=60,botC=60;
+  for(let r=14;r<=35;r++){const cc=60+Math.round(Math.sin(r*0.4)*6);set(cc-1,r,cc+1,r,'S');if(r===14)topC=cc;if(r===35)botC=cc;}
+  set(Math.min(botC,59)-1,35,Math.max(botC,62)+1,35,'S');
+  // the Danger and Destruction paths (dead ends)
+  set(36,34,56,35,'d');set(63,34,88,35,'d');
+  set(32,31,35,38,'t');set(89,31,92,38,'t');
+  // the Cross on its hill, with the open tomb below
+  disc(30,48,8,'k');
+  set(38,47,55,48,'d');set(31,46,38,47,'S');
+  // the stream
+  for(let c=0;c<cols;c++){const r0=61+Math.round(Math.sin(c*0.12)*1.5);for(let k=0;k<3;k++)g[r0+k][c]=(c>=57&&c<=62)||(c>=18&&c<=21)?'B':'w';}
+  // paths to the Interpreter's house and the east meadow
+  set(40,80,41,82,'d');set(41,81,55,82,'d');set(64,80,92,81,'d');
+  set(19,58,20,66,'d');
+
+  const solid=new Uint8Array(cols*rows);
+  const S=(c0,r0,c1,r1,v=1)=>{for(let r=r0;r<=r1;r++)for(let c=c0;c<=c1;c++)if(inb(c,r))solid[r*cols+c]=v;};
+  for(let r=0;r<rows;r++)for(let c=0;c<cols;c++){const t=g[r][c];if(t==='w'||t==='h'||t==='t'||t==='L')solid[r*cols+c]=1;}
+  S(0,0,119,5);S(40,6,79,7);S(57,6,62,7,2);
+
+  const[ground,gx]=mkCv(W,H);
+  for(let r=0;r<rows;r++)for(let c=0;c<cols;c++)dhPaintTile(gx,g,c,r);
+
+  const objects=[],chimneys=[];
+  const add=(cv,x,y,base)=>objects.push({cv,x,y,base});
+  add(dhPalace(),320,64-120,63);
+  const lion=dhLion(),lionR=flipCv(lion);
+  add(lion,416,70,96);S(52,9,54,11);
+  add(lionR,514,70,96);S(64,9,66,11);
+  const hs=dwHouse(13,10,7,true);add(hs.cv,34*8-2,70*8-14,80*8);chimneys.push([34*8-2+hs.chim[0],70*8-14+hs.chim[1]]);S(34,72,46,79);
+  gx.fillStyle='rgba(20,15,10,0.2)';gx.fillRect(47*8+2,73*8,5,7*8);
+  S(29,44,31,45);
+  add(dhTomb(),37*8+4-23,53*8-34,53*8);S(35,51,40,52);
+  add(dhArbor(),68*8-19,25*8-36,25*8);S(66,24,66,24);S(70,24,70,24);
+  const prop=(cv,c,r,wT=1)=>{add(cv,c*8+(wT*8-cv.width)/2,(r+1)*8-cv.height,(r+1)*8);S(c,r,c+wT-1,r);};
+  prop(dwSign('DANGER',46),48,33,2);prop(dwSign('DESTRUCTION',66),68,33,3);
+  prop(dwSign('HILL DIFFICULTY',76),64,37,4);prop(dwSign('THE CROSS',54),50,45,2);prop(dwSign('INTERPRETER',62),48,79,2);
+  const thorn=dhThorn();[[33,30],[34,39],[90,30],[91,39],[31,35],[93,34]].forEach(([c,r])=>add(thorn,c*8-5,(r+1)*8-16,(r+1)*8));
+  const treeAt=(c,r,cv)=>{add(cv,c*8+4-cv.width/2,(r+1)*8-cv.height,(r+1)*8);S(c,r,c,r);pcirc(gx,c*8+5,(r+1)*8,6,'rgba(0,0,0,0.18)');};
+  [[6,20],[14,10],[26,8],[98,10],[108,22],[114,8],[8,40],[16,52],[44,56],[50,40],[74,44],[86,52],[100,46],[112,40],[106,70],[96,86],[78,74],[70,86],[12,84],[26,76],[50,70],[112,84],[4,64],[118,60]].forEach(([c,r],i)=>treeAt(c,r,dwGreenTree(i)));
+
+  const water=[];for(let r=0;r<rows;r++)for(let c=0;c<cols;c++)if(g[r][c]==='w')water.push([c,r]);
+  return{cols,rows,W,H,grid:g,solid,ground,objects,chimneys,water,smoke:[]};
+}
+
 const CHEST_NEED=5;
 let CHEST=null;
 function dwHasBelt(){return G.armorEarned.includes(G.wIdx);}
@@ -2104,6 +2316,8 @@ function dwDrawChest(ctx,cx,base,f){
 
 function dwOpenChest(){
   G.chestOpen=true;G.phase='itemGet';G.itemT=0;
+  const it=DENSE[G.wIdx].item;G.itemMin=it.burdenTo?112:70;
+  if(it.burdenTo){G.burdenWas=G.burden;G.burden=0;setTimeout(()=>{tone(220,0.2,'triangle',0.15);setTimeout(()=>tone(160,0.25,'triangle',0.12),180);},300);}
   keys.up=keys.down=keys.left=keys.right=false;
   if(!G.armorEarned.includes(G.wIdx))G.armorEarned.push(G.wIdx);
   G.dir='down';
@@ -2111,28 +2325,39 @@ function dwOpenChest(){
   try{save();}catch(e){}
 }
 
-function dwDrawItemGet(ctx,sx,sy,t){
-  ctx.fillStyle=`rgba(0,0,10,${0.5*Math.min(1,t/12)})`;ctx.fillRect(0,0,640,480);
+function dwDrawItemGet(ctx,sx,sy,t0){
+  const it=DENSE[G.wIdx].item,delay=it.burdenTo?44:0,t=t0-delay;
+  ctx.fillStyle=`rgba(0,0,10,${0.45*Math.min(1,t0/12)})`;ctx.fillRect(0,0,640,480);
+  if(it.burdenTo&&t0<64){
+    // the burden loosens, tumbles down the hill and falls into the open tomb
+    const k=Math.min(1,t0/56),bp=Math.max(0.3,(G.burdenWas||60)/100);
+    const camX=G.px-sx,camY=G.py-sy;
+    const fx=sx,fy=sy-26,tx=it.burdenTo[0]-camX,ty=it.burdenTo[1]-camY;
+    const x=fx+(tx-fx)*k,y=fy+(ty-fy)*k-Math.abs(Math.sin(k*Math.PI*3))*22*(1-k);
+    const pw=8+Math.round(10*bp),ph=7+Math.round(7*bp),sc=1-Math.max(0,k-0.8)*4;
+    if(sc>0){ctx.save();ctx.translate(x,y);ctx.rotate(k*9);ctx.scale(sc,sc);ctx.fillStyle='#4a2a0e';ctx.fillRect(-pw/2-1,-ph/2-1,pw+2,ph+2);ctx.fillStyle='#7a3a10';ctx.fillRect(-pw/2,-ph/2,pw,ph);ctx.fillStyle='#d0a030';ctx.fillRect(-1,-1,2,2);ctx.restore();}
+  }
+  dwDrawPlayer(ctx,sx,sy);
+  if(t<0)return;
   const by=sy-46-Math.min(14,t*0.8)+Math.sin(t*0.1)*2;
   ctx.save();ctx.translate(sx,by);ctx.rotate(t*0.01);
   ctx.fillStyle=`rgba(255,240,170,${0.22*Math.min(1,t/12)})`;
   for(let i=0;i<10;i++){ctx.rotate(Math.PI/5);ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(-7,70);ctx.lineTo(7,70);ctx.closePath();ctx.fill();}
   ctx.restore();
-  dwDrawPlayer(ctx,sx,sy);
   const gr=ctx.createRadialGradient(sx,by,2,sx,by,26);gr.addColorStop(0,'rgba(255,250,210,0.9)');gr.addColorStop(1,'rgba(255,230,120,0)');
   ctx.fillStyle=gr;ctx.fillRect(sx-28,by-28,56,56);
-  DENSE[G.wIdx].item.icon(ctx,sx,by,2);
+  it.icon(ctx,sx,by,2);
   if(t%12<6){ctx.fillStyle='#fff8d0';[[sx-22,by-10],[sx+20,by+6],[sx+6,by-20]].forEach(([x,y])=>{ctx.fillRect(x,y-2,1,5);ctx.fillRect(x-2,y,5,1);});}
   if(t>14){
     const bh=96,bx=20,bw=600,top=sy>280?40:480-bh-10;
     ctx.fillStyle='rgba(8,10,40,0.95)';ctx.fillRect(bx,top,bw,bh);
     ctx.strokeStyle='#f8c840';ctx.lineWidth=3;ctx.strokeRect(bx+1.5,top+1.5,bw-3,bh-3);
     ctx.textAlign='center';ctx.textBaseline='alphabetic';
-    const it=DENSE[G.wIdx].item,title='You got the '+it.name+'!';
+    const title=it.title||'You got the '+it.name+'!';
     ctx.fillStyle='#f8c840';ctx.font='bold 22px monospace';if(ctx.measureText(title).width>580)ctx.font='bold 18px monospace';ctx.fillText(title,320,top+32);
-    ctx.fillStyle='#ffffff';ctx.font='bold 14px monospace';ctx.fillText(it.verse,320,top+56);
+    ctx.fillStyle='#ffffff';ctx.font='bold 14px monospace';if(ctx.measureText(it.verse).width>580)ctx.font='bold 12px monospace';ctx.fillText(it.verse,320,top+56);
     ctx.fillStyle='#a0b0e0';ctx.font='12px monospace';ctx.fillText('— '+it.ref+'   •   '+it.hint,320,top+76);
-    if(t>70){ctx.fillStyle=Math.floor(t/20)%2?'#f8c840':'#c89820';ctx.font='bold 12px monospace';ctx.textAlign='right';ctx.fillText(('ontouchstart' in window?'TAP':'SPACE')+' ▶',bx+bw-12,top+bh-8);}
+    if(t0>(G.itemMin||70)){ctx.fillStyle=Math.floor(t/20)%2?'#f8c840':'#c89820';ctx.font='bold 12px monospace';ctx.textAlign='right';ctx.fillText(('ontouchstart' in window?'TAP':'SPACE')+' ▶',bx+bw-12,top+bh-8);}
     ctx.textAlign='left';
   }
 }
@@ -2170,7 +2395,7 @@ function startDenseLoop(){
     if(G.phase==='walk'){
       const dx=(keys.right?1:0)-(keys.left?1:0),dy=(keys.down?1:0)-(keys.up?1:0);
       if(dx||dy){
-        const sl=dwTileAt(G.px,G.py)==='m'?0.5:1,len=Math.hypot(dx,dy),mx=dx/len*SPEED*sl,my=dy/len*SPEED*sl,ox=G.px,oy=G.py;
+        const tF=dwTileAt(G.px,G.py),sl=tF==='m'?0.5:(D.slow&&tF===D.slow?0.6:1),len=Math.hypot(dx,dy),mx=dx/len*SPEED*sl,my=dy/len*SPEED*sl,ox=G.px,oy=G.py;
         if(!dwBlocked(G.px+mx,G.py))G.px+=mx;
         else if(!dy){for(let o=1;o<=7;o++){if(!dwBlocked(G.px+mx,G.py-o)){if(!dwBlocked(G.px,G.py-SPEED))G.py-=SPEED;break;}if(!dwBlocked(G.px+mx,G.py+o)){if(!dwBlocked(G.px,G.py+SPEED))G.py+=SPEED;break;}}}
         if(!dwBlocked(G.px,G.py+my))G.py+=my;
@@ -2199,8 +2424,8 @@ function startDenseLoop(){
     DWS.objects.forEach(o=>{const sx=o.x-camX,sy=o.y-camY;if(sx>-o.cv.width&&sx<640&&sy>-o.cv.height&&sy<480)list.push({base:o.base,draw:()=>spCtx.drawImage(o.cv,sx,sy)});});
     G.altarData.forEach((a,i)=>{const sx=a.x-camX,sy=a.y-camY;if(sx>-40&&sx<680&&sy>-40&&sy<520)list.push({base:a.y+6,draw:()=>drawAltarAt(spCtx,a,i,sx,sy)});});
     list.push({base:64,draw:()=>dwDrawWicket(spCtx,456-camX,48-camY)});
-    if(D.npc)list.push({base:D.npc.y,draw:()=>dwDrawHelp(spCtx,D.npc.x-camX,D.npc.y-camY,mapFrame)});
-    if(CHEST)list.push({base:CHEST.y,draw:()=>dwDrawChest(spCtx,CHEST.x-camX,CHEST.y-camY,mapFrame)});
+    if(D.npc)list.push({base:D.npc.y,draw:()=>dwDrawHelp(spCtx,D.npc.x-camX,D.npc.y-camY,mapFrame,D.npc.robe)});
+    if(CHEST)list.push({base:CHEST.y,draw:()=>(CHEST.draw||dwDrawChest)(spCtx,CHEST.x-camX,CHEST.y-camY,mapFrame)});
     list.push({base:G.companion.py,draw:()=>drawCompanionSprite(spCtx,Math.round(G.companion.px-camX)-7,Math.round(G.companion.py-camY)-8)});
     list.push({base:G.py+0.5,draw:()=>dwDrawPlayer(spCtx,Math.round(G.px-camX),Math.round(G.py-camY))});
     list.sort((a,b)=>a.base-b.base).forEach(o=>o.draw());
@@ -2209,8 +2434,8 @@ function startDenseLoop(){
     if(G.phase==='itemGet')dwDrawItemGet(spCtx,Math.round(G.px-camX),Math.round(psy),G.itemT);
     else if(G.nearAltar&&!G.nearAltar.lit)drawPrayPrompt(spCtx,psy);
     else if(G.nearChest){
-      if(G.altarsLit>=CHEST_NEED)drawPromptBox(spCtx,psy,'A treasure chest!','Something shines inside…',(touch?'TAP':'SPACE')+' to open ▶');
-      else drawPromptBox(spCtx,psy,'Evangelist says:','"Light '+CHEST_NEED+' altars to open this chest. ('+G.altarsLit+'/'+CHEST_NEED+')"','');
+      if(G.altarsLit>=CHEST_NEED)drawPromptBox(spCtx,psy,CHEST.label||'A treasure chest!',CHEST.text||'Something shines inside…',(touch?'TAP':'SPACE')+' '+(CHEST.action||'to open ▶'));
+      else drawPromptBox(spCtx,psy,'Evangelist says:',(CHEST.locked||'"Light '+CHEST_NEED+' altars to open this chest."')+' ('+G.altarsLit+'/'+CHEST_NEED+')','');
     }
     else if(G.nearNpc)drawPromptBox(spCtx,psy,D.npc.name+' says:',D.npc.line,'');
     else if(D.item&&G.altarsLit>=10&&!dwHasBelt()&&G.py<120)drawPromptBox(spCtx,psy,'Evangelist says:',D.item.gateMsg,'');
@@ -3191,7 +3416,7 @@ document.addEventListener('keydown',e=>{
     G.qIdx=0;G.correct=0;G.wrong=0;G.streak=0;G.bossHP=100;
     stopLoop();show('bossBattleScr');startBossBattle();return;
   }
-  if((e.key===' '||e.key==='Enter')&&G.phase==='itemGet'){e.preventDefault();if(G.itemT>70)G.phase='walk';return;}
+  if((e.key===' '||e.key==='Enter')&&G.phase==='itemGet'){e.preventDefault();if(G.itemT>(G.itemMin||70))G.phase='walk';return;}
   if((e.key===' '||e.key==='Enter')&&G.phase==='walk'&&G.nearChest&&G.altarsLit>=CHEST_NEED&&!G.chestOpen){e.preventDefault();dwOpenChest();return;}
   // Space key — interact with altar
   if((e.key===' '||e.key==='Enter')&&G.phase==='walk'&&G.nearAltar&&!G.nearAltar.lit){
@@ -3506,6 +3731,75 @@ function dsDrawSerpent(g,f,hp){
 
 function dsFruit(ctx,x,y,u){const F=(a,b,w,h,c)=>{ctx.fillStyle=c;ctx.fillRect(x+a*u,y+b*u,w*u,h*u);};F(-3,-2,6,5,'#c82828');F(-2,-3,4,7,'#c82828');F(-2,-2,2,2,'#ff8080');F(1,2,2,1,'#8a1818');F(0,-5,1,2,'#5a3a1a');F(1,-5,2,1,'#4a9a3a');}
 function dsFruitOrbit(ctx,f,n,cx,cy,r,alpha=1){ctx.save();ctx.globalAlpha=alpha;for(let i=0;i<n;i++){const a=f*0.022+i*(Math.PI*2/n);dsFruit(ctx,Math.round(cx+Math.cos(a)*r),Math.round(cy+Math.sin(a)*r*0.45+Math.sin(f*0.08+i)*4),2);}ctx.restore();}
+
+
+// ── World 3 boss: the Accuser at the gate of House Beautiful ─
+function dhBuildBossBg(){
+  const[cv,g]=mkCv(640,480);
+  const F=(x,y,w,h,c)=>{g.fillStyle=c;g.fillRect(x,y,w,h);};
+  const HZ=W0B.horizon,GX=W0B.gateX;
+  const sk=g.createLinearGradient(0,0,0,HZ);
+  sk.addColorStop(0,'#6a8ad0');sk.addColorStop(0.55,'#f0b890');sk.addColorStop(1,'#ffe6a8');
+  g.fillStyle=sk;g.fillRect(0,0,640,HZ);
+  for(let x=0;x<640;x++){const h1=Math.round(16+Math.sin(x*0.02)*8+Math.sin(x*0.05+1)*3);F(x,HZ-h1-6,1,h1+6,'#9ab8a0');}
+  // the palace across the horizon, gate centred on GX
+  const pal=dhPalace();g.drawImage(pal,GX-160,HZ-120);
+  // meadow
+  F(0,HZ,640,480-HZ,'#5cb43c');
+  for(let by=HZ;by<480;by+=4)for(let bx=0;bx<640;bx+=4){const n=vnoise(bx,by,30);if(n>0.66)F(bx,by,4,4,'#54aa36');else if(n<0.3)F(bx,by,4,4,'#66c046');}
+  for(let y=HZ;y<480;y++){const depth=(y-HZ)/(480-HZ),sz=1+Math.floor(depth*2.2);for(let x=0;x<640;x+=2){const h=tHash(x,y);if(h%29===0)F(x,y,sz,sz,'#7ad052');else if(h%181===0&&depth>0.1){F(x,y,sz,sz,['#fff6a0','#ffffff','#ff9ec4','#ffd040'][(h>>9)&3]);}}}
+  // marble path to the gate
+  for(let y=HZ;y<480;y++){const t=(y-HZ)/(480-HZ),cx=GX+(W0B.pX+10-GX)*Math.pow(t,1.15),hw=10+t*64,x0=Math.round(cx-hw),x1=Math.round(cx+hw);
+    F(x0,y,x1-x0,1,'#ddd4c2');if(Math.round(t*40)%3===0&&Math.round(t*400)%10===0)F(x0,y,x1-x0,1,'#c4baa6');F(x0,y,1+Math.floor(t*2),1,'#b0a690');F(x1-1-Math.floor(t*2),y,1+Math.floor(t*2),1,'#b0a690');}
+  // chained lions either side of the gate
+  const lion=dhLion(),lionR=flipCv(lion);
+  g.drawImage(lion,GX-92,HZ-12,42,39);g.drawImage(lionR,GX+50,HZ-12,42,39);
+  // framing trees
+  const t1=dwGreenTree(0),t2=dwGreenTree(4);
+  g.drawImage(t1,-16,150,64,76);g.drawImage(t2,590,140,64,76);g.drawImage(dwGreenTree(2),520,108,40,48);
+  for(let i=0;i<60;i++){const x=(i*97)%640,y=250+((i*53)%220);if(Math.abs(x-W0B.pX)<90)continue;F(x,y,2,6,'#7ad052');F(x+3,y+2,2,4,'#4ea032');if(i%4===0)F(x,y-2,2,2,'#ff9ec4');}
+  return cv;
+}
+
+function dhDrawAccuser(g,f,hp){
+  const u=2,F=(x,y,w,h,c)=>{g.fillStyle=c;g.fillRect(Math.round(x*u),Math.round(y*u),Math.max(1,Math.round(w*u)),Math.max(1,Math.round(h*u)));};
+  const R='#7a1a24',RH='#9a2a34',RD='#4e0e16',GD='#d8a838',SK='#b0a898',SKD='#8a8274';
+  const sway=Math.round(Math.sin(f*0.05));
+  // the scroll of accusations — it shrinks as truth prevails
+  const sl=Math.round(12+30*(hp/100));
+  F(3,26,9,sl,'#e8dcb8');F(3,26,1,sl,'#c8bc98');F(11,26,1,sl,'#c8bc98');
+  for(let y=29;y<26+sl-2;y+=3)F(5,y,(y*7)%5+3,1,'#8a7a5a');
+  F(2,24,11,3,'#c8b890');F(2,24,11,1,'#e0d4b0');F(2,26+sl,11,2,'#c8b890');
+  // robe
+  for(let y=22;y<66;y++){const half=Math.round(8+(y-22)*0.2),x0=24-half;F(x0,y,half*2,1,R);F(x0,y,2,1,RH);F(x0+half*2-2,y,2,1,RD);}
+  F(23,22,2,44,GD);
+  for(let x=15;x<33;x++)F(x,64+((x+sway)&1),1,2,RD);F(15,63,18,1,GD);
+  // high collar
+  F(14,11,4,13,RD);F(30,11,4,13,RD);F(14,11,1,13,GD);F(33,11,1,13,GD);F(15,9,2,3,RD);F(31,9,2,3,RD);
+  F(14,20,20,4,R);F(14,20,20,1,RH);
+  // gaunt head
+  F(18,6,12,13,SK);F(19,5,10,1,SK);F(18,6,2,13,SKD);F(29,7,1,10,SKD);
+  F(16,9,2,3,SK);F(30,9,2,3,SK);F(16,8,1,1,SK);F(31,8,1,1,SK);
+  F(19,9,4,1,'#3a2a2a');F(25,9,4,1,'#3a2a2a');F(19,8,1,1,'#3a2a2a');F(28,8,1,1,'#3a2a2a');
+  const blink=(f%160)<5;
+  if(!blink){F(20,11,3,1,'#ff4040');F(25,11,3,1,'#ff4040');}else{F(20,11,3,1,SKD);F(25,11,3,1,SKD);}
+  F(23,13,1,2,SKD);F(21,16,6,1,'#5a2a2a');F(26,15,1,1,'#5a2a2a');F(18,18,12,1,SKD);
+  // hand holding the scroll
+  F(9,22,6,4,R);F(8,23,4,3,SK);
+  // pointing at the pilgrim
+  const pt=Math.round(Math.sin(f*0.08));
+  F(32,24,10,4,R);F(32,24,10,1,RH);F(42,25+pt,3,3,SK);F(45,26+pt,2,1,SK);
+}
+
+function dhPage(ctx,x,y,a,u=2){ctx.save();ctx.translate(Math.round(x),Math.round(y));ctx.rotate(a);ctx.fillStyle='#efe6c8';ctx.fillRect(-5*u/2,-6*u/2,5*u,6*u);ctx.fillStyle='#8a7a5a';for(let i=0;i<4;i++)ctx.fillRect(-2*u,(-2+i)*u,(3+(i%2))*u*0.8,u/2);ctx.fillStyle='#c02040';ctx.fillRect(u,-2*u,u,u);ctx.restore();}
+function dhPageOrbit(ctx,f,n,cx,cy,r,alpha=1){ctx.save();ctx.globalAlpha=alpha;for(let i=0;i<n;i++){const a=f*0.02+i*(Math.PI*2/n);dhPage(ctx,cx+Math.cos(a)*r,cy+Math.sin(a)*r*0.45+Math.sin(f*0.07+i)*4,Math.sin(f*0.05+i)*0.5,2);}ctx.restore();}
+
+BOSSW[2]={name:'THE ACCUSER',hudName:'THE ACCUSER',gateX:190,horizon:134,bossX:190,feetY:240,BS:1.45,pX:470,foeW:96,foeH:136,
+  buildBg:()=>dhBuildBossBg(),clouds:()=>w0Clouds(),drawFoe:(g,f,hp)=>dhDrawAccuser(g,f,hp),orbit:(...a)=>dhPageOrbit(...a),projectile:(c,x,y)=>dhPage(c,x,y,x*0.05,3),icon:(...a)=>drawShoesIcon(...a),
+  gloom:'60,16,24',gloom2:'30,6,10',aura:'120,20,30',mist:'120,40,50',orb:'255,120,120',hp:['#c03040','#ff7080'],accent:'#ff7080',accentLt:'#ffd4d4',accentDim:'#c08888',panel:'30,6,10',
+  counterFrom:[60,-106],taunt1:'"You can never be saved!"',taunt2:'"Look at all your sins!"',introSub:'He accuses you at the gate. Stand in peace!',
+  counterLine:'"GUILTY!"',laughLine:'"You can never be saved!"',victoryLine:'The Accuser is silenced!',itemName:'SHOES OF PEACE',finalWord:'FORGIVEN',
+  bg:null,cl:null,anim:false,idle:0,boss:null,bossG:null};
 
 BOSSW[1]={name:'THE OLD SERPENT',hudName:'OLD SERPENT',gateX:190,horizon:134,bossX:190,feetY:240,BS:1.35,pX:470,foeW:104,foeH:136,
   buildBg:()=>dsBuildBossBg(),clouds:null,animBg:ctx=>dsBossAnim(ctx),drawFoe:(g,f,hp)=>dsDrawSerpent(g,f,hp),orbit:(...a)=>dsFruitOrbit(...a),projectile:(c,x,y)=>dsFruit(c,Math.round(x),Math.round(y),3),icon:(...a)=>drawBreastplateIcon(...a),
@@ -4284,7 +4578,7 @@ function buildBossWordBank(blanks, idx) {
   return shuffle(pool.slice(0,4));
 }
 function extractBossBlanks(full) {
-  const SKIP = new Set(['a','an','the','of','to','in','is','it','by','on','as','at','or','and','but','for','with','that','this','from','into','not','no','be','my','our','us','we','him','his','her','me','do','did','he','she','they','who','how','why','can','has','have','was','were','are','had','been','its','if','so','up','out','all','both','too','very','than','their','your','will','does','just','one','nor','per','yet','any','due','via']);
+  const SKIP = new Set(['them','these','those','there','then','when','what','which','whom','would','could','should','shall','must','may','might','being','also','only','upon','unto','am','because','you','yours','own','a','an','the','of','to','in','is','it','by','on','as','at','or','and','but','for','with','that','this','from','into','not','no','be','my','our','us','we','him','his','her','me','do','did','he','she','they','who','how','why','can','has','have','was','were','are','had','been','its','if','so','up','out','all','both','too','very','than','their','your','will','does','just','one','nor','per','yet','any','due','via']);
   const words = full.replace(/[.,!?;:"]/g, '').split(' ');
   const blanks = [];
   words.forEach(w => {
@@ -4691,7 +4985,7 @@ document.getElementById('bqCv').addEventListener('touchstart',()=>{
   },{passive:false});
   ow.addEventListener('touchend',e=>{
     keys.up=keys.down=keys.left=keys.right=false;
-    if(G.phase==='itemGet'){if(G.itemT>70)G.phase='walk';touchStart=null;moveJoy=null;return;}
+    if(G.phase==='itemGet'){if(G.itemT>(G.itemMin||70))G.phase='walk';touchStart=null;moveJoy=null;return;}
     if(touchStart&&moveJoy&&G.phase==='walk'&&G.nearChest&&G.altarsLit>=CHEST_NEED&&!G.chestOpen){
       const dx=moveJoy.x-touchStart.x,dy=moveJoy.y-touchStart.y;
       if(Math.abs(dx)<12&&Math.abs(dy)<12){dwOpenChest();touchStart=null;moveJoy=null;return;}
@@ -5366,7 +5660,7 @@ drawTitle();
 {const m=location.hash.match(/^#boss(\d)?$/);if(m){
   const wi=(+m[1]||1)-1;
   G.name='Preview';G.gender='boy';G.diff='young';G.score=0;G.lives=3;G.worldsDone=[];G.armorEarned=[];for(let i=0;i<=wi;i++)G.armorEarned.push(i);
-  beginWorld(wi);stopLoop();G.phase='bossIntro';triggerBossIntro();
+  beginWorld(wi);if(wi>=2)G.burden=0;stopLoop();G.phase='bossIntro';triggerBossIntro();
 }}
 // Start title music on first click (audio context needs user gesture)
 document.getElementById('titleScr').addEventListener('click',()=>playTitleMusic(),{once:false});
