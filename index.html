@@ -1273,7 +1273,7 @@ function beginWorld(wIdx){
   G.px=320;G.py=376;G.dir='up';G.frame=0;
   if(wIdx===0)G.burden=100; // reset burden only at start of game, not per world
   G.companion={px:320,py:396,frame:0,animT:0};
-  G.trail=[];
+  G.trail=[];G.chestOpen=G.armorEarned.includes(wIdx);G.nearChest=false;
   if(D){G.px=D.start[0];G.py=D.start[1];G.companion.px=D.comp[0];G.companion.py=D.comp[1];}
   // Keep path data for tile rendering (path tiles render as cobblestone)
   const path=PATHS[wIdx]||PATHS[0];
@@ -1749,6 +1749,7 @@ function dwBuildCity(){
   prop(dwSign('TO THE GATE'),64,80,2);
   // well in the square
   add(dwWell(),458,356,392);S(57,47,62,48);
+  S(65,40,68,41);
   // gatehouse
   const tower=dwTower();
   add(tower,52*8,232-72,232);add(tower,64*8,232-72,232);
@@ -1762,7 +1763,7 @@ function dwSolidAt(x,y){
   const c=Math.floor(x/8),r=Math.floor(y/8);
   if(c<0||r<0||c>=DWS.cols||r>=DWS.rows)return true;
   const v=DWS.solid[r*DWS.cols+c];
-  return v===1||(v===2&&G.altarsLit<10);
+  return v===1||(v===2&&(G.altarsLit<10||!dwHasBelt()));
 }
 function dwBlocked(px,py){return dwSolidAt(px-4,py-3)||dwSolidAt(px+4,py-3)||dwSolidAt(px-4,py+2)||dwSolidAt(px+4,py+2);}
 
@@ -1777,7 +1778,7 @@ function dwUpdateCompanion(){
 
 function dwDrawWicket(ctx,sx,sy){
   // sx,sy = top-left of the 48px opening at hedge top
-  const open=G.altarsLit>=10;
+  const open=G.altarsLit>=10&&dwHasBelt();
   const F=(x,y,w,h,c)=>{ctx.fillStyle=c;ctx.fillRect(sx+x,sy+y,w,h);};
   if(open){
     const p=0.5+Math.sin(mapFrame*0.08)*0.2;
@@ -1798,7 +1799,7 @@ function dwDrawWicket(ctx,sx,sy){
   if(!open){
     ctx.fillStyle='rgba(0,0,20,0.85)';ctx.fillRect(sx-28,sy+20,104,18);
     ctx.fillStyle='#f0d890';ctx.font='bold 12px monospace';ctx.textAlign='center';
-    ctx.fillText((10-G.altarsLit)+' MORE ALTARS',sx+24,sy+33);
+    ctx.fillText(G.altarsLit<10?(10-G.altarsLit)+' MORE ALTARS':'FIND THE BELT',sx+24,sy+33);
   }
 }
 
@@ -1860,6 +1861,93 @@ function dwDrawPlayer(ctx,sx,sy){
   drawPilgrimCanvas(ctx,sx-14,sy-26,G.armorEarned,1.0,G.frame);
 }
 
+const CHEST_NEED=5;
+const CHEST={x:536,y:336};
+function dwHasBelt(){return G.armorEarned.includes(0);}
+
+// Belt of Truth item icon, drawn on a pixel grid of size u, centred on (cx,cy)
+function drawBeltIcon(ctx,cx,cy,u=2){
+  const ox=Math.round(cx-10*u),oy=Math.round(cy-6*u);
+  const F=(x,y,w,h,c)=>{ctx.fillStyle=c;ctx.fillRect(ox+x*u,oy+y*u,w*u,h*u);};
+  const st='#8a5a2a',hi='#c08a4c',dk='#5a3818';
+  F(3,1,14,2,st);F(3,1,14,1,hi);F(1,2,2,2,st);F(17,2,2,2,st);
+  F(0,4,2,4,st);F(18,4,2,4,st);F(0,4,1,4,hi);F(19,4,1,4,dk);
+  F(1,8,2,2,st);F(17,8,2,2,st);F(3,9,14,2,st);F(3,10,14,1,dk);
+  for(let x=4;x<16;x+=3)F(x,2,1,1,'#e0b070');
+  F(7,6,6,6,'#f8c840');F(7,6,6,1,'#fff0a0');F(12,6,1,6,'#c89820');F(7,11,6,1,'#a07810');
+  F(9,8,2,2,dk);F(10,7,1,2,'#fff0a0');
+}
+
+function dwDrawChest(ctx,cx,base,f){
+  const open=G.chestOpen,ready=!open&&G.altarsLit>=CHEST_NEED;
+  const F=(x,y,w,h,c)=>{ctx.fillStyle=c;ctx.fillRect(cx+x,base+y,w,h);};
+  if(ready){
+    const p=0.35+Math.sin(f*0.12)*0.2;
+    const gr=ctx.createRadialGradient(cx,base-8,2,cx,base-8,30);gr.addColorStop(0,`rgba(255,230,120,${p})`);gr.addColorStop(1,'rgba(255,220,100,0)');
+    ctx.fillStyle=gr;ctx.fillRect(cx-32,base-40,64,48);
+  }
+  ctx.fillStyle='rgba(0,0,0,0.28)';ctx.beginPath();ctx.ellipse(cx,base,13,3,0,0,Math.PI*2);ctx.fill();
+  F(-11,-12,22,12,'#8a5a2a');F(-11,-8,22,1,'#6a4220');F(-11,-4,22,1,'#6a4220');F(-11,-1,22,1,'#4a2c14');
+  F(-8,-12,2,12,'#d8a830');F(6,-12,2,12,'#d8a830');F(-11,-12,1,12,'#a8743c');F(10,-12,1,12,'#5a3818');
+  if(open){
+    F(-11,-24,22,9,'#6a4220');F(-11,-24,22,2,'#8a5a2a');F(-8,-24,2,9,'#c89820');F(6,-24,2,9,'#c89820');
+    F(-10,-15,20,4,'#2a1808');F(-10,-15,20,1,'#4a2c14');
+  }else{
+    F(-12,-17,24,6,'#a06a34');F(-11,-18,22,2,'#b47a40');F(-11,-18,22,1,'#d09a5c');F(-12,-12,24,1,'#5a3818');
+    F(-8,-18,2,7,'#e8b838');F(6,-18,2,7,'#e8b838');
+    F(-2,-13,4,5,'#f8d040');F(-1,-11,2,2,'#3a2410');
+    if(!ready){F(-3,-9,6,5,'#7a7a88');F(-3,-9,6,1,'#9a9aa8');F(-2,-12,1,3,'#7a7a88');F(1,-12,1,3,'#7a7a88');F(-2,-12,4,1,'#7a7a88');F(-1,-7,2,2,'#3a3a44');}
+    else if(f%40<20){F(9,-22,1,3,'#fff6c0');F(8,-21,3,1,'#fff6c0');F(-12,-20,1,1,'#fff6c0');}
+  }
+}
+
+function dwOpenChest(){
+  G.chestOpen=true;G.phase='itemGet';G.itemT=0;
+  keys.up=keys.down=keys.left=keys.right=false;
+  if(!G.armorEarned.includes(0))G.armorEarned.push(0);
+  G.dir='down';
+  [523,659,784,1047,0,784,1047,1319].forEach((n,i)=>{if(n)setTimeout(()=>tone(n,i>4?0.22:0.12,'square',0.13),i*110);});
+  try{save();}catch(e){}
+}
+
+function dwDrawItemGet(ctx,sx,sy,t){
+  ctx.fillStyle=`rgba(0,0,10,${0.5*Math.min(1,t/12)})`;ctx.fillRect(0,0,640,480);
+  const by=sy-46-Math.min(14,t*0.8)+Math.sin(t*0.1)*2;
+  ctx.save();ctx.translate(sx,by);ctx.rotate(t*0.01);
+  ctx.fillStyle=`rgba(255,240,170,${0.22*Math.min(1,t/12)})`;
+  for(let i=0;i<10;i++){ctx.rotate(Math.PI/5);ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(-7,70);ctx.lineTo(7,70);ctx.closePath();ctx.fill();}
+  ctx.restore();
+  dwDrawPlayer(ctx,sx,sy);
+  const gr=ctx.createRadialGradient(sx,by,2,sx,by,26);gr.addColorStop(0,'rgba(255,250,210,0.9)');gr.addColorStop(1,'rgba(255,230,120,0)');
+  ctx.fillStyle=gr;ctx.fillRect(sx-28,by-28,56,56);
+  drawBeltIcon(ctx,sx,by,2);
+  if(t%12<6){ctx.fillStyle='#fff8d0';[[sx-22,by-10],[sx+20,by+6],[sx+6,by-20]].forEach(([x,y])=>{ctx.fillRect(x,y-2,1,5);ctx.fillRect(x-2,y,5,1);});}
+  if(t>14){
+    const bh=96,bx=20,bw=600,top=sy>280?40:480-bh-10;
+    ctx.fillStyle='rgba(8,10,40,0.95)';ctx.fillRect(bx,top,bw,bh);
+    ctx.strokeStyle='#f8c840';ctx.lineWidth=3;ctx.strokeRect(bx+1.5,top+1.5,bw-3,bh-3);
+    ctx.textAlign='center';ctx.textBaseline='alphabetic';
+    ctx.fillStyle='#f8c840';ctx.font='bold 22px monospace';ctx.fillText('You got the BELT OF TRUTH!',320,top+32);
+    ctx.fillStyle='#ffffff';ctx.font='bold 14px monospace';ctx.fillText('"Stand firm, with the belt of truth buckled on."',320,top+56);
+    ctx.fillStyle='#a0b0e0';ctx.font='12px monospace';ctx.fillText('— Ephesians 6:14   •   Use it to defeat the Doubter!',320,top+76);
+    if(t>70){ctx.fillStyle=Math.floor(t/20)%2?'#f8c840':'#c89820';ctx.font='bold 12px monospace';ctx.textAlign='right';ctx.fillText(('ontouchstart' in window?'TAP':'SPACE')+' ▶',bx+bw-12,top+bh-8);}
+    ctx.textAlign='left';
+  }
+}
+
+function drawPromptBox(ctx,playerScreenY,label,text,action){
+  const bw=600,bh=70,bx=20,by=playerScreenY>300?40:480-bh-10;
+  ctx.fillStyle='rgba(8,10,40,0.94)';ctx.fillRect(bx,by,bw,bh);
+  ctx.strokeStyle='#f8c840';ctx.lineWidth=3;ctx.strokeRect(bx+1.5,by+1.5,bw-3,bh-3);
+  ctx.textAlign='left';ctx.textBaseline='alphabetic';
+  ctx.fillStyle='#9ab4ff';ctx.font='bold 13px monospace';ctx.fillText(label,bx+16,by+22);
+  ctx.fillStyle='#ffffff';ctx.font='bold 17px monospace';
+  let line=text;while(ctx.measureText(line).width>bw-32&&line.length>4)line=line.slice(0,-4)+'…';
+  ctx.fillText(line,bx+16,by+50);
+  if(action){ctx.textAlign='right';ctx.font='bold 14px monospace';ctx.fillStyle=Math.floor(mapFrame/20)%2===0?'#f8c840':'#c89820';ctx.fillText(action,bx+bw-16,by+22);}
+  ctx.textAlign='left';
+}
+
 function startDenseLoop(){
   stopLoop();
   const D=DENSE[G.wIdx];
@@ -1892,8 +1980,9 @@ function startDenseLoop(){
       }else G.frame=0;
       dwUpdateCompanion();
       checkAltarProximity();
-      if(G.altarsLit>=10&&G.py<D.gateY){G.phase='bossIntro';stopLoop();triggerBossIntro();return;}
-    }
+      G.nearChest=G.wIdx===0&&!G.chestOpen&&Math.hypot(G.px-CHEST.x,G.py-(CHEST.y+6))<30;
+      if(G.altarsLit>=10&&dwHasBelt()&&G.py<D.gateY){G.phase='bossIntro';stopLoop();triggerBossIntro();return;}
+    }else if(G.phase==='itemGet'){G.itemT++;}
     const camX=Math.round(Math.max(0,Math.min(DWS.W-640,G.px-320)));
     const camY=Math.round(Math.max(-TOP,Math.min(DWS.H-480,G.py-TOP-225)));
     owCtx.clearRect(0,0,640,480);
@@ -1906,11 +1995,19 @@ function startDenseLoop(){
     DWS.objects.forEach(o=>{const sx=o.x-camX,sy=o.y-camY;if(sx>-o.cv.width&&sx<640&&sy>-o.cv.height&&sy<480)list.push({base:o.base,draw:()=>spCtx.drawImage(o.cv,sx,sy)});});
     G.altarData.forEach((a,i)=>{const sx=a.x-camX,sy=a.y-camY;if(sx>-40&&sx<680&&sy>-40&&sy<520)list.push({base:a.y+6,draw:()=>drawAltarAt(spCtx,a,i,sx,sy)});});
     list.push({base:64,draw:()=>dwDrawWicket(spCtx,456-camX,48-camY)});
+    if(G.wIdx===0)list.push({base:CHEST.y,draw:()=>dwDrawChest(spCtx,CHEST.x-camX,CHEST.y-camY,mapFrame)});
     list.push({base:G.companion.py,draw:()=>drawCompanionSprite(spCtx,Math.round(G.companion.px-camX)-7,Math.round(G.companion.py-camY)-8)});
     list.push({base:G.py+0.5,draw:()=>dwDrawPlayer(spCtx,Math.round(G.px-camX),Math.round(G.py-camY))});
     list.sort((a,b)=>a.base-b.base).forEach(o=>o.draw());
     dwSmoke(spCtx,camX,camY);
-    drawPrayPrompt(spCtx,G.py-camY);
+    const psy=G.py-camY,touch='ontouchstart' in window;
+    if(G.phase==='itemGet')dwDrawItemGet(spCtx,Math.round(G.px-camX),Math.round(psy),G.itemT);
+    else if(G.nearAltar&&!G.nearAltar.lit)drawPrayPrompt(spCtx,psy);
+    else if(G.nearChest){
+      if(G.altarsLit>=CHEST_NEED)drawPromptBox(spCtx,psy,'A treasure chest!','Something shines inside…',(touch?'TAP':'SPACE')+' to open ▶');
+      else drawPromptBox(spCtx,psy,'Evangelist says:','"Light '+CHEST_NEED+' altars to open this chest. ('+G.altarsLit+'/'+CHEST_NEED+')"','');
+    }
+    else if(G.wIdx===0&&G.altarsLit>=10&&!dwHasBelt()&&G.py<120)drawPromptBox(spCtx,psy,'Evangelist says:','"Get the Belt of Truth first — it\'s in the square!"','');
     drawMapHUDNew(spCtx);
   }
   loop();
@@ -2499,11 +2596,13 @@ function drawMapHUDNew(ctx){
     if(i<G.lives){ctx.fillStyle='rgba(255,120,120,0.6)';ctx.beginPath();ctx.arc(hx-1,hy-4,2,0,Math.PI*2);ctx.fill();}
   }
   ctx.fillStyle='#f8c840';ctx.font='bold 10px monospace';ctx.textAlign='left';ctx.fillText('★'+G.score,76,19);
+  if(G.wIdx===0&&G.armorEarned.includes(0))drawBeltIcon(ctx,150,15,1);
   // World name + altar counter (center)
   ctx.fillStyle='#e0e0ff';ctx.textAlign='center';ctx.font='bold 12px monospace';
   ctx.fillText(WORLDS[G.wIdx].name.toUpperCase(),320,13);
   ctx.fillStyle=G.altarsLit>=10?'#60ff60':'#b0b8ff';ctx.font='bold 12px monospace';
-  ctx.fillText('ALTARS '+G.altarsLit+'/10'+(G.altarsLit>=10?' — GATE OPEN!':''),320,27);
+  const needBelt=G.wIdx===0&&!G.armorEarned.includes(0);
+  ctx.fillText('ALTARS '+G.altarsLit+'/10'+(G.altarsLit>=10?(needBelt?' — FIND THE BELT!':' — GATE OPEN!'):''),320,27);
   // Burden bar (right, worlds 0-2 only)
   if(G.wIdx<=2&&G.burden>0){
     const bx=530,by=8,bw=100;
@@ -2886,6 +2985,8 @@ document.addEventListener('keydown',e=>{
     G.qIdx=0;G.correct=0;G.wrong=0;G.streak=0;G.bossHP=100;
     stopLoop();show('bossBattleScr');startBossBattle();return;
   }
+  if((e.key===' '||e.key==='Enter')&&G.phase==='itemGet'){e.preventDefault();if(G.itemT>70)G.phase='walk';return;}
+  if((e.key===' '||e.key==='Enter')&&G.phase==='walk'&&G.nearChest&&G.altarsLit>=CHEST_NEED&&!G.chestOpen){e.preventDefault();dwOpenChest();return;}
   // Space key — interact with altar
   if((e.key===' '||e.key==='Enter')&&G.phase==='walk'&&G.nearAltar&&!G.nearAltar.lit){
     e.preventDefault();
@@ -3367,6 +3468,12 @@ function w0WordBolt(ctx,word,t,fromX,fromY,toX,toY){
   ctx.fillStyle='#fff8d0';ctx.fillText(word.toUpperCase(),x,y);ctx.textBaseline='alphabetic';
 }
 
+function w0DrawBeltPower(ctx,x,y,a,u=2){
+  const gr=ctx.createRadialGradient(x,y,2,x,y,30+u*4);gr.addColorStop(0,`rgba(255,250,210,${0.85*a})`);gr.addColorStop(1,'rgba(255,230,120,0)');
+  ctx.fillStyle=gr;ctx.fillRect(x-50,y-50,100,100);
+  ctx.save();ctx.globalAlpha=Math.min(1,a*1.4);drawBeltIcon(ctx,x,y,u);ctx.restore();
+}
+
 function w0AttackAnim(onDone){
   const bq=document.getElementById('bqDlg');bq.style.display='none';
   W0B.anim=true;
@@ -3377,16 +3484,17 @@ function w0AttackAnim(onDone){
   tone(420,0.03,'square',0.13);setTimeout(()=>tone(560,0.03,'square',0.15),90);setTimeout(()=>tone(740,0.04,'square',0.18),170);
   (function step(){
     f++;mapFrame++;
-    const sx=W0B.pX-10,sy=W0B.feetY-40,tx=W0B.bossX,ty=W0B.feetY-110;
+    const beltY=W0B.feetY-86,sx=W0B.pX,sy=beltY,tx=W0B.bossX,ty=W0B.feetY-110;
     w0DrawBg(ctx);w0DrawGateDoors(ctx,0);
     if(f<=12){
       w0DrawBoss(ctx,mapFrame);
-      const a=f/12;const gr=ctx.createRadialGradient(W0B.pX,W0B.feetY-30,0,W0B.pX,W0B.feetY-30,60);gr.addColorStop(0,`rgba(255,240,160,${a*0.7})`);gr.addColorStop(1,'rgba(255,220,80,0)');
-      ctx.fillStyle=gr;ctx.fillRect(W0B.pX-70,W0B.feetY-100,140,120);
+      const a=f/12;
       w0DrawPilgrim(ctx,W0B.pX,W0B.feetY,f,{dy:-Math.round(a*4)});
+      w0DrawBeltPower(ctx,W0B.pX,W0B.feetY-26-(60*a),a);
     }else if(f<=34){
       w0DrawBoss(ctx,mapFrame);
       w0DrawPilgrim(ctx,W0B.pX,W0B.feetY,f);
+      w0DrawBeltPower(ctx,W0B.pX,beltY+Math.sin(f*0.4)*2,1-(f-12)/40);
       w0WordBolt(ctx,word,(f-12)/22,sx,sy,tx,ty);
     }else if(f<=60){
       const p=(f-34)/26;
@@ -3462,7 +3570,8 @@ function w0Victory(){
     if(f<=26){
       Object.assign(bossBox,w0DrawBoss(ctx,mapFrame,{hp:5}));
       w0DrawPilgrim(ctx,W0B.pX,W0B.feetY,f);
-      w0WordBolt(ctx,word,f/26,sx,sy,tx,ty);
+      w0DrawBeltPower(ctx,W0B.pX,W0B.feetY-90,1,3);
+      w0WordBolt(ctx,word,f/26,W0B.pX,W0B.feetY-90,tx,ty);
     }else if(f<=70){
       const p=(f-26)/44;
       Object.assign(bossBox,w0DrawBoss(ctx,mapFrame,{hp:5,flash:0.3+0.5*Math.abs(Math.sin(f*0.5)),dx:Math.sin(f*2.1)*4}));
@@ -3520,7 +3629,6 @@ function w0Victory(){
 function w0Defeat(){
   const bq=document.getElementById('bqDlg');bq.style.display='none';
   W0B.anim=true;W0B.idle++;
-  G.armorEarned=G.armorEarned.filter(i=>i!==G.wIdx);
   const answer=(G.bossBlanks||G.bossQ.blanks)[G.bossBlankIdx]||'';
   const full=G.bossQ?G.bossQ.full:'';
   const ctx=document.getElementById('bbCv').getContext('2d');
@@ -3556,7 +3664,7 @@ function w0Defeat(){
       ctx.fillStyle='#f8c840';ctx.font='bold 26px monospace';ctx.fillText(answer.toUpperCase(),320,py+108);
       ctx.fillStyle='#c0d0ff';ctx.font='bold 14px monospace';
       if(ctx.measureText(full).width<=500)ctx.fillText(full,320,py+142);else wrapText(ctx,full,70,py+136,500,18);
-      ctx.textAlign='center';ctx.fillStyle='#ff9080';ctx.font='bold 13px monospace';ctx.fillText('Belt of Truth lost — beat the Doubter to win it back!',320,py+196);
+      ctx.textAlign='center';ctx.fillStyle='#ff9080';ctx.font='bold 13px monospace';ctx.fillText('Your hearts are refilled — try again!',320,py+196);
       ctx.fillStyle='#a0a0e0';ctx.font='12px monospace';ctx.fillText('"Study God\'s Word and return stronger." — 2 Tim 2:15',320,py+222);
       if(f>160){ctx.fillStyle=Math.floor(f/20)%2?'#f8c840':'#c89820';ctx.font='bold 13px monospace';ctx.fillText('▶ PRESS ENTER OR TAP TO CONTINUE',320,py+258);}
     }
@@ -3608,7 +3716,7 @@ function w0Intro(roar,theme){
       ctx.save();ctx.globalAlpha=t;
       ctx.fillStyle='rgba(16,6,26,0.92)';ctx.fillRect(0,300,640,96);ctx.fillStyle='#b080ff';ctx.fillRect(0,300,640,3);ctx.fillRect(0,393,640,3);
       bChromaText(ctx,'THE DOUBTER',320,346,'#e0c0ff',34,3);
-      ctx.fillStyle='#ffffff';ctx.font='bold 14px monospace';ctx.textAlign='center';ctx.fillText('He blocks the Wicket Gate. Answer with TRUTH!',320,376);
+      ctx.fillStyle='#ffffff';ctx.font='bold 14px monospace';ctx.textAlign='center';ctx.fillText('He blocks the Wicket Gate. Use the Belt of Truth!',320,376);
       ctx.restore();
     }
     w0DrawHUD(ctx);
@@ -3889,7 +3997,7 @@ function startBossBattle(){
   document.getElementById('bqDlg').style.display='none';
   // Play armor grant cinematic first — only set phase+bossQ AFTER it completes
   // This prevents the Enter key dismiss from instantly triggering submitBossBlank
-  triggerArmorGrant(()=>{
+  const begin=()=>{
     G.phase='boss';
     G.bossQ=bossQ;
     G.bossBlanks=bossBlanks;
@@ -3900,7 +4008,8 @@ function startBossBattle(){
     document.getElementById('bqDlg').style.display='block';
     renderBQDlg();
     if(G.wIdx===0)w0StartIdle();
-  });
+  };
+  if(G.wIdx===0)begin();else triggerArmorGrant(begin);
 }
 
 // ===========================================================
@@ -4251,6 +4360,7 @@ document.getElementById('bqCv').addEventListener('touchstart',()=>{
   let touchStart=null,moveJoy=null;
   const ow=document.getElementById('owScr');
   ow.addEventListener('touchstart',e=>{
+    if(G.phase==='itemGet'){e.preventDefault();return;}
     if(G.phase!=='walk')return;
     const t=e.touches[0];
     const rect=ow.getBoundingClientRect();
@@ -4272,6 +4382,11 @@ document.getElementById('bqCv').addEventListener('touchstart',()=>{
   },{passive:false});
   ow.addEventListener('touchend',e=>{
     keys.up=keys.down=keys.left=keys.right=false;
+    if(G.phase==='itemGet'){if(G.itemT>70)G.phase='walk';touchStart=null;moveJoy=null;return;}
+    if(touchStart&&moveJoy&&G.phase==='walk'&&G.nearChest&&G.altarsLit>=CHEST_NEED&&!G.chestOpen){
+      const dx=moveJoy.x-touchStart.x,dy=moveJoy.y-touchStart.y;
+      if(Math.abs(dx)<12&&Math.abs(dy)<12){dwOpenChest();touchStart=null;moveJoy=null;return;}
+    }
     // Tap near altar = interact
     if(touchStart&&moveJoy){
       const dx=moveJoy.x-touchStart.x,dy=moveJoy.y-touchStart.y;
