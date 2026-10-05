@@ -4799,7 +4799,8 @@ function bossWinsAnimation(){
 
 function endWorld(won){
   stopLoop();G.win=won;
-  if(!won&&G.bossLost){G.lives=3;}
+  G.retryBoss=!won&&G.bossLost;
+  if(G.retryBoss){G.lives=3;}
   G.bossLost=false;G.bossMiss=null;
   const w=WORLDS[G.wIdx];
   if(won){
@@ -4821,6 +4822,7 @@ function endWorld(won){
   const nw=WORLDS[G.wIdx+1];
   document.getElementById('nextWBtn').style.display=won&&nw?'block':'none';
   document.getElementById('retryBtn').style.display=won?'none':'block';
+  document.getElementById('retryBtn').textContent=G.retryBoss?'↺ FIGHT '+w.boss.name.toUpperCase()+' AGAIN':'↺ TRY AGAIN';
   const cv=document.getElementById('resCv'),ctx=cv.getContext('2d');
   const gr=ctx.createLinearGradient(0,0,0,480);
   gr.addColorStop(0,won?'#001800':'#180000');gr.addColorStop(1,'#000');
@@ -4830,7 +4832,10 @@ function endWorld(won){
 }
 
 function goNextWorld(){if(G.wIdx<5)beginWorld(G.wIdx+1);else goWM();}
-function retryWorld(){beginWorld(G.wIdx);}
+function retryWorld(){
+  if(G.retryBoss){G.retryBoss=false;stopLoop();G.phase='bossIntro';G.bossHP=100;startBossBattle();return;}
+  beginWorld(G.wIdx);
+}
 
 // ===============================
 // GAME OVER
