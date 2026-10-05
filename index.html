@@ -494,7 +494,7 @@ function sfxBlankOk(){tone(659,0.07);setTimeout(()=>tone(880,0.1),70);}
 // ===============================
 function save(){
   const saves=JSON.parse(localStorage.getItem('cq3s')||'{}');
-  saves[G.name]={score:G.score,lives:G.lives,worldsDone:G.worldsDone,armorEarned:G.armorEarned,totalAnswered:G.totalAnswered,gender:G.gender,diff:G.diff,ts:Date.now()};
+  saves[G.name]={score:G.score,lives:G.lives,worldsDone:G.worldsDone,armorEarned:G.armorEarned,totalAnswered:G.totalAnswered,gender:G.gender,diff:G.diff,mastery:G.mastery||{},sealed:G.sealed||[],ts:Date.now()};
   localStorage.setItem('cq3s',JSON.stringify(saves));
   const lb=JSON.parse(localStorage.getItem('cq3lb')||'[]');
   const ei=lb.findIndex(e=>e.name===G.name);
@@ -1066,7 +1066,9 @@ function drawWM(){
   // armour collected
   ctx.fillStyle='#a89878';ctx.font='bold 10px monospace';ctx.fillText('ARMOR OF GOD',14,468);
   for(let k=0;k<6;k++){const x=130+k*30,y=464;pcirc(ctx,x,y,11,'#2a1a0e');if(G.armorEarned.includes(k))wmArmorIcon(k,ctx,x,y,1);else{ctx.save();ctx.globalAlpha=0.25;wmArmorIcon(k,ctx,x,y,1);ctx.restore();}}
+  {const[rn,rt]=rollCount(i);btn(370,424,120,40,'ROLL '+rn+'/'+rt,G.sealed&&G.sealed.includes(i)?'#8a6a10':'#5a4020',()=>{sfxMenu();G.rollOpen=i;});}
   if(un)btn(500,424,126,40,(G.worldsDone.includes(i)?'PLAY AGAIN ▶':'PLAY ▶'),'#2a7a3a',()=>{sfxMenu();beginWorld(i);});
+  if(G.rollOpen!=null)drawRollOverlay(ctx,G.rollOpen);
   ctx.textAlign='right';ctx.fillStyle='#8a7a60';ctx.font='10px monospace';ctx.fillText('← → choose   ENTER play',626,419);
 }
 
@@ -1075,7 +1077,7 @@ function buildWM(){
   const cv=document.getElementById('wmCv');if(!cv)return;
   wmFrame=0;
   let reached=0;for(let i=0;i<6;i++)if(wmUnlocked(i))reached=i;
-  wmSel=reached;
+  wmSel=reached;G.rollOpen=null;
   if(wmLoopId){cancelAnimationFrame(wmLoopId);wmLoopId=null;}
   let last=0;
   function wmLoop(now){wmLoopId=requestAnimationFrame(wmLoop);if(now&&now-last<15.5)return;last=now||0;wmFrame++;drawWM();}
@@ -1088,6 +1090,7 @@ function buildWM(){
 }
 document.addEventListener('keydown',e=>{
   const scr=document.getElementById('wmScr');if(!scr||!scr.classList.contains('on'))return;
+  if(G.rollOpen!=null){if(['Escape','Enter',' '].includes(e.key)){e.preventDefault();G.rollOpen=null;}return;}
   if(e.key==='ArrowRight'||e.key==='ArrowUp'){for(let i=wmSel+1;i<6;i++)if(wmUnlocked(i)){wmSel=i;sfxMenu();break;}e.preventDefault();}
   else if(e.key==='ArrowLeft'||e.key==='ArrowDown'){for(let i=wmSel-1;i>=0;i--)if(wmUnlocked(i)){wmSel=i;sfxMenu();break;}e.preventDefault();}
   else if(e.key==='Enter'||e.key===' '){if(wmUnlocked(wmSel)){e.preventDefault();sfxMenu();beginWorld(wmSel);}}
@@ -1134,16 +1137,16 @@ function beginWorld(wIdx){
   // Setup altars — assign questions round-robin from non-boss range
   const D=DENSE[wIdx],TS=D?8:16;
   const positions=D?D.altars:(ALTAR_POSITIONS[wIdx]||ALTAR_POSITIONS[0]);
-  const nonBossQs=G.wQs.slice(0,G.wQs.length-1); // last Q reserved for boss
-  G.altarData=positions.map((pos,i)=>({
-    tx:pos[1],ty:pos[0],
-    x:pos[1]*TS+TS/2,y:pos[0]*TS+TS/2,
-    qIdx:nonBossQs[i%nonBossQs.length],
-    lit:false,animT:0,required:i<10
-  }));
-  // Shuffle altar question order so adjacent altars ask different questions
-  const shuffledQs=shuffle(nonBossQs);
-  G.altarData.forEach((a,i)=>{a.qIdx=shuffledQs[i%shuffledQs.length];});
+  const bossN=Math.min(BOSS_N[wIdx]||4,G.wQs.length-1);
+  G.bossQs=G.wQs.slice(G.wQs.length-bossN);
+  const pool=shuffle(G.wQs.slice(0,G.wQs.length-bossN));
+  const nAlt=Math.min(positions.length,pool.length);
+  G.altarData=positions.slice(0,nAlt).map((pos,i)=>({tx:pos[1],ty:pos[0],x:pos[1]*TS+TS/2,y:pos[0]*TS+TS/2,qIdx:pool[i],lit:false,animT:0,required:i<10}));
+  const rest=pool.slice(nAlt),givers=(D&&D.quests)||[];
+  G.quests=givers.length&&rest.length?givers.map(gv=>Object.assign({},gv,{qs:[],done:0})):[];
+  rest.forEach((q,k)=>G.quests[k%G.quests.length].qs.push(q));
+  G.quests=G.quests.filter(q=>q.qs.length);
+  G.activeQuest=null;G.nearQuest=null;
   // Player starts near bottom center of map
   G.px=320;G.py=376;G.dir='up';G.frame=0;
   G.burden=G.armorEarned.includes(2)?0:(wIdx===0?100:G.burden);
@@ -1284,6 +1287,7 @@ let tiles=[];
 const DENSE={
   0:{
     build:dwBuildCity,
+    quests:[{name:'Obstinate',robe:['#6a4a5a','#8a6a7a','#4a3040'],x:244,y:352,hello:'"Turn back! Unless you can answer me…"',thanks:'"Hmph! You really do know it."'}],
     start:[580,664],comp:[548,668],
     chest:{x:536,y:336},gateLabel:'WICKET GATE',
     item:{name:'BELT OF TRUTH',short:'FIND THE BELT!',verse:'"Stand firm, with the belt of truth buckled on."',ref:'Ephesians 6:14',hint:'Use it to defeat the Doubter!',gateMsg:'"Get the Belt of Truth first — it\'s in the square!"',icon:(...a)=>drawBeltIcon(...a)},
@@ -1293,6 +1297,7 @@ const DENSE={
   },
   1:{
     build:dsBuildSlough,
+    quests:[{name:'Pliable',robe:['#8a7a3a','#a89a50','#6a5a28'],x:164,y:624,hello:'"I\'m stuck in the mud! Teach me!"',thanks:'"Thank you, friend! Onward!"'}],
     start:[480,660],comp:[452,668],
     gateY:62,
     chest:{x:504,y:392},gateLabel:'FIRM GROUND',light:(...a)=>dsDrawLight(...a),
@@ -1302,6 +1307,8 @@ const DENSE={
   },
   2:{
     build:dhBuildHill,
+    quests:[{name:'Interpreter',robe:['#3a5a8a','#5a7aaa','#283c68'],x:356,y:656,hello:'"Come in! I will show you great things."',thanks:'"Well learned! God speed you!"'},
+            {name:'Prudence',robe:['#8a3a6a','#aa5a8a','#682848'],x:340,y:112,hello:'"Before you rest here, answer me."',thanks:'"Welcome to House Beautiful!"'}],
     start:[480,664],comp:[470,690],
     gateY:62,slow:'k',
     chest:{x:244,y:368,draw:(...a)=>dhDrawCross(...a),label:'The Cross',text:'Kneel here and lay down your burden…',action:'to kneel ▶',locked:'"Light 5 altars, then come to the Cross."'},
@@ -1312,6 +1319,10 @@ const DENSE={
   },
   3:{
     build:dvBuildValley,
+    quests:[{name:'Shepherd Boy',robe:['#7a8a3a','#9aaa50','#5a6a28'],x:244,y:584,hello:'"He that is down needs fear no fall!"',thanks:'"Go in peace, pilgrim!"'},
+            {name:'Mr. Honest',robe:['#6a6a6a','#8a8a8a','#4a4a4a'],x:564,y:632,hello:'"Honest is my name. Answer me true!"',thanks:'"Truly answered!"'},
+            {name:'Great-heart',robe:['#8a2a2a','#aa4a4a','#681818'],x:(dvC0(40)+1)*8+4,y:40*8+8,hello:'"I guard pilgrims here. Show me!"',thanks:'"Bravely answered!"'},
+            {name:'Mr. Fearing',robe:['#5a5a7a','#7a7a9a','#3a3a5a'],x:(dvC0(24)+1)*8+4,y:24*8+8,hello:'"I am so afraid… help me remember!"',thanks:'"I feel braver now. Thank you!"'}],
     start:[484,676],comp:[460,690],
     gateY:62,
     chest:Object.assign(dvChestPos(),{text:'A chest, glinting in the dark…'}),
@@ -1322,6 +1333,9 @@ const DENSE={
   },
   4:{
     build:dfBuildFair,
+    quests:[{name:'Talkative',robe:['#c06020','#e08040','#904010'],x:244,y:216,hello:'"I love to talk! But do you KNOW it?"',thanks:'"Well! You know more than talk!"'},
+            {name:'Mr. By-ends',robe:['#3a6a6a','#5a8a8a','#284a4a'],x:644,y:216,hello:'"Faith? Only when it pays! Prove it."',thanks:'"Hmm… perhaps I was wrong."'},
+            {name:'Demas',robe:['#9a9aa8','#babac8','#6a6a78'],x:244,y:504,hello:'"Come see my silver mine! Or…"',thanks:'"Ah, you will not be tempted."'}],
     start:[480,680],comp:[456,688],
     gateY:62,
     chest:{x:524,y:392,draw:(...a)=>dfDrawHopeful(...a),label:'Hopeful says:',text:'"I will go with you! Take this helmet."',action:'to talk ▶',locked:'"Light 5 altars, then come talk to Hopeful."'},
@@ -1333,8 +1347,8 @@ const DENSE={
   5:{
     build:dcBuildJourney,
     start:[488,680],comp:[466,690],
-    gateY:62,need:6,chestNeed:3,slowMap:{k:0.6,r:0.45},camTop:110,sky:'#fff2c8',
-    chest:{x:712,y:432,draw:(...a)=>dcDrawShepherds(...a),label:'The Shepherds say:',text:'"Take the Word of God — the sword of the Spirit!"',action:'to talk ▶',locked:'"Light 3 altars, then visit the Shepherds on Hill Clear."'},
+    gateY:62,need:4,chestNeed:2,slowMap:{k:0.6,r:0.45},camTop:110,sky:'#fff2c8',
+    chest:{x:712,y:432,draw:(...a)=>dcDrawShepherds(...a),label:'The Shepherds say:',text:'"Take the Word of God — the sword of the Spirit!"',action:'to talk ▶',locked:'"Light 2 altars, then visit the Shepherds."'},
     gateLabel:'CELESTIAL CITY',light:(...a)=>dcDrawLight(...a),wicket:(...a)=>dcWicket(...a),
     tick:()=>dcTick(),dyn:(...a)=>dcDyn(...a),promptFn:()=>dcPrompt(),
     item:{name:'SWORD OF THE SPIRIT',short:'SEE THE SHEPHERDS!',verse:'"Take the sword of the Spirit, which is the word of God."',ref:'Ephesians 6:17',hint:'Use it against Giant Despair!',gateMsg:'"Visit the Shepherds on Hill Clear first!"',icon:(...a)=>drawSwordIcon(...a)},
@@ -2635,8 +2649,76 @@ function dcBuildJourney(){
   return{cols,rows,W,H,grid:g,solid,ground,objects,chimneys:[],water,smoke:[],sheep:dcSheep(),ripple:'200,235,255'};
 }
 
+
+// ===============================
+// LEARNING: mastery stars, Christian's Roll, side quests
+// ===============================
+const BOSS_N=[4,4,4,4,4,3];
+function todayStr(){const d=new Date();return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate();}
+function mastery(q){return(G.mastery&&G.mastery[q])||{s:0,d:'',r:0};}
+function starStr(n){return'★'.repeat(n)+'☆'.repeat(3-n);}
+function markMastery(q,ok){
+  if(q==null||q<0)return;
+  G.mastery=G.mastery||{};
+  const m=Object.assign({s:0,d:'',r:0},G.mastery[q]),t=todayStr();
+  if(ok){m.r=1;if(m.d!==t){m.s=Math.min(3,m.s+1);m.d=t;}}
+  else m.s=Math.max(0,m.s-1);
+  G.mastery[q]=m;
+  if(ok)checkRollSeal();
+  try{save();}catch(e){}
+}
+function rollCount(w){const r=WRANGES[w];let n=0,t=0;for(let i=r[0];i<=r[1];i++){t++;if(mastery(i).r)n++;}return[n,t];}
+function checkRollSeal(){
+  const w=G.wIdx,[n,t]=rollCount(w);G.sealed=G.sealed||[];
+  if(n>=t&&!G.sealed.includes(w)){G.sealed.push(w);G.score+=250;showToast("Christian's Roll for this world is complete! +250");}
+}
+function showToast(text){G.toast={text,t:170};}
+function drawToast(ctx){
+  if(!G.toast||G.toast.t<=0)return;G.toast.t--;
+  const a=Math.min(1,G.toast.t/20);ctx.save();ctx.globalAlpha=a;ctx.font='bold 15px monospace';
+  const w=ctx.measureText(G.toast.text).width+30;
+  ctx.fillStyle='rgba(40,24,6,0.95)';ctx.fillRect(320-w/2,42,w,28);ctx.strokeStyle='#f8c840';ctx.lineWidth=2;ctx.strokeRect(320-w/2,42,w,28);
+  ctx.fillStyle='#ffe080';ctx.textAlign='center';ctx.fillText(G.toast.text,320,61);ctx.restore();
+}
+function dwDrawQuestGiver(ctx,q,sx,sy,f){
+  dwDrawHelp(ctx,sx,sy,f,q.robe);
+  const bx=Math.round(sx),by=Math.round(sy)-46+Math.round(Math.sin(f*0.1)*2);
+  if(q.done>=q.qs.length){pcirc(ctx,bx,by,7,'#2a8a3a');ctx.fillStyle='#ffffff';ctx.font='bold 10px monospace';ctx.textAlign='center';ctx.fillText('✓',bx,by+4);}
+  else{
+    ctx.fillStyle='#fff8e0';ctx.fillRect(bx-13,by-8,26,15);ctx.strokeStyle='#c89820';ctx.lineWidth=1;ctx.strokeRect(bx-12.5,by-7.5,25,14);
+    ctx.fillStyle='#c02020';ctx.font='bold 10px monospace';ctx.textAlign='center';ctx.fillText(q.done?q.done+'/'+q.qs.length:'!',bx,by+3);
+    ctx.fillStyle='#fff8e0';ctx.fillRect(bx-2,by+7,4,3);
+  }
+}
+function dwTalkQuest(){
+  const q=G.nearQuest;if(!q||q.done>=q.qs.length)return false;
+  G.activeQuest=q;G.activeAltarIdx=-1;openQuestion(q.qs[q.done]);return true;
+}
+function drawRollOverlay(ctx,w){
+  ctx.fillStyle='rgba(0,0,0,0.6)';ctx.fillRect(0,0,640,480);
+  const x0=24,y0=40,W=592,H=420;
+  ctx.fillStyle='#a08860';ctx.fillRect(x0-8,y0-8,W+16,10);ctx.fillRect(x0-8,y0+H-2,W+16,10);
+  ctx.fillStyle='#efe2c0';ctx.fillRect(x0,y0,W,H);ctx.fillStyle='#ddcca4';ctx.fillRect(x0,y0,W,4);ctx.fillRect(x0,y0+H-4,W,4);
+  const[n,t]=rollCount(w),sealed=G.sealed&&G.sealed.includes(w);
+  ctx.textAlign='center';ctx.fillStyle='#5a3a10';ctx.font='bold 16px monospace';ctx.fillText("CHRISTIAN'S ROLL — "+WORLDS[w].name.toUpperCase(),320,y0+30);
+  ctx.font='bold 12px monospace';ctx.fillStyle='#8a6a30';ctx.fillText(n+' of '+t+' questions learned'+(sealed?'   •   SEALED ✓':''),320,y0+48);
+  const r=WRANGES[w],qs=[];for(let i=r[0];i<=r[1];i++)qs.push(i);
+  const half=Math.ceil(qs.length/2),rowH=Math.min(22,Math.floor((H-90)/half));
+  qs.forEach((q,k)=>{
+    const col=k<half?0:1,row=k%half,x=x0+14+col*290,y=y0+72+row*rowH,m=mastery(q);
+    ctx.font='bold 11px monospace';ctx.textAlign='left';ctx.fillStyle=m.r?'#2a7a2a':'#b0a080';ctx.fillText(m.r?'✓':'○',x,y);
+    ctx.font=(rowH<18?'10px':'11px')+' monospace';ctx.fillStyle=m.r?'#3a2410':'#a89878';
+    const full='Q'+(q+1)+' '+QS[q].q;let tx=full;while(ctx.measureText(tx).width>200&&tx.length>6)tx=tx.slice(0,-1);if(tx!==full)tx=tx.slice(0,-1)+'…';
+    ctx.fillText(tx,x+14,y);
+    ctx.textAlign='right';ctx.fillStyle='#c89820';ctx.font='bold 11px monospace';ctx.fillText(starStr(m.s),x+280,y);
+  });
+  if(sealed){pcirc(ctx,x0+W-40,y0+34,18,'#a02020');pcirc(ctx,x0+W-40,y0+34,14,'#c83030');ctx.fillStyle='#ffe080';ctx.font='bold 14px monospace';ctx.textAlign='center';ctx.fillText('✓',x0+W-40,y0+39);}
+  ctx.textAlign='center';ctx.fillStyle='#8a6a30';ctx.font='bold 11px monospace';ctx.fillText('★ = answered right on a different day  •  TAP ANYWHERE TO CLOSE',320,y0+H-14);
+  wmBtns=[{x:0,y:0,w:640,h:480,act:()=>{G.rollOpen=null;sfxMenu();}}];
+}
+
 const CHEST_NEED=5;
-function altarNeed(){const D=DENSE[G.wIdx];return(D&&D.need)||10;}
+function altarNeed(){const D=DENSE[G.wIdx];return Math.min((D&&D.need)||10,(G.altarData&&G.altarData.length)||10);}
 function chestNeed(){const D=DENSE[G.wIdx];return(D&&D.chestNeed)||CHEST_NEED;}
 let CHEST=null;
 function dwHasBelt(){return G.armorEarned.includes(G.wIdx);}
@@ -2773,6 +2855,7 @@ function startDenseLoop(){
       dwUpdateCompanion();
       if(D.tick)D.tick();
       checkAltarProximity();
+      {let nq=null,nd=32;(G.quests||[]).forEach(q=>{const d=Math.hypot(G.px-q.x,G.py-q.y);if(d<nd){nd=d;nq=q;}});G.nearQuest=nq;}
       G.nearNpc=!!D.npc&&Math.hypot(G.px-D.npc.x,G.py-D.npc.y)<36;
       G.nearChest=!!CHEST&&!G.chestOpen&&Math.hypot(G.px-CHEST.x,G.py-(CHEST.y+6))<30;
       if(G.altarsLit>=altarNeed()&&dwHasBelt()&&G.py<D.gateY){G.phase='bossIntro';stopLoop();triggerBossIntro();return;}
@@ -2790,6 +2873,7 @@ function startDenseLoop(){
     DWS.objects.forEach(o=>{const sx=o.x-camX,sy=o.y-camY;if(sx>-o.cv.width&&sx<640&&sy>-o.cv.height&&sy<480)list.push({base:o.base,draw:()=>spCtx.drawImage(o.cv,sx,sy)});});
     G.altarData.forEach((a,i)=>{const sx=a.x-camX,sy=a.y-camY;if(sx>-40&&sx<680&&sy>-40&&sy<520)list.push({base:a.y+6,draw:()=>drawAltarAt(spCtx,a,i,sx,sy)});});
     list.push({base:64,draw:()=>(D.wicket||dwDrawWicket)(spCtx,456-camX,48-camY)});
+    (G.quests||[]).forEach(q=>{const sx=q.x-camX,sy=q.y-camY;if(sx>-30&&sx<670&&sy>-60&&sy<520)list.push({base:q.y,draw:()=>dwDrawQuestGiver(spCtx,q,sx,sy,mapFrame)});});
     if(D.npc)list.push({base:D.npc.y,draw:()=>dwDrawHelp(spCtx,D.npc.x-camX,D.npc.y-camY,mapFrame,D.npc.robe)});
     if(CHEST)list.push({base:CHEST.y,draw:()=>(CHEST.draw||dwDrawChest)(spCtx,CHEST.x-camX,CHEST.y-camY,mapFrame)});
     list.push({base:G.companion.py,draw:()=>drawCompanionSprite(spCtx,Math.round(G.companion.px-camX)-7,Math.round(G.companion.py-camY)-8)});
@@ -2801,6 +2885,7 @@ function startDenseLoop(){
     const psy=G.py-camY,touch='ontouchstart' in window;
     if(G.phase==='itemGet')dwDrawItemGet(spCtx,Math.round(G.px-camX),Math.round(psy),G.itemT);
     else if(G.nearAltar&&!G.nearAltar.lit)drawPrayPrompt(spCtx,psy);
+    else if(G.nearQuest){const q=G.nearQuest;if(q.done>=q.qs.length)drawPromptBox(spCtx,psy,q.name+' says:',q.thanks,'');else drawPromptBox(spCtx,psy,q.name+' says:',q.done?'"Next question! ('+(q.done+1)+' of '+q.qs.length+')"':q.hello+' ('+q.qs.length+' questions)',(touch?'TAP':'SPACE')+' to answer ▶');}
     else if(G.nearChest){
       if(G.altarsLit>=chestNeed())drawPromptBox(spCtx,psy,CHEST.label||'A treasure chest!',CHEST.text||'Something shines inside…',(touch?'TAP':'SPACE')+' '+(CHEST.action||'to open ▶'));
       else drawPromptBox(spCtx,psy,'Evangelist says:',(CHEST.locked||'"Light '+chestNeed()+' altars to open this chest."')+' ('+G.altarsLit+'/'+chestNeed()+')','');
@@ -2809,6 +2894,7 @@ function startDenseLoop(){
     else if(D.promptFn&&D.promptFn())drawPromptBox(spCtx,psy,...D.promptFn(),'');
     else if(D.item&&G.altarsLit>=altarNeed()&&!dwHasBelt()&&G.py<120)drawPromptBox(spCtx,psy,'Evangelist says:',D.item.gateMsg,'');
     drawMapHUDNew(spCtx);
+    drawToast(spCtx);
   }
   loop();
 }
@@ -3397,6 +3483,7 @@ function drawMapHUDNew(ctx){
   }
   ctx.fillStyle='#f8c840';ctx.font='bold 10px monospace';ctx.textAlign='left';ctx.fillText('★'+G.score,76,19);
   {const D=DENSE[G.wIdx];if(D&&D.item&&G.armorEarned.includes(G.wIdx))D.item.icon(ctx,150,15,1);}
+  {const[n,t]=rollCount(G.wIdx);ctx.fillStyle='#e8d8b0';ctx.font='bold 10px monospace';ctx.textAlign='left';ctx.fillText('ROLL '+n+'/'+t,168,19);}
   // World name + altar counter (center)
   ctx.fillStyle='#e0e0ff';ctx.textAlign='center';ctx.font='bold 12px monospace';
   ctx.fillText(WORLDS[G.wIdx].name.toUpperCase(),320,13);
@@ -3556,7 +3643,7 @@ function shuffle(a){const b=[...a];for(let i=b.length-1;i>0;i--){const j=Math.fl
 
 
 function openQuestion(qIdx){
-  G.activeQ=QS[qIdx];G.blankIdx=0;G.filledBlanks=[];
+  G.activeQIdx=qIdx;G.activeQ=QS[qIdx];G.blankIdx=0;G.filledBlanks=[];
   G.typedAns='';G.wbSel=0;G.wbTap=-1;_di.value='';
   G.wordBank=buildWordBank(G.activeQ.blanks,0);
   G.phase='question';
@@ -3575,8 +3662,9 @@ function renderQDlg(){
   ctx.fillStyle='#000';ctx.font='bold 12px monospace';ctx.textAlign='center';ctx.fillText('?',20,26);
   // Q label
   ctx.fillStyle='#f8c840';ctx.font='bold 11px monospace';ctx.textAlign='left';
-  const qNum=G.wQs.indexOf(G.wQs.find(q=>QS[q]===G.activeQ))+1;
-  ctx.fillText('Q'+qNum+' — FILL IN THE BLANK'+(G.activeQ.blanks.length>1?'S':''),38,17);
+  const qNum=G.activeQIdx+1;
+  ctx.fillText((G.activeQuest?G.activeQuest.name.toUpperCase()+' ASKS  •  ':'')+'Q'+qNum+' — FILL IN THE BLANK'+(G.activeQ.blanks.length>1?'S':''),38,17);
+  ctx.textAlign='right';ctx.fillStyle='#f8c840';ctx.font='bold 14px monospace';ctx.fillText(starStr(mastery(G.activeQIdx).s),630,19);ctx.textAlign='left';ctx.font='bold 11px monospace';
   // blank progress
   ctx.fillStyle='#606080';ctx.font='9px monospace';
   ctx.fillText('Blank '+(G.blankIdx+1)+' of '+G.activeQ.blanks.length,38,29);
@@ -3726,6 +3814,7 @@ function submitBlank(answer){
 
 function showQFeedback(good){
   G.phase='feedback';
+  markMastery(G.activeQIdx,good);
   const cv=document.getElementById('qCv'),ctx=cv.getContext('2d');
   ctx.imageSmoothingEnabled=false;
   ctx.fillStyle=good?'rgba(0,28,0,0.97)':'rgba(28,0,0,0.97)';ctx.fillRect(0,0,640,230);
@@ -3771,8 +3860,9 @@ function showQFeedback(good){
         G.altarsLit=Math.min(altarNeed(),G.altarsLit+1);
         if(G.wIdx<=2)G.burden=Math.max(0,Math.round(G.burden-100/30));
       }
-      G.activeAltarIdx=-1;
     }
+    G.activeAltarIdx=-1;
+    if(G.activeQuest){const q=G.activeQuest;G.activeQuest=null;if(good){q.done++;if(q.done>=q.qs.length){G.score+=100;sfxWin();showToast(q.name+"'s quest complete! +100");}}}
     if(!good&&G.lives<=0){endWorld(false);return;}
     G.phase='walk';startMapLoop();
   },delay);
@@ -3790,10 +3880,11 @@ document.addEventListener('keydown',e=>{
   }
   if((e.key===' '||e.key==='Enter')&&G.phase==='itemGet'){e.preventDefault();if(G.itemT>(G.itemMin||70))G.phase='walk';return;}
   if((e.key===' '||e.key==='Enter')&&G.phase==='walk'&&G.nearChest&&G.altarsLit>=chestNeed()&&!G.chestOpen){e.preventDefault();dwOpenChest();return;}
+  if((e.key===' '||e.key==='Enter')&&G.phase==='walk'&&G.nearQuest&&G.nearQuest.done<G.nearQuest.qs.length&&!(G.nearAltar&&!G.nearAltar.lit)){e.preventDefault();dwTalkQuest();return;}
   // Space key — interact with altar
   if((e.key===' '||e.key==='Enter')&&G.phase==='walk'&&G.nearAltar&&!G.nearAltar.lit){
     e.preventDefault();
-    G.activeAltarIdx=G.altarData.indexOf(G.nearAltar);
+    G.activeQuest=null;G.activeAltarIdx=G.altarData.indexOf(G.nearAltar);
     openQuestion(G.nearAltar.qIdx);
     return;
   }
@@ -4675,6 +4766,7 @@ function w0RenderScene(opts={}){
   w0DrawPilgrim(ctx,W0B.pX,W0B.feetY,mapFrame);
   if(opts.overlay)opts.overlay(ctx);
   w0DrawHUD(ctx);
+  drawToast(ctx);
 }
 
 function w0StartIdle(){
@@ -4708,7 +4800,7 @@ function w0AttackAnim(onDone){
   const bq=document.getElementById('bqDlg');bq.style.display='none';
   W0B.anim=true;
   const word=G.bossFilledBlanks[G.bossFilledBlanks.length-1]||W0B.finalWord;
-  const dmg=Math.floor(100/G.bossMaxBlanks);
+  const dmg=G.lastDmg||Math.floor(100/G.bossMaxBlanks);
   const ctx=document.getElementById('bbCv').getContext('2d');
   let f=0;
   tone(420,0.03,'square',0.13);setTimeout(()=>tone(560,0.03,'square',0.15),90);setTimeout(()=>tone(740,0.04,'square',0.18),170);
@@ -5230,14 +5322,11 @@ function startBossBattle(){
   document.getElementById('bqDlg').style.display='none';
   // Play armor grant cinematic first — only set phase+bossQ AFTER it completes
   // This prevents the Enter key dismiss from instantly triggering submitBossBlank
+  if(!G.bossQs||!G.bossQs.length)G.bossQs=G.wQs.slice(-Math.min(BOSS_N[G.wIdx]||4,G.wQs.length));
   const begin=()=>{
-    G.phase='boss';
-    G.bossQ=bossQ;
-    G.bossBlanks=bossBlanks;
-    G.bossDisplayStr=buildBossDisplayStr(bossQ.full,bossBlanks);
-    G.bossBlankIdx=0;G.bossFilledBlanks=[];G.bossTyped='';G.bossSel=0;_di.value='';G.bossMiss=null;
-    G.bossMaxBlanks=bossBlanks.length;
-    if(G.diff==='young'){G.bossWB=buildBossWordBank(bossBlanks,0);}
+    G.phase='boss';G.bossQi=0;G.bossDone=0;
+    G.bossTotal=G.bossQs.reduce((n,q)=>n+QS[q].blanks.length,0);
+    loadBossQ();
     document.getElementById('bqDlg').style.display='block';
     renderBQDlg();
     if(BOSSW[G.wIdx]){useBoss();w0StartIdle();}
@@ -5561,8 +5650,8 @@ function renderBQDlg(){
   const cv=document.getElementById('bqCv'),ctx=cv.getContext('2d');
   ctx.imageSmoothingEnabled=false;ctx.clearRect(0,0,640,230);
   ctx.fillStyle='rgba(0,0,12,0.97)';ctx.fillRect(0,0,640,230);ctx.fillStyle='#e03030';ctx.fillRect(0,0,640,3);
-  ctx.fillStyle='#ff6060';ctx.font='bold 13px monospace';ctx.textAlign='left';ctx.fillText('⚔ BOSS QUESTION — fill every blank!',10,18);
-  ctx.fillStyle='#ffb0b0';ctx.font='bold 11px monospace';ctx.textAlign='right';ctx.fillText('Blank '+(G.bossBlankIdx+1)+' of '+((G.bossBlanks||G.bossQ.blanks).length)+'  •  wrong word = lose a heart',630,18);
+  ctx.fillStyle='#ff6060';ctx.font='bold 13px monospace';ctx.textAlign='left';ctx.fillText('⚔ BOSS — QUESTION '+((G.bossQi||0)+1)+' OF '+((G.bossQs||[1]).length),10,18);
+  ctx.fillStyle='#ffb0b0';ctx.font='bold 11px monospace';ctx.textAlign='right';ctx.fillText('Q'+(G.bossQIdx+1)+' '+starStr(mastery(G.bossQIdx).s)+'   •   Blank '+(G.bossBlankIdx+1)+' of '+G.bossBlanks.length+'   •   wrong word = lose a heart',630,18);
   ctx.fillStyle='#202050';ctx.fillRect(0,28,640,1);ctx.fillStyle='#ffe0e0';ctx.font='bold 16px monospace';wrapText(ctx,G.bossQ.q,10,52,620,18);
   ctx.fillStyle='#202050';ctx.fillRect(0,72,640,1);ctx.fillStyle='#ff8080';ctx.font='bold 12px monospace';ctx.textAlign='left';ctx.fillText('ANSWER:',10,88);
   const _bqObj={dp:G.bossDisplayStr||G.bossQ.dp,blanks:G.bossBlanks||G.bossQ.blanks};
@@ -5620,11 +5709,12 @@ document.getElementById('bqCv').addEventListener('touchstart',()=>{
       const dx=moveJoy.x-touchStart.x,dy=moveJoy.y-touchStart.y;
       if(Math.abs(dx)<12&&Math.abs(dy)<12){dwOpenChest();touchStart=null;moveJoy=null;return;}
     }
+    if(touchStart&&moveJoy&&G.phase==='walk'&&G.nearQuest&&!(G.nearAltar&&!G.nearAltar.lit)){const dx=moveJoy.x-touchStart.x,dy=moveJoy.y-touchStart.y;if(Math.abs(dx)<12&&Math.abs(dy)<12&&dwTalkQuest()){touchStart=null;moveJoy=null;return;}}
     // Tap near altar = interact
     if(touchStart&&moveJoy){
       const dx=moveJoy.x-touchStart.x,dy=moveJoy.y-touchStart.y;
       if(Math.abs(dx)<12&&Math.abs(dy)<12&&G.nearAltar&&!G.nearAltar.lit){
-        G.activeAltarIdx=G.altarData.indexOf(G.nearAltar);
+        G.activeQuest=null;G.activeAltarIdx=G.altarData.indexOf(G.nearAltar);
         openQuestion(G.nearAltar.qIdx);
       }
     }
@@ -5733,18 +5823,29 @@ function triggerBossAttackAnim(onDone){
   step();
 }
 
+function loadBossQ(){
+  const q=G.bossQs[G.bossQi];G.bossQIdx=q;G.bossQ=QS[q];
+  G.bossBlanks=G.bossQ.blanks.slice();G.bossDisplayStr=G.bossQ.dp;
+  G.bossBlankIdx=0;G.bossFilledBlanks=[];G.bossTyped='';G.bossSel=0;G.bossTap=-1;_di.value='';G.bossMiss=null;G.bossQMissed=false;
+  G.bossMaxBlanks=G.bossBlanks.length;
+  if(G.diff==='young')G.bossWB=buildBossWordBank(G.bossBlanks,0);
+}
 function submitBossBlank(answer){
   if(G.diff!=='young'&&!normAns(answer))return;
   G.bossTap=-1;
   const correct=(G.bossBlanks||G.bossQ.blanks)[G.bossBlankIdx];
   const ok=normAns(answer)===normAns(correct);
   if(ok){
-    G.bossMiss=null;sfxBossHit();flash('#f8c840',0.22);G.bossFilledBlanks.push(answer);G.bossBlankIdx++;
-    const dmgPer=Math.floor(100/G.bossMaxBlanks);G.bossHP=Math.max(0,G.bossHP-dmgPer);showBossDamageNumber(dmgPer);
-    if(G.bossBlankIdx>=G.bossMaxBlanks){G.bossHP=0;G.score+=200;G.correct++;G.totalAnswered++;bossDefeatAnimation();}
-    else{G.bossTyped='';G.bossSel=0;_di.value='';if(G.diff==='young')G.bossWB=buildBossWordBank(G.bossBlanks||G.bossQ.blanks,G.bossBlankIdx);triggerBossAttackAnim(()=>{renderBQDlg();});}
+    G.bossMiss=null;sfxBossHit();flash('#f8c840',0.22);G.bossFilledBlanks.push(answer);G.bossBlankIdx++;G.bossDone++;
+    const hp=Math.max(0,Math.round(100*(1-G.bossDone/G.bossTotal)));G.lastDmg=G.bossHP-hp;G.bossHP=hp;
+    const qDone=G.bossBlankIdx>=G.bossBlanks.length;
+    if(qDone){markMastery(G.bossQIdx,!G.bossQMissed);G.correct++;G.totalAnswered++;}
+    if(qDone&&G.bossQi>=G.bossQs.length-1){G.bossHP=0;G.score+=200;bossDefeatAnimation();return;}
+    G.bossTyped='';G.bossSel=0;_di.value='';
+    triggerBossAttackAnim(()=>{if(qDone){G.bossQi++;loadBossQ();}else if(G.diff==='young')G.bossWB=buildBossWordBank(G.bossBlanks,G.bossBlankIdx);renderBQDlg();});
   }else{
     sfxLose();flash('#ff0000',0.3);G.lives=Math.max(0,G.lives-1);G.wrong++;G.totalAnswered++;
+    if(!G.bossQMissed){G.bossQMissed=true;markMastery(G.bossQIdx,false);}
     if(G.lives<=0){G.bossLost=true;bossWinsAnimation();return;}
     G.bossMiss=answer;G.bossTyped='';_di.value='';
     if(G.diff==='young'){G.bossWB=G.bossWB.filter(w=>w!==answer);G.bossSel=0;}
@@ -6239,7 +6340,7 @@ function startJourney(){
   const n=document.getElementById('nameInp').value.trim();
   if(!n){document.getElementById('nameInp').focus();return;}
   G.name=n;G.gender=sel.g;G.diff=sel.d;
-  G.score=0;G.lives=3;G.worldsDone=[];G.armorEarned=[];G.totalAnswered=0;G.qIdx=0;G.correct=0;G.wrong=0;
+  G.score=0;G.lives=3;G.worldsDone=[];G.armorEarned=[];G.totalAnswered=0;G.qIdx=0;G.correct=0;G.wrong=0;G.mastery={};G.sealed=[];
   sfxMenu();save();goWM();
 }
 
@@ -6250,7 +6351,7 @@ function doLoad(){
   const nm=names[names.length-1],s=saves[nm];
   G.name=nm;G.gender=s.gender||'boy';G.diff=s.diff||'young';
   G.score=s.score||0;G.lives=s.lives||3;
-  G.worldsDone=s.worldsDone||[];G.armorEarned=s.armorEarned||[];G.totalAnswered=s.totalAnswered||0;
+  G.worldsDone=s.worldsDone||[];G.armorEarned=s.armorEarned||[];G.totalAnswered=s.totalAnswered||0;G.mastery=s.mastery||{};G.sealed=s.sealed||[];
   sfxMenu();goWM();
 }
 
@@ -6280,7 +6381,8 @@ function buildParent(){
   const si=document.getElementById('savesInfo');si.innerHTML='';
   Object.entries(saves).forEach(([n,s])=>{
     const d=new Date(s.ts).toLocaleDateString();
-    si.innerHTML+=`📂 ${n} — Score: ${s.score} | Worlds: ${(s.worldsDone||[]).length}/6 | Mode: ${s.diff||'young'} | ${d}<br>`;
+    const ms=Object.values(s.mastery||{});
+    si.innerHTML+=`📂 ${n} — Score: ${s.score} | Worlds: ${(s.worldsDone||[]).length}/6 | Roll: ${ms.filter(m=>m.r).length}/${QS.length} | ★★★ ${ms.filter(m=>m.s>=3).length} · ★★ ${ms.filter(m=>m.s===2).length} · ★ ${ms.filter(m=>m.s===1).length} | Mode: ${s.diff||'young'} | ${d}<br>`;
   });
   if(!Object.keys(saves).length)si.innerHTML='No saved games.';
 }
