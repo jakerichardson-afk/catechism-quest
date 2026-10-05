@@ -846,8 +846,10 @@ function drawTitle(){
 
 
 // ==================== NEW DETAILED PILGRIM (Boy + Girl with Brown Hair) ====================
-function drawPilgrimCanvas(ctx, ox, oy, armor, scale = 2.5, frame = 0) {
+function drawPilgrimCanvas(ctx, ox, oy, armor, scale = 2.5, frame = 0, dir = 'down') {
   if(armor===G.armorEarned)armor=armorPieces(armor);
+  if(dir==='up'){drawPilgrimBack(ctx,ox,oy,armor,scale,frame);return;}
+  if(dir==='left'||dir==='right'){drawPilgrimSide(ctx,ox,oy,armor,scale,frame,dir);return;}
   const s = scale;
   const belt = armor.includes(0);
   const breast = armor.includes(1);
@@ -954,6 +956,53 @@ function drawPilgrimCanvas(ctx, ox, oy, armor, scale = 2.5, frame = 0) {
     px(7, -9, 11, 4, '#b8b8d0');
   }
 } 
+
+
+function pilgrimLook(armor){
+  const g=G.gender||'boy',breast=armor.includes(1);
+  return{girl:g==='girl',belt:armor.includes(0),breast,shoes:armor.includes(2),shield:armor.includes(3),helm:armor.includes(4),sword:armor.includes(5),
+    body:g==='girl'?'#c04070':(breast?'#a0a0b8':'#2a6a2a'),bodyHi:g==='girl'?'#e06090':(breast?'#c0c0d8':'#3a9a3a'),
+    arm:g==='girl'?'#c04070':'#2a6a2a',boot:armor.includes(2)?'#b86a2a':'#3a2a1a'};
+}
+function drawPilgrimBack(ctx,ox,oy,armor,s,frame){
+  const L=pilgrimLook(armor),bob=(frame%2===1)?1:0;
+  const px=(x,y,w,h,c)=>{ctx.fillStyle=c;ctx.fillRect(Math.round(ox+x*s),Math.round(oy+y*s),Math.round(w*s),Math.round(h*s));};
+  ctx.fillStyle='rgba(0,0,0,0.4)';ctx.beginPath();ctx.ellipse(ox+14*s,oy+26*s,11*s,3*s,0,0,Math.PI*2);ctx.fill();
+  px(4,19+bob,8,6,L.boot);px(13,19-bob,8,6,L.boot);
+  if(L.girl){px(5,6,15,14,L.body);px(6,7,13,12,L.bodyHi);px(7,15,11,3,'#a02050');}
+  else{px(5,6,15,10,L.body);px(6,7,13,7,L.bodyHi);}
+  if(L.belt){px(5,11,15,3,'#d8a030');px(6,11,13,2,'#f0c040');}
+  px(3,8+bob,4,9,L.arm);px(17,8-bob,4,9,L.arm);px(3,15+bob,4,2,'#c0906a');px(18,15-bob,4,2,'#c0906a');
+  if(L.sword){px(16,-2,3,20,'#d0d8e0');px(14,14,7,3,'#b88030');}
+  if(L.shield){px(7,6,11,12,'#b8a050');px(8,7,9,10,'#d0c070');px(11,9,3,6,'#c04020');}
+  if(L.girl){px(4,-6,17,15,'#2a1a10');px(5,-7,15,14,'#3a2a18');px(7,6,11,4,'#2a1a10');}
+  else{px(6,-4,13,12,'#2a1a10');px(7,-5,11,10,'#3a2a18');}
+  px(6,4,2,3,'#f0c090');px(17,4,2,3,'#f0c090');
+  if(L.helm){px(5,-6,15,11,'#8888a0');px(6,-5,13,8,'#a0a0b8');px(7,-9,11,4,'#b8b8d0');}
+}
+function drawPilgrimSide(ctx,ox,oy,armor,s,frame,dir){
+  const L=pilgrimLook(armor);
+  ctx.save();
+  if(dir==='left'){ctx.translate(ox*2+25*s,0);ctx.scale(-1,1);}
+  const px=(x,y,w,h,c)=>{ctx.fillStyle=c;ctx.fillRect(Math.round(ox+x*s),Math.round(oy+y*s),Math.round(w*s),Math.round(h*s));};
+  ctx.fillStyle='rgba(0,0,0,0.4)';ctx.beginPath();ctx.ellipse(ox+13*s,oy+26*s,9*s,3*s,0,0,Math.PI*2);ctx.fill();
+  const st=[0,2,0,-2][frame%4];
+  px(9-st,19,7,6,L.boot);px(10+st,19,7,6,shade(L.boot));
+  if(L.shield){px(4,5,6,13,'#b8a050');px(5,6,4,11,'#d0c070');}
+  px(10-st*0.5,8,4,8,shade(L.arm));
+  if(L.girl){px(8,6,10,14,L.body);px(9,7,8,12,L.bodyHi);px(8,15,10,3,'#a02050');}
+  else{px(8,6,10,10,L.body);px(9,7,8,7,L.bodyHi);}
+  if(L.belt){px(8,11,10,3,'#d8a030');px(8,11,10,1,'#f0c040');}
+  px(12+st*0.5,8,4,9,L.arm);px(12+st*0.5,15,4,3,'#c0906a');
+  if(L.sword){ctx.save();ctx.translate(ox+15*s,oy+15*s);ctx.rotate(-0.5);ctx.fillStyle='#d0d8e0';ctx.fillRect(-1*s,-18*s,3*s,18*s);ctx.fillStyle='#b88030';ctx.fillRect(-3*s,-1*s,7*s,3*s);ctx.restore();}
+  px(8,1,11,8,'#f0c090');px(10,2,8,6,'#ffd0a8');px(18,4,2,2,'#f0c090');
+  px(15,4,2,2,'#1a1a1a');px(15,4,1,1,'#ffffff');px(15,7,3,1,L.girl?'#e07080':'#c06048');
+  if(L.girl){px(6,-6,12,9,'#2a1a10');px(7,-7,10,7,'#3a2a18');px(5,0,6,14,'#2a1a10');px(6,1,4,12,'#3a2a18');}
+  else{px(7,-4,11,7,'#2a1a10');px(8,-5,9,5,'#3a2a18');px(7,1,4,5,'#2a1a10');}
+  if(L.helm){px(6,-6,13,9,'#8888a0');px(7,-5,11,6,'#a0a0b8');px(8,-9,9,4,'#b8b8d0');}
+  ctx.restore();
+}
+function shade(hex){const n=parseInt(hex.slice(1),16),f=v=>Math.max(0,Math.round(v*0.78));return'#'+[f(n>>16),f((n>>8)&255),f(n&255)].map(v=>v.toString(16).padStart(2,'0')).join('');}
 
 // ===============================
 // WORLD MAP — full canvas parchment+pixel hybrid
@@ -1715,18 +1764,21 @@ function dwSmoke(ctx,camX,camY){
 }
 
 function dwDrawPlayer(ctx,sx,sy){
-  const bp=G.wIdx<=2?G.burden/100:0;
+  const bp=G.wIdx<=2?G.burden/100:0,dir=G.dir||'down';
   const pack=()=>{
     if(bp<=0)return;
-    const pw=8+Math.round(10*bp),ph=7+Math.round(7*bp),x=sx-Math.round(pw/2),y=sy-24-Math.round(4*bp);
+    const pw=8+Math.round(10*bp),ph=7+Math.round(7*bp);
+    let x=sx-Math.round(pw/2),y=sy-24-Math.round(4*bp);
+    if(dir==='right')x=sx-pw-2;else if(dir==='left')x=sx+2;else if(dir==='up')y=sy-22;
     ctx.fillStyle='#4a2a0e';ctx.fillRect(x-1,y-1,pw+2,ph+2);
     ctx.fillStyle=bp>0.6?'#7a3a10':bp>0.3?'#9a5020':'#b07040';ctx.fillRect(x,y,pw,ph);
     ctx.fillStyle='rgba(255,255,255,0.22)';ctx.fillRect(x,y,pw,2);
     ctx.fillStyle='#d0a030';ctx.fillRect(x+Math.floor(pw/2)-1,y+Math.floor(ph/2),2,2);
   };
-  pack();
   const tf=dwTileAt(G.px,G.py),mud=tf==='m',wade=tf==='r';
-  drawPilgrimCanvas(ctx,sx-14,sy-26+(mud?3:wade?5:0),G.armorEarned,1.0,G.frame);
+  if(dir!=='up')pack();
+  drawPilgrimCanvas(ctx,sx-14,sy-26+(mud?3:wade?5:0),G.armorEarned,1.0,G.frame,dir);
+  if(dir==='up')pack();
   if(wade){const ph=mapFrame*0.15;ctx.fillStyle='rgba(70,140,210,0.85)';ctx.beginPath();ctx.ellipse(sx,sy-3,15,6,0,0,Math.PI*2);ctx.fill();ctx.fillStyle='rgba(200,235,255,0.9)';ctx.fillRect(sx-12+Math.round(Math.sin(ph)*2),sy-8,8,1);ctx.fillRect(sx+3-Math.round(Math.sin(ph)*2),sy-7,7,1);}
   if(mud){ctx.fillStyle='#5a4630';ctx.beginPath();ctx.ellipse(sx,sy-1,13,5,0,0,Math.PI*2);ctx.fill();ctx.fillStyle='#6e5a42';ctx.fillRect(sx-9,sy-5,18,1);ctx.fillStyle='#8a7a5e';ctx.fillRect(sx-5,sy-6,3,1);ctx.fillRect(sx+4,sy-5,2,1);}
 }
@@ -3876,7 +3928,7 @@ function celestialEnding(done){
     angel(250,226,false);angel(390,226,true);
     // the pilgrim walks up the golden street
     const t=Math.min(1,f/300),py=Math.round(470-t*230),sc=Math.max(0.6,1.6-t*1.1);
-    ctx.save();ctx.translate(320,py);ctx.scale(sc,sc);drawPilgrimCanvas(ctx,-28,-52,G.armorEarned,2.0,Math.floor(f/8));ctx.restore();
+    ctx.save();ctx.translate(320,py);ctx.scale(sc,sc);drawPilgrimCanvas(ctx,-28,-52,G.armorEarned,2.0,Math.floor(f/8),f<300?'up':'down');ctx.restore();
     // sparkles
     for(let i=0;i<30;i++){const x=(i*97+f*0.5)%640,y=(i*53+f*(0.3+(i%3)*0.2))%480;ctx.fillStyle=`rgba(255,240,180,${0.5+0.5*Math.sin(f*0.1+i)})`;ctx.fillRect(Math.round(x),Math.round(480-y),2,2);}
     // words
@@ -4258,12 +4310,12 @@ function w0DrawPilgrim(ctx,x,y,f,opts={}){
   ctx.fillStyle='rgba(0,0,0,0.3)';ctx.beginPath();ctx.ellipse(x,y+1,24,5,0,0,Math.PI*2);ctx.fill();
   const bp=G.wIdx<=2?G.burden/100:0;
   if(bp>0&&!opts.noPack){
-    const pw=16+Math.round(20*bp),ph=14+Math.round(14*bp),px=x-Math.round(pw/2),py=y-48-Math.round(8*bp);
+    const pw=16+Math.round(20*bp),ph=14+Math.round(14*bp),px=x+6,py=y-46-Math.round(8*bp);
     ctx.fillStyle='#4a2a0e';ctx.fillRect(px-2,py-2,pw+4,ph+4);
     ctx.fillStyle=bp>0.6?'#7a3a10':bp>0.3?'#9a5020':'#b07040';ctx.fillRect(px,py,pw,ph);
     ctx.fillStyle='rgba(255,255,255,0.22)';ctx.fillRect(px,py,pw,4);
   }
-  drawPilgrimCanvas(ctx,x-28,y-52+(opts.dy||0),G.armorEarned,2.0,opts.frame||0);
+  drawPilgrimCanvas(ctx,x-28,y-52+(opts.dy||0),G.armorEarned,2.0,opts.frame||0,opts.dir||'left');
 }
 
 function w0DrawHUD(ctx){
