@@ -236,14 +236,20 @@ function _fmtDate(ts){
 // WORLD DEFINITIONS
 // ===============================
 const WORLDS=[
-  {id:0,name:"City of Destruction",icon:"🏛",sky:["#38b0f8","#78d0ff"],ground:"#3a8a20",path:"#c8a050",water:"#2070d0",boss:{name:"The Doubter",sp:"👿",sub:"'Is God even real?' — Answer with TRUTH!",bg:["#1a2a5a","#0a1a3a"]}},
-  {id:1,name:"Slough of Despond",icon:"🌑",sky:["#0a0018","#180030"],ground:"#1a1208",path:"#3a2510",water:"#101028",boss:{name:"The Old Serpent",sp:"🐍",sub:"'Sin doesn't matter!' — Answer with JUSTICE!",bg:["#0a0005","#150010"]}},
-  {id:2,name:"House Beautiful",icon:"✝",sky:["#f0a030","#f8d060"],ground:"#4a7020",path:"#d0a848",water:"#3080c0",boss:{name:"The Accuser",sp:"👹",sub:"'You can never be saved!' — Answer with FAITH!",bg:["#200a00","#380a00"]}},
-  {id:3,name:"Valley of the Shadow",icon:"⛰",sky:["#7080a0","#90a0c0"],ground:"#6a5a30",path:"#b09050",water:"#4060a0",boss:{name:"Apollyon",sp:"🗿",sub:"'Make your own rules!' — Answer with GOD'S LAW!",bg:["#1a1000","#2a1800"]}},
-  {id:4,name:"Vanity Fair",icon:"💧",sky:["#30a870","#60d890"],ground:"#206830",path:"#b89840",water:"#1060c0",boss:{name:"The Deceiver",sp:"🦹",sub:"'Religion is just ritual!' — Answer with TRUTH!",bg:["#001a10","#002a18"]}},
-  {id:5,name:"The Celestial City",icon:"🌟",sky:["#f0d050","#fff080"],ground:"#60a030",path:"#e0c860",water:"#60b0e0",boss:{name:"Giant Despair",sp:"💀",sub:"'There is no hope!' — Answer with ETERNAL TRUTH!",bg:["#080618","#100c28"]}}
+  {id:0,name:"City of Destruction",icon:"🏛",sky:["#38b0f8","#78d0ff"],ground:"#3a8a20",path:"#c8a050",water:"#2070d0",boss:{name:"The Doubter",sp:"👿",sub:"",bg:["#1a2a5a","#0a1a3a"]}},
+  {id:1,name:"Slough of Despond",icon:"🌫",sky:["#0a0018","#180030"],ground:"#1a1208",path:"#3a2510",water:"#101028",boss:{name:"The Old Serpent",sp:"🐍",sub:"",bg:["#0a0005","#150010"]}},
+  {id:2,name:"The Cross",icon:"✝",sky:["#f0a030","#f8d060"],ground:"#4a7020",path:"#d0a848",water:"#3080c0",boss:{name:"The Accuser",sp:"👹",sub:"",bg:["#200a00","#380a00"]}},
+  {id:3,name:"House Beautiful",icon:"🏰",sky:["#70a0e0","#a0c8f0"],ground:"#4a8a30",path:"#d8c8a0",water:"#3080c0",boss:{name:"Timorous & Mistrust",sp:"😨",sub:"",bg:["#203040","#304050"]}},
+  {id:4,name:"Valley of Humiliation",icon:"🌿",sky:["#60a0d0","#90c8e8"],ground:"#3a8a30",path:"#b89850",water:"#3080c0",boss:{name:"Apollyon",sp:"🐉",sub:"",bg:["#1a1000","#2a1800"]}},
+  {id:5,name:"Valley of the Shadow",icon:"🌑",sky:["#0a0018","#180030"],ground:"#1a1208",path:"#3a2510",water:"#101028",boss:{name:"The Whisperer",sp:"👁",sub:"",bg:["#0a0005","#150010"]}},
+  {id:6,name:"Vanity Fair",icon:"🎪",sky:["#30a870","#60d890"],ground:"#206830",path:"#b89840",water:"#1060c0",boss:{name:"The Deceiver",sp:"🎩",sub:"",bg:["#001a10","#002a18"]}},
+  {id:7,name:"Doubting Castle",icon:"🏯",sky:["#404858","#606878"],ground:"#3a4a30",path:"#7a6a50",water:"#304860",boss:{name:"Giant Despair",sp:"👹",sub:"",bg:["#101418","#202428"]}},
+  {id:8,name:"The Celestial City",icon:"🌟",sky:["#f0d050","#fff080"],ground:"#60a030",path:"#e0c860",water:"#60b0e0",boss:{name:"The Dark River",sp:"🌊",sub:"",bg:["#080618","#100c28"]}}
 ];
-const ARMOR=[{p:"🥋",n:"Belt of Truth"},{p:"🛡",n:"Breastplate"},{p:"👟",n:"Shoes of Peace"},{p:"🔰",n:"Shield of Faith"},{p:"⛑",n:"Helm of Salvation"},{p:"⚔",n:"Sword of Spirit"}];
+const ARMOR=[{p:"🥋",n:"Belt of Truth"},{p:"🛡",n:"Breastplate"},{p:"👟",n:"Shoes of Peace"},{p:"🏮",n:"Lantern"},{p:"🔰",n:"Shield of Faith"},{p:"",n:""},{p:"⛑",n:"Helmet of Salvation"},{p:"🗝",n:"Key of Promise"},{p:"⚔",n:"Sword of the Spirit"}];
+// which armour piece (as drawn on the pilgrim) each world awards
+const WORLD_ARMOR=[0,1,2,-1,3,-1,4,-1,5];
+function armorPieces(list){return list.map(w=>WORLD_ARMOR[w]).filter(x=>x!=null&&x>=0);}
 // Distractors organized by grammatical category for context-matching
 const DISTRACTOR_POOL={
   verbs_s:["loves","hates","rules","creates","saves","judges","sees","hears","knows","forgives","commands","blesses","sends","dwells","reigns","speaks","forms","guides","calls","keeps"],
@@ -425,7 +431,7 @@ const QS=[
 ];
 
 // World Q ranges
-const WRANGES=[[0,18],[19,37],[38,62],[63,95],[96,126],[127,133]];
+const WRANGES=[[0,18],[19,37],[38,50],[51,62],[63,78],[79,95],[96,111],[112,126],[127,133]];
 
 // ===============================
 // STATE
@@ -835,13 +841,14 @@ function drawTitle(){
   ctx.fillText(soundOn?'\ud83d\udd0a SOUND ON':'\ud83d\udd07 SOUND OFF',630,472);
   // Center tagline
   ctx.fillStyle='#90d0ff';ctx.font='8px monospace';ctx.textAlign='center';
-  ctx.fillText('134 QUESTIONS  \u2022  6 WORLDS  \u2022  ARMOR OF GOD  \u2022  FILL IN THE BLANKS',320,472);
+  ctx.fillText('134 QUESTIONS  \u2022  9 WORLDS  \u2022  ARMOR OF GOD  \u2022  FILL IN THE BLANKS',320,472);
 }
 
 
 
 // ==================== NEW DETAILED PILGRIM (Boy + Girl with Brown Hair) ====================
 function drawPilgrimCanvas(ctx, ox, oy, armor, scale = 2.5, frame = 0) {
+  if(armor===G.armorEarned)armor=armorPieces(armor);
   const s = scale;
   const belt = armor.includes(0);
   const breast = armor.includes(1);
@@ -952,63 +959,62 @@ function drawPilgrimCanvas(ctx, ox, oy, armor, scale = 2.5, frame = 0) {
 // ===============================
 // WORLD MAP — full canvas parchment+pixel hybrid
 // ===============================
-const WM_POS=[{x:92,y:356},{x:206,y:300},{x:300,y:200},{x:404,y:296},{x:500,y:212},{x:568,y:104}];
-const WM_COL=['#c8a050','#7a9a5a','#e8c060','#9a7ac8','#e070b0','#f8d870'];
+const WM_POS=[{x:78,y:368},{x:170,y:322},{x:234,y:246},{x:322,y:188},{x:410,y:250},{x:470,y:334},{x:566,y:292},{x:520,y:170},{x:586,y:86}];
+const WM_COL=['#c8a050','#7a9a5a','#e8c060','#a0c0f0','#60c070','#9a7ac8','#e070b0','#8a8a9a','#f8d870'];
 let wmFrame=0,wmLoopId=null,wmBg=null,wmSel=0,wmBtns=[];
 
 function wmUnlocked(i){return i===0||G.worldsDone.includes(i)||G.worldsDone.includes(i-1);}
-function wmArmorIcon(i,ctx,x,y,u){[drawBeltIcon,drawBreastplateIcon,drawShoesIcon,drawShieldIcon,drawHelmetIcon,drawSwordIcon][i](ctx,x,y,u);}
+function wmRewardIcon(i,ctx,x,y,u){const D=DENSE[i];if(D&&D.item){D.item.icon(ctx,x,y,u);return true;}return false;}
 
 function wmBuildBg(){
   const[cv,g]=mkCv(640,480);
   const F=(x,y,w,h,c)=>{g.fillStyle=c;g.fillRect(x,y,w,h);};
-  // land
   F(0,0,640,480,'#5cab3c');
   for(let y=0;y<480;y+=4)for(let x=0;x<640;x+=4){const n=vnoise(x,y,40);if(n>0.66)F(x,y,4,4,'#54a236');else if(n<0.3)F(x,y,4,4,'#66b746');}
   for(let y=0;y<480;y+=2)for(let x=0;x<640;x+=2){const h=tHash(x,y);if(h%41===0)F(x,y,1,1,'#78c852');else if(h%53===0)F(x,y,1,1,'#4a9230');else if(h%601===0)F(x,y,1,1,['#fff6a0','#ffffff','#ff9ec4'][h%3]);}
-  // sea along the left and bottom edge
-  for(let y=0;y<480;y++){const w=Math.round(18+vnoise(3,y,30)*24-(y>380?0:0));F(0,y,w,1,'#3e7ab0');F(w,y,2,1,'#e8d8a0');}
-  for(let x=0;x<640;x++){const h=Math.round(12+vnoise(x,5,30)*14);F(x,480-h,1,h,'#3e7ab0');F(x,480-h-2,1,2,'#e8d8a0');}
-  // mountains
+  for(let y=0;y<480;y++){const w=Math.round(14+vnoise(3,y,30)*20);F(0,y,w,1,'#3e7ab0');F(w,y,2,1,'#e8d8a0');}
+  for(let x=0;x<640;x++){const h=Math.round(10+vnoise(x,5,30)*12);F(x,480-h,1,h,'#3e7ab0');F(x,480-h-2,1,2,'#e8d8a0');}
   const mtn=(x,y,w,h)=>{for(let i=0;i<h;i++){const ww=Math.round(w*(i/h));F(x-ww/2,y+i,ww,1,i<h*0.25?'#f0f4f8':'#8a8a94');F(x-ww/2,y+i,Math.max(1,Math.round(ww*0.4)),1,i<h*0.25?'#ffffff':'#a0a0aa');}};
-  [[60,90,70,52],[110,80,60,46],[160,100,56,40],[230,70,64,48],[40,180,50,36],[620,300,60,44],[600,380,56,40],[470,60,50,36],[380,90,46,32]].forEach(a=>mtn(...a));
-  // forests
+  [[60,80,64,48],[120,60,56,42],[180,90,50,36],[250,64,56,40],[40,180,46,34],[380,70,48,34],[440,100,40,30],[620,380,50,36],[110,200,40,28]].forEach(a=>mtn(...a));
   const tree=dwGreenTree(0),tree2=dwGreenTree(4);
-  [[150,180],[170,196],[132,200],[250,130],[270,150],[440,170],[460,186],[600,190],[580,206],[330,360],[350,380],[310,384],[150,420],[520,360],[540,380],[260,410],[420,420]].forEach(([x,y],i)=>g.drawImage(i%2?tree2:tree,x-10,y-24,20,24));
-  // the river before the Celestial City
-  for(let x=440;x<640;x++){const y=Math.round(150+Math.sin(x*0.04)*6-(x-440)*0.12);F(x,y,1,8,'#4a8ad0');F(x,y,1,1,'#9ad0ff');}
-  // the King's Highway linking every world
-  const pts=[];for(let i=0;i<WM_POS.length-1;i++){const a=WM_POS[i],b=WM_POS[i+1];const mx=(a.x+b.x)/2+(i%2?18:-18),my=(a.y+b.y)/2+(i%2?-14:14);for(let t=0;t<=1;t+=0.01){const x=(1-t)*(1-t)*a.x+2*(1-t)*t*mx+t*t*b.x,y=(1-t)*(1-t)*a.y+2*(1-t)*t*my+t*t*b.y;pts.push([x,y,i]);}}
-  pts.forEach(([x,y])=>{F(Math.round(x)-3,Math.round(y)-3,7,7,'#7a5a34');});
-  pts.forEach(([x,y])=>{F(Math.round(x)-2,Math.round(y)-2,5,5,'#c8a060');});
+  [[150,160],[166,176],[290,120],[300,280],[320,300],[360,250],[420,370],[440,390],[620,200],[606,224],[150,420],[260,410],[520,410],[380,140],[470,120]].forEach(([x,y],i)=>g.drawImage(i%2?tree2:tree,x-10,y-24,20,24));
+  for(let x=470;x<640;x++){const y=Math.round(128+Math.sin(x*0.05)*5-(x-470)*0.08);F(x,y,1,8,'#4a8ad0');F(x,y,1,1,'#9ad0ff');}
+  const pts=[];for(let i=0;i<WM_POS.length-1;i++){const a=WM_POS[i],b=WM_POS[i+1];const mx=(a.x+b.x)/2+(i%2?14:-14),my=(a.y+b.y)/2+(i%2?-10:10);for(let t=0;t<=1;t+=0.01){const x=(1-t)*(1-t)*a.x+2*(1-t)*t*mx+t*t*b.x,y=(1-t)*(1-t)*a.y+2*(1-t)*t*my+t*t*b.y;pts.push([x,y]);}}
+  pts.forEach(([x,y])=>F(Math.round(x)-3,Math.round(y)-3,7,7,'#7a5a34'));
+  pts.forEach(([x,y])=>F(Math.round(x)-2,Math.round(y)-2,5,5,'#c8a060'));
   pts.forEach(([x,y],k)=>{if(k%6===0)F(Math.round(x),Math.round(y),1,1,'#a07848');});
-  wmBg={cv,pts};
-  // vignettes
   const P=WM_POS;
-  // 1 City of Destruction
-  F(P[0].x-44,P[0].y-44,88,10,'#8c8274');F(P[0].x-44,P[0].y-44,88,2,'#aca292');
-  [[-38,-40],[-6,-44],[18,-36]].forEach(([dx,dy],i)=>{const h=dwHouse(5,5,i*7+3,i===1);g.drawImage(h.cv,P[0].x+dx,P[0].y+dy,40,52);});
-  // 2 Slough of Despond
-  g.fillStyle='#5a4630';g.beginPath();g.ellipse(P[1].x,P[1].y-10,50,22,0,0,Math.PI*2);g.fill();
-  g.fillStyle='#36574a';g.beginPath();g.ellipse(P[1].x-14,P[1].y-14,22,9,0,0,Math.PI*2);g.fill();g.beginPath();g.ellipse(P[1].x+22,P[1].y-6,14,6,0,0,Math.PI*2);g.fill();
-  for(let i=0;i<7;i++){const x=P[1].x-36+i*12,y=P[1].y-4-Math.round(Math.sin(i)*6);g.fillStyle='#8e887e';g.beginPath();g.ellipse(x,y,4,2.5,0,0,Math.PI*2);g.fill();}
-  g.drawImage(dwDeadTree(2),P[1].x+28,P[1].y-46,22,28);g.drawImage(dsReeds(1),P[1].x-48,P[1].y-26,14,18);g.drawImage(dsReeds(3),P[1].x+40,P[1].y-16,14,18);
-  // 3 House Beautiful and the Cross
-  g.fillStyle='#4e9a36';g.beginPath();g.ellipse(P[2].x,P[2].y-16,46,26,0,0,Math.PI*2);g.fill();
-  g.drawImage(dhPalace(),P[2].x-50,P[2].y-62,100,38);
-  g.drawImage(dhCrossCv(),P[2].x+30,P[2].y-30,15,27);g.drawImage(dhTomb(),P[2].x-50,P[2].y-22,23,17);
-  // 4 Valley of the Shadow
+  // 1 the city
+  F(P[0].x-38,P[0].y-38,76,8,'#8c8274');
+  [[-34,-36],[-6,-40],[14,-32]].forEach(([dx,dy],i)=>{const h=dwHouse(5,5,i*7+3,i===1);g.drawImage(h.cv,P[0].x+dx,P[0].y+dy,34,44);});
+  // 2 the slough
+  g.fillStyle='#5a4630';g.beginPath();g.ellipse(P[1].x,P[1].y-8,40,17,0,0,Math.PI*2);g.fill();
+  g.fillStyle='#36574a';g.beginPath();g.ellipse(P[1].x-12,P[1].y-11,16,7,0,0,Math.PI*2);g.fill();
+  for(let i=0;i<6;i++){g.fillStyle='#8e887e';g.beginPath();g.ellipse(P[1].x-28+i*11,P[1].y-3-Math.round(Math.sin(i)*5),3.5,2,0,0,Math.PI*2);g.fill();}
+  g.drawImage(dwDeadTree(2),P[1].x+22,P[1].y-40,18,24);
+  // 3 the Cross
+  g.fillStyle='#4e9a36';g.beginPath();g.ellipse(P[2].x,P[2].y-10,32,16,0,0,Math.PI*2);g.fill();
+  g.drawImage(dhCrossCv(),P[2].x-8,P[2].y-44,17,31);g.drawImage(dhTomb(),P[2].x+12,P[2].y-24,23,17);
+  // 4 House Beautiful
+  g.drawImage(dhPalace(),P[3].x-44,P[3].y-48,88,33);
+  // 5 Valley of Humiliation
+  g.fillStyle='#3e8a2e';g.beginPath();g.ellipse(P[4].x,P[4].y-8,38,15,0,0,Math.PI*2);g.fill();
+  for(let i=0;i<10;i++)F(P[4].x-30+i*7,P[4].y-14+((i*5)%9),2,2,'#ffffff');
+  g.fillStyle='rgba(40,20,10,0.5)';g.beginPath();g.ellipse(P[4].x+16,P[4].y-24,12,5,0,0,Math.PI*2);g.fill();
+  // 6 Valley of the Shadow
   const cl=(pts,c)=>{g.fillStyle=c;g.beginPath();g.moveTo(pts[0][0],pts[0][1]);pts.forEach(([x,y])=>g.lineTo(x,y));g.closePath();g.fill();};
-  cl([[P[3].x-56,P[3].y+10],[P[3].x-40,P[3].y-50],[P[3].x-14,P[3].y-56],[P[3].x-8,P[3].y+10]],'#3e3848');
-  cl([[P[3].x+8,P[3].y+10],[P[3].x+14,P[3].y-58],[P[3].x+42,P[3].y-48],[P[3].x+58,P[3].y+10]],'#3e3848');
-  cl([[P[3].x-44,P[3].y-40],[P[3].x-18,P[3].y-50],[P[3].x-12,P[3].y-20],[P[3].x-36,P[3].y-10]],'#4a4458');
-  cl([[P[3].x+18,P[3].y-50],[P[3].x+40,P[3].y-40],[P[3].x+46,P[3].y-12],[P[3].x+16,P[3].y-20]],'#4a4458');
-  F(P[3].x-8,P[3].y-56,16,66,'#1a1424');
-  // 5 Vanity Fair
-  g.drawImage(dfTent(),P[4].x-30,P[4].y-60,58,48);
-  g.drawImage(dfStall(0,'GOLD'),P[4].x-60,P[4].y-32,30,28);g.drawImage(dfStall(3,'FAME'),P[4].x+28,P[4].y-32,30,28);
-  // 6 the Celestial City
-  const city=dcCity();g.drawImage(city,P[5].x-70,P[5].y-58,140,35);
+  cl([[P[5].x-44,P[5].y+8],[P[5].x-30,P[5].y-40],[P[5].x-10,P[5].y-44],[P[5].x-6,P[5].y+8]],'#3e3848');
+  cl([[P[5].x+6,P[5].y+8],[P[5].x+10,P[5].y-46],[P[5].x+32,P[5].y-38],[P[5].x+44,P[5].y+8]],'#3e3848');
+  F(P[5].x-6,P[5].y-44,12,52,'#1a1424');
+  // 7 Vanity Fair
+  g.drawImage(dfTent(),P[6].x-24,P[6].y-48,46,38);
+  g.drawImage(dfStall(0,'GOLD'),P[6].x-48,P[6].y-26,24,22);g.drawImage(dfStall(3,'FAME'),P[6].x+22,P[6].y-26,24,22);
+  // 8 Doubting Castle
+  g.drawImage(dcCastle(),P[7].x-30,P[7].y-54,60,52);
+  pcirc(g,P[7].x-14,P[7].y-60,9,'#5a5e6e');pcirc(g,P[7].x+4,P[7].y-62,11,'#4a4e5e');pcirc(g,P[7].x+20,P[7].y-58,8,'#5a5e6e');
+  // 9 the Celestial City
+  g.drawImage(dcCity(),P[8].x-60,P[8].y-50,120,30);
+  wmBg={cv,pts};
   return wmBg;
 }
 
@@ -1019,15 +1025,16 @@ function drawWM(){
   ctx.drawImage(wmBg.cv,0,0);
   const P=WM_POS,f=wmFrame;
   // living details
-  for(let i=0;i<3;i++){const t=((f*0.6+i*40)%120)/120;ctx.fillStyle=`rgba(110,104,98,${0.5*(1-t)})`;const s=2+Math.floor(t*4);ctx.fillRect(Math.round(P[0].x-20+i*18+t*8),Math.round(P[0].y-40-t*30),s,s);}
-  ctx.save();ctx.globalAlpha=0.35;ctx.drawImage(fogBlob(),Math.round(P[1].x-70+Math.sin(f*0.01)*10),P[1].y-44,140,50);ctx.restore();
-  for(let i=0;i<4;i++){if((f+i*53)%200<10)continue;const x=P[3].x-30+i*18,y=P[3].y-34+(i%2)*14;ctx.fillStyle='#ffd040';ctx.fillRect(x,y,1,1);ctx.fillRect(x+3,y,1,1);}
-  const cg=ctx.createRadialGradient(P[5].x,P[5].y-40,4,P[5].x,P[5].y-40,90);cg.addColorStop(0,`rgba(255,250,210,${0.55+Math.sin(f*0.05)*0.1})`);cg.addColorStop(1,'rgba(255,240,180,0)');ctx.fillStyle=cg;ctx.fillRect(P[5].x-90,P[5].y-130,180,180);
-  const cols=['#d83030','#f8d040','#3060c0','#30a050'];for(let k=0;k<10;k++){const x=P[4].x-56+k*12,y=P[4].y-58+Math.round(Math.sin(k*0.6)*3+Math.sin(f*0.1+k)*1);ctx.fillStyle=cols[k%4];ctx.fillRect(x,y,4,4);}
+  for(let i=0;i<3;i++){const t=((f*0.6+i*40)%120)/120;ctx.fillStyle=`rgba(110,104,98,${0.5*(1-t)})`;const s=2+Math.floor(t*4);ctx.fillRect(Math.round(P[0].x-18+i*14+t*8),Math.round(P[0].y-34-t*26),s,s);}
+  ctx.save();ctx.globalAlpha=0.35;ctx.drawImage(fogBlob(),Math.round(P[1].x-56+Math.sin(f*0.01)*10),P[1].y-36,112,40);ctx.restore();
+  for(let i=0;i<4;i++){if((f+i*53)%200<10)continue;const x=P[5].x-26+i*16,y=P[5].y-30+(i%2)*12;ctx.fillStyle='#ffd040';ctx.fillRect(x,y,1,1);ctx.fillRect(x+3,y,1,1);}
+  const cg=ctx.createRadialGradient(P[8].x,P[8].y-36,4,P[8].x,P[8].y-36,80);cg.addColorStop(0,`rgba(255,250,210,${0.55+Math.sin(f*0.05)*0.1})`);cg.addColorStop(1,'rgba(255,240,180,0)');ctx.fillStyle=cg;ctx.fillRect(P[8].x-80,P[8].y-116,160,160);
+  const cols=['#d83030','#f8d040','#3060c0','#30a050'];for(let k=0;k<8;k++){const x=P[6].x-44+k*12,y=P[6].y-50+Math.round(Math.sin(k*0.6)*3+Math.sin(f*0.1+k)*1);ctx.fillStyle=cols[k%4];ctx.fillRect(x,y,3,3);}
+  if((f%300)<4){ctx.fillStyle='rgba(230,240,255,0.7)';ctx.fillRect(P[7].x-4,P[7].y-52,2,10);ctx.fillRect(P[7].x-2,P[7].y-44,2,8);}
   // fog over worlds not yet reached
-  WORLDS.forEach((w,i)=>{if(wmUnlocked(i))return;ctx.save();ctx.globalAlpha=0.85;ctx.drawImage(fogBlob(),P[i].x-70+Math.sin(f*0.01+i)*6,P[i].y-80,140,110);ctx.drawImage(fogBlob(),P[i].x-50,P[i].y-60,100,80);ctx.restore();});
+  WORLDS.forEach((w,i)=>{if(wmUnlocked(i))return;ctx.save();ctx.globalAlpha=0.85;ctx.drawImage(fogBlob(),P[i].x-56+Math.sin(f*0.01+i)*6,P[i].y-66,112,90);ctx.drawImage(fogBlob(),P[i].x-40,P[i].y-50,80,64);ctx.restore();});
   // where the pilgrim has reached
-  let reached=0;for(let i=0;i<6;i++)if(wmUnlocked(i))reached=i;
+  let reached=0;for(let i=0;i<WORLDS.length;i++)if(wmUnlocked(i))reached=i;
   // nodes
   wmBtns=[];
   WORLDS.forEach((w,i)=>{
@@ -1035,15 +1042,16 @@ function drawWM(){
     if(sel&&un){const r=24+Math.sin(f*0.12)*3;ctx.strokeStyle='#fff8c0';ctx.lineWidth=3;ctx.beginPath();ctx.arc(p.x,p.y,r,0,Math.PI*2);ctx.stroke();}
     pcirc(ctx,p.x,p.y+2,15,'rgba(0,0,0,0.3)');
     pcirc(ctx,p.x,p.y,15,un?'#3a2410':'#3a3a44');pcirc(ctx,p.x,p.y,13,un?WM_COL[i]:'#6a6a74');pcirc(ctx,p.x-3,p.y-3,6,un?'rgba(255,255,255,0.35)':'rgba(255,255,255,0.12)');
-    if(done)wmArmorIcon(i,ctx,p.x,p.y,1);
+    if(done&&wmRewardIcon(i,ctx,p.x,p.y,1)){}
+    else if(done){ctx.fillStyle='#2a8a3a';ctx.font='bold 14px monospace';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('✓',p.x,p.y+1);ctx.textBaseline='alphabetic';}
     else if(!un){ctx.fillStyle='#2a2a34';ctx.fillRect(p.x-5,p.y-2,10,8);ctx.strokeStyle='#2a2a34';ctx.lineWidth=2;ctx.beginPath();ctx.arc(p.x,p.y-3,4,Math.PI,0);ctx.stroke();}
     else{ctx.fillStyle='#3a2410';ctx.font='bold 14px monospace';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(String(i+1),p.x,p.y+1);ctx.textBaseline='alphabetic';}
     if(done){pcirc(ctx,p.x+12,p.y-12,6,'#2a8a3a');ctx.fillStyle='#ffffff';ctx.font='bold 9px monospace';ctx.textAlign='center';ctx.fillText('✓',p.x+12,p.y-9);}
     // name label
-    ctx.font='bold 11px monospace';const nm=w.name.toUpperCase(),tw=ctx.measureText(nm).width+12;
-    const ly=p.y+20;ctx.fillStyle=un?'rgba(30,18,8,0.88)':'rgba(30,30,40,0.7)';ctx.fillRect(p.x-tw/2,ly,tw,16);
-    ctx.strokeStyle=un?WM_COL[i]:'#6a6a74';ctx.lineWidth=1;ctx.strokeRect(p.x-tw/2+0.5,ly+0.5,tw-1,15);
-    ctx.fillStyle=un?'#fff4d8':'#9a9aa8';ctx.textAlign='center';ctx.fillText(nm,p.x,ly+12);
+    ctx.font='bold 10px monospace';const nm=w.name.toUpperCase(),tw=ctx.measureText(nm).width+10;
+    const lx=Math.max(tw/2+4,Math.min(636-tw/2,p.x)),ly=p.y+18;ctx.fillStyle=un?'rgba(30,18,8,0.88)':'rgba(30,30,40,0.7)';ctx.fillRect(lx-tw/2,ly,tw,14);
+    ctx.strokeStyle=un?WM_COL[i]:'#6a6a74';ctx.lineWidth=1;ctx.strokeRect(lx-tw/2+0.5,ly+0.5,tw-1,13);
+    ctx.fillStyle=un?'#fff4d8':'#9a9aa8';ctx.textAlign='center';ctx.fillText(nm,lx,ly+11);
     wmBtns.push({x:p.x-30,y:p.y-30,w:60,h:68,act:()=>{if(un){wmSel=i;sfxMenu();beginWorld(i);}}});
   });
   // the pilgrim stands at the furthest world reached
@@ -1062,10 +1070,10 @@ function drawWM(){
   ctx.fillStyle='rgba(20,12,6,0.92)';ctx.fillRect(0,404,640,76);ctx.fillStyle='#f8c840';ctx.fillRect(0,404,640,2);
   ctx.textAlign='left';ctx.fillStyle=WM_COL[i];ctx.font='bold 17px monospace';ctx.fillText('WORLD '+(i+1)+' · '+w.name.toUpperCase(),14,428);
   ctx.fillStyle='#d8c8a8';ctx.font='bold 12px monospace';
-  ctx.fillText(un?('Boss: '+(BOSSW[i]?BOSSW[i].hudName:w.boss.name)+'   •   Armor: '+(DENSE[i]&&DENSE[i].item?DENSE[i].item.name:ARMOR[i].n)):'Finish the world before it to unlock.',14,448);
+  ctx.fillText(un?('Boss: '+(BOSSW[i]?BOSSW[i].hudName:w.boss.name)+(DENSE[i]&&DENSE[i].item?'   •   Treasure: '+DENSE[i].item.name:'')):'Finish the world before it to unlock.',14,448);
   // armour collected
-  ctx.fillStyle='#a89878';ctx.font='bold 10px monospace';ctx.fillText('ARMOR OF GOD',14,468);
-  for(let k=0;k<6;k++){const x=130+k*30,y=464;pcirc(ctx,x,y,11,'#2a1a0e');if(G.armorEarned.includes(k))wmArmorIcon(k,ctx,x,y,1);else{ctx.save();ctx.globalAlpha=0.25;wmArmorIcon(k,ctx,x,y,1);ctx.restore();}}
+  ctx.fillStyle='#a89878';ctx.font='bold 10px monospace';ctx.fillText('TREASURES',14,468);
+  [0,1,2,3,4,6,7,8].forEach((k,n)=>{const x=100+n*30,y=464;pcirc(ctx,x,y,11,'#2a1a0e');if(G.armorEarned.includes(k))wmRewardIcon(k,ctx,x,y,1);else{ctx.save();ctx.globalAlpha=0.25;wmRewardIcon(k,ctx,x,y,1);ctx.restore();}});
   {const[rn,rt]=rollCount(i);btn(370,424,120,40,'ROLL '+rn+'/'+rt,G.sealed&&G.sealed.includes(i)?'#8a6a10':'#5a4020',()=>{sfxMenu();G.rollOpen=i;});}
   if(un)btn(500,424,126,40,(G.worldsDone.includes(i)?'PLAY AGAIN ▶':'PLAY ▶'),'#2a7a3a',()=>{sfxMenu();beginWorld(i);});
   if(G.rollOpen!=null)drawRollOverlay(ctx,G.rollOpen);
@@ -1076,7 +1084,7 @@ function buildWM(){
   stopLoop();
   const cv=document.getElementById('wmCv');if(!cv)return;
   wmFrame=0;
-  let reached=0;for(let i=0;i<6;i++)if(wmUnlocked(i))reached=i;
+  let reached=0;for(let i=0;i<WORLDS.length;i++)if(wmUnlocked(i))reached=i;
   wmSel=reached;G.rollOpen=null;
   if(wmLoopId){cancelAnimationFrame(wmLoopId);wmLoopId=null;}
   let last=0;
@@ -1091,7 +1099,7 @@ function buildWM(){
 document.addEventListener('keydown',e=>{
   const scr=document.getElementById('wmScr');if(!scr||!scr.classList.contains('on'))return;
   if(G.rollOpen!=null){if(['Escape','Enter',' '].includes(e.key)){e.preventDefault();G.rollOpen=null;}return;}
-  if(e.key==='ArrowRight'||e.key==='ArrowUp'){for(let i=wmSel+1;i<6;i++)if(wmUnlocked(i)){wmSel=i;sfxMenu();break;}e.preventDefault();}
+  if(e.key==='ArrowRight'||e.key==='ArrowUp'){for(let i=wmSel+1;i<WORLDS.length;i++)if(wmUnlocked(i)){wmSel=i;sfxMenu();break;}e.preventDefault();}
   else if(e.key==='ArrowLeft'||e.key==='ArrowDown'){for(let i=wmSel-1;i>=0;i--)if(wmUnlocked(i)){wmSel=i;sfxMenu();break;}e.preventDefault();}
   else if(e.key==='Enter'||e.key===' '){if(wmUnlocked(wmSel)){e.preventDefault();sfxMenu();beginWorld(wmSel);}}
 });
@@ -1140,7 +1148,7 @@ function beginWorld(wIdx){
   const bossN=Math.min(BOSS_N[wIdx]||4,G.wQs.length-1);
   G.bossQs=G.wQs.slice(G.wQs.length-bossN);
   const pool=shuffle(G.wQs.slice(0,G.wQs.length-bossN));
-  const nAlt=Math.min(positions.length,pool.length);
+  const nAlt=Math.min((D&&D.altarCount)||positions.length,positions.length,pool.length);
   G.altarData=positions.slice(0,nAlt).map((pos,i)=>({tx:pos[1],ty:pos[0],x:pos[1]*TS+TS/2,y:pos[0]*TS+TS/2,qIdx:pool[i],lit:false,animT:0,required:i<10}));
   const rest=pool.slice(nAlt),givers=(D&&D.quests)||[];
   G.quests=givers.length&&rest.length?givers.map(gv=>Object.assign({},gv,{qs:[],done:0})):[];
@@ -1307,8 +1315,8 @@ const DENSE={
   },
   2:{
     build:dhBuildHill,
-    quests:[{name:'Interpreter',robe:['#3a5a8a','#5a7aaa','#283c68'],x:356,y:656,hello:'"Come in! I will show you great things."',thanks:'"Well learned! God speed you!"'},
-            {name:'Prudence',robe:['#8a3a6a','#aa5a8a','#682848'],x:340,y:112,hello:'"Before you rest here, answer me."',thanks:'"Welcome to House Beautiful!"'}],
+    quests:[{name:'Interpreter',robe:['#3a5a8a','#5a7aaa','#283c68'],x:356,y:656,hello:'"Come in! I will show you great things."',thanks:'"Well learned! God speed you!"'}],
+    altarCount:8,need:7,chestNeed:4,
     start:[480,664],comp:[470,690],
     gateY:62,slow:'k',
     chest:{x:244,y:368,draw:(...a)=>dhDrawCross(...a),label:'The Cross',text:'Kneel here and lay down your burden…',action:'to kneel ▶',locked:'"Light 5 altars, then come to the Cross."'},
@@ -1317,25 +1325,20 @@ const DENSE={
     item:{name:'SHOES OF PEACE',title:'Your burden is gone!',burdenTo:[302,418],short:'GO TO THE CROSS!',verse:'"He hath given me rest by His sorrow, and life by His death."',ref:'Christian at the Cross',hint:'You got the SHOES OF PEACE!',gateMsg:'"Go to the Cross first — off the highway, west!"',icon:(...a)=>drawShoesIcon(...a)},
     altars:[[81,30],[76,90],[70,20],[57,24],[56,80],[44,96],[58,46],[40,12],[27,74],[20,46],[33,38],[11,46]]
   },
-  3:{
+  5:{
     build:dvBuildValley,
-    quests:[{name:'Shepherd Boy',robe:['#7a8a3a','#9aaa50','#5a6a28'],x:244,y:584,hello:'"He that is down needs fear no fall!"',thanks:'"Go in peace, pilgrim!"'},
-            {name:'Mr. Honest',robe:['#6a6a6a','#8a8a8a','#4a4a4a'],x:564,y:632,hello:'"Honest is my name. Answer me true!"',thanks:'"Truly answered!"'},
-            {name:'Great-heart',robe:['#8a2a2a','#aa4a4a','#681818'],x:(dvC0(40)+1)*8+4,y:40*8+8,hello:'"I guard pilgrims here. Show me!"',thanks:'"Bravely answered!"'},
-            {name:'Mr. Fearing',robe:['#5a5a7a','#7a7a9a','#3a3a5a'],x:(dvC0(24)+1)*8+4,y:24*8+8,hello:'"I am so afraid… help me remember!"',thanks:'"I feel braver now. Thank you!"'}],
+    quests:[{name:'Mr. Fearing',robe:['#5a5a7a','#7a7a9a','#3a3a5a'],x:(dvC0(24)+1)*8+4,y:24*8+8,hello:'"I am so afraid… help me remember!"',thanks:'"I feel braver now. Thank you!"'}],
+    altarCount:10,need:9,
     start:[484,676],comp:[460,690],
     gateY:62,
-    chest:Object.assign(dvChestPos(),{text:'A chest, glinting in the dark…'}),
     gateLabel:'THE MORNING',light:(...a)=>dvDrawLight(...a),overlay:(...a)=>dvDarkness(...a),
     npc:{x:532,y:96,name:'Faithful',line:'"I will fear no evil, for Thou art with me!"',robe:['#8a4a2a','#a85a34','#6a3420']},
-    item:{name:'SHIELD OF FAITH',short:'FIND THE SHIELD!',verse:'"Take up the shield of faith, to quench every fiery dart."',ref:'Ephesians 6:16',hint:'Use it against Apollyon!',gateMsg:'"Find the Shield first — in a cave off the path!"',icon:(...a)=>drawShieldIcon(...a)},
     altars:dvAltarList()
   },
-  4:{
+  6:{
     build:dfBuildFair,
-    quests:[{name:'Talkative',robe:['#c06020','#e08040','#904010'],x:244,y:216,hello:'"I love to talk! But do you KNOW it?"',thanks:'"Well! You know more than talk!"'},
-            {name:'Mr. By-ends',robe:['#3a6a6a','#5a8a8a','#284a4a'],x:644,y:216,hello:'"Faith? Only when it pays! Prove it."',thanks:'"Hmm… perhaps I was wrong."'},
-            {name:'Demas',robe:['#9a9aa8','#babac8','#6a6a78'],x:244,y:504,hello:'"Come see my silver mine! Or…"',thanks:'"Ah, you will not be tempted."'}],
+    quests:[{name:'Talkative',robe:['#c06020','#e08040','#904010'],x:244,y:216,hello:'"I love to talk! But do you KNOW it?"',thanks:'"Well! You know more than talk!"'}],
+    altarCount:9,need:8,chestNeed:4,
     start:[480,680],comp:[456,688],
     gateY:62,
     chest:{x:524,y:392,draw:(...a)=>dfDrawHopeful(...a),label:'Hopeful says:',text:'"I will go with you! Take this helmet."',action:'to talk ▶',locked:'"Light 5 altars, then come talk to Hopeful."'},
@@ -1344,7 +1347,7 @@ const DENSE={
     item:{name:'HELMET OF SALVATION',short:'TALK TO HOPEFUL!',verse:'"Take the helmet of salvation."',ref:'Ephesians 6:17',hint:'Hopeful joins your journey!',gateMsg:'"Talk to Hopeful first — he\'s by the fountain!"',icon:(...a)=>drawHelmetIcon(...a)},
     altars:[[82,54],[64,10],[62,80],[46,34],[42,84],[26,10],[26,46],[28,108],[12,56],[46,100],[62,46],[80,92]]
   },
-  5:{
+  8:{
     build:dcBuildJourney,
     start:[488,680],comp:[466,690],
     gateY:62,need:4,chestNeed:2,slowMap:{k:0.6,r:0.45},camTop:110,sky:'#fff2c8',
@@ -1353,6 +1356,41 @@ const DENSE={
     tick:()=>dcTick(),dyn:(...a)=>dcDyn(...a),promptFn:()=>dcPrompt(),
     item:{name:'SWORD OF THE SPIRIT',short:'SEE THE SHEPHERDS!',verse:'"Take the sword of the Spirit, which is the word of God."',ref:'Ephesians 6:17',hint:'Use it against Giant Despair!',gateMsg:'"Visit the Shepherds on Hill Clear first!"',icon:(...a)=>drawSwordIcon(...a)},
     altars:[[78,30],[72,104],[56,48],[34,22],[30,96],[26,64]]
+  },
+  3:{
+    build:dbBuildPalace,
+    quests:[{name:'Prudence',robe:['#8a3a6a','#aa5a8a','#682848'],x:372,y:424,hello:'"Before you go on, answer me these."',thanks:'"Well done! You are ready to go."'}],
+    altarCount:7,need:6,chestNeed:3,
+    start:[480,680],comp:[456,690],
+    gateY:62,
+    chest:{x:148,y:344,text:'The Armory! Something glows inside…'},
+    gateLabel:'THE DESCENT',light:(...a)=>dhDrawLight(...a),
+    npc:{x:564,y:664,name:'Watchful',line:'"Welcome! Rest here, and be armed."',robe:['#34508a','#4a68a8','#283c68']},
+    item:{name:'LANTERN',short:'FIND THE LANTERN!',verse:'"Thy word is a lamp unto my feet."',ref:'Psalm 119:105',hint:'It will light the dark valley!',gateMsg:'"Get the Lantern from the Armory first!"',icon:(...a)=>drawLanternIcon(...a)},
+    altars:[[40,30],[40,90],[30,8],[46,112],[78,20],[78,100],[20,50],[20,70],[56,46],[66,46]]
+  },
+  4:{
+    build:duBuildValley,
+    quests:[{name:'Shepherd Boy',robe:['#7a8a3a','#9aaa50','#5a6a28'],x:300,y:620,hello:'"He that is down needs fear no fall!"',thanks:'"Go in peace, pilgrim!"'}],
+    altarCount:9,need:8,chestNeed:4,slowMap:{k:0.6},
+    start:[484,680],comp:[460,690],
+    gateY:62,
+    chest:{x:708,y:584,text:'A chest by the shepherd\'s hut…'},
+    gateLabel:'THE DARK VALLEY',light:(...a)=>dhDrawLight(...a),
+    tick:()=>dcTick(),dyn:(...a)=>dcDyn(...a),promptFn:()=>dcPrompt(),
+    item:{name:'SHIELD OF FAITH',short:'FIND THE SHIELD!',verse:'"Take up the shield of faith, to quench every fiery dart."',ref:'Ephesians 6:16',hint:'Use it against Apollyon!',gateMsg:'"Find the Shield first — at the shepherd\'s hut!"',icon:(...a)=>drawShieldIcon(...a)},
+    altars:[[80,30],[76,90],[66,40],[60,80],[44,32],[42,88],[34,50],[28,76],[22,40],[18,84]]
+  },
+  7:{
+    build:ddBuildCastle,
+    quests:[{name:'Hopeful',robe:['#2a7a6a','#3a9a84','#1e5a4e'],x:404,y:600,hello:'"Brother, take heart! Answer with me."',thanks:'"There is hope yet! Let us go on."'}],
+    altarCount:8,need:7,chestNeed:4,
+    start:[480,684],comp:[456,692],
+    gateY:62,
+    chest:{x:284,y:288,text:'A chest in the dungeon cell…'},
+    gateLabel:'CASTLE GATE',light:()=>{},overlay:(...a)=>ddOverlay(...a),
+    item:{name:'KEY OF PROMISE',short:'FIND THE KEY!',verse:'"I have a key in my bosom, called Promise."',ref:'Christian, in Doubting Castle',hint:'It opens every lock!',gateMsg:'"Find the Key of Promise in the dungeon!"',icon:(...a)=>drawKeyIcon(...a)},
+    altars:[[36,23],[47,35],[47,47],[22,30],[22,90],[40,80],[64,30],[72,90],[80,50],[66,70]]
   }
 };
 let DWS=null;
@@ -2246,7 +2284,7 @@ function dvDarkness(ctx,camX,camY){
   g.fillStyle=gr;g.fillRect(0,0,640,480);
   g.globalCompositeOperation='destination-out';
   const hole=(x,y,rr,a=1)=>{if(x<-rr||x>640+rr||y<-rr||y>480+rr)return;const hg=g.createRadialGradient(x,y,rr*0.3,x,y,rr);hg.addColorStop(0,`rgba(0,0,0,${a})`);hg.addColorStop(1,'rgba(0,0,0,0)');g.fillStyle=hg;g.fillRect(x-rr,y-rr,rr*2,rr*2);};
-  hole(G.px-camX,G.py-camY-12,108+Math.sin(mapFrame*0.3)*3);
+  hole(G.px-camX,G.py-camY-12,(G.armorEarned.includes(3)?165:108)+Math.sin(mapFrame*0.3)*3);
   hole(G.companion.px-camX,G.companion.py-camY-12,40,0.6);
   G.altarData.forEach(a=>hole(a.x-camX,a.y-camY-6,a.lit?96:28,a.lit?1:0.75));
   if(CHEST&&!G.chestOpen&&G.altarsLit>=chestNeed())hole(CHEST.x-camX,CHEST.y-camY-8,60,0.85);
@@ -2618,8 +2656,6 @@ function dcBuildJourney(){
   // the way
   for(let r=8;r<=87;r++){const o=Math.round(Math.sin(r*0.11)*6);const tile=g[r][59+o];if(tile==='r'||tile==='w')continue;set(58+o,r,61+o,r,g[r][59+o]==='k'?'S':'d');}
   set(57,8,62,12,'O');
-  // By-Path Meadow to Doubting Castle
-  set(16,47,54,48,'d');set(9,40,26,52,'f');set(14,49,20,52,'d');
   // stairs up Hill Clear to the shepherds
   for(let r=56;r<=66;r++){const cc=86+Math.round(Math.sin(r*0.5)*2);set(cc,r,cc+1,r,'S');}
   set(66,66,86,67,'d');
@@ -2635,14 +2671,11 @@ function dcBuildJourney(){
   const objects=[];
   const add=(cv,x,y,base)=>objects.push({cv,x,y,base});
   add(dcCity(),160,64-160,62);
-  add(dcCastle(),8*8,52*8-104,52*8);S(8,44,22,51);
   add(dcTelescope(),90*8,56*8-26,56*8);S(90,55,91,55);
-  add(dcStile(),54*8-4,48*8-18,48*8);
   const treeAt=(c,r,cv)=>{add(cv,c*8+4-cv.width/2,(r+1)*8-cv.height,(r+1)*8);S(c,r,c,r);pcirc(gx,c*8+5,(r+1)*8,6,'rgba(0,0,0,0.18)');};
   [[6,30],[16,26],[30,36],[44,28],[78,30],[92,36],[104,26],[114,34],[8,60],[40,58],[70,60],[100,56],[116,68],[4,74],[66,84],[96,86],[24,86],[112,84],[46,86],[76,74]].forEach(([c,r],i)=>treeAt(c,r,dwGreenTree(i)));
   const prop=(cv,c,r,wT=1)=>{add(cv,c*8+(wT*8-cv.width)/2,(r+1)*8-cv.height,(r+1)*8);S(c,r,c+wT-1,r);};
   prop(dwSign('DELECTABLE MOUNTAINS',100),48,84,4);prop(dwSign('LAND OF BEULAH',72),66,42,3);
-  prop(dwSign('BY-PATH MEADOW',76),50,45,3);prop(dwSign('DOUBTING CASTLE',80),24,54,3);
   prop(dwSign('THE RIVER',54),66,23,2);prop(dwSign('HILL CLEAR',60),82,67,2);
   S(88,54,90,54);
   const water=[];for(let r=0;r<rows;r++)for(let c=0;c<cols;c++)if(g[r][c]==='w')water.push([c,r]);
@@ -2653,7 +2686,7 @@ function dcBuildJourney(){
 // ===============================
 // LEARNING: mastery stars, Christian's Roll, side quests
 // ===============================
-const BOSS_N=[4,4,4,4,4,3];
+const BOSS_N=[4,4,3,3,4,4,4,4,3];
 function todayStr(){const d=new Date();return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate();}
 function mastery(q){return(G.mastery&&G.mastery[q])||{s:0,d:'',r:0};}
 function starStr(n){return'★'.repeat(n)+'☆'.repeat(3-n);}
@@ -2677,8 +2710,8 @@ function drawToast(ctx){
   if(!G.toast||G.toast.t<=0)return;G.toast.t--;
   const a=Math.min(1,G.toast.t/20);ctx.save();ctx.globalAlpha=a;ctx.font='bold 15px monospace';
   const w=ctx.measureText(G.toast.text).width+30;
-  ctx.fillStyle='rgba(40,24,6,0.95)';ctx.fillRect(320-w/2,42,w,28);ctx.strokeStyle='#f8c840';ctx.lineWidth=2;ctx.strokeRect(320-w/2,42,w,28);
-  ctx.fillStyle='#ffe080';ctx.textAlign='center';ctx.fillText(G.toast.text,320,61);ctx.restore();
+  ctx.fillStyle='rgba(40,24,6,0.95)';ctx.fillRect(320-w/2,120,w,28);ctx.strokeStyle='#f8c840';ctx.lineWidth=2;ctx.strokeRect(320-w/2,120,w,28);
+  ctx.fillStyle='#ffe080';ctx.textAlign='center';ctx.fillText(G.toast.text,320,139);ctx.restore();
 }
 function dwDrawQuestGiver(ctx,q,sx,sy,f){
   dwDrawHelp(ctx,sx,sy,f,q.robe);
@@ -2717,11 +2750,168 @@ function drawRollOverlay(ctx,w){
   wmBtns=[{x:0,y:0,w:640,h:480,act:()=>{G.rollOpen=null;sfxMenu();}}];
 }
 
+
+// ===============================
+// WORLD 4 — HOUSE BEAUTIFUL · WORLD 5 — VALLEY OF HUMILIATION · WORLD 8 — DOUBTING CASTLE
+// ===============================
+function drawLanternIcon(ctx,cx,cy,u=2){
+  const ox=Math.round(cx-6*u),oy=Math.round(cy-9*u);
+  const F=(x,y,w,h,c)=>{ctx.fillStyle=c;ctx.fillRect(ox+x*u,oy+y*u,w*u,h*u);};
+  F(4,0,4,1,'#3a3a44');F(3,1,1,2,'#3a3a44');F(8,1,1,2,'#3a3a44');
+  F(2,3,8,2,'#5a5a64');F(1,4,10,1,'#7a7a84');
+  F(2,5,8,9,'#ffd860');F(3,6,6,7,'#fff4b0');F(5,7,2,4,'#ffffff');
+  F(2,5,1,9,'#5a5a64');F(9,5,1,9,'#5a5a64');F(5,5,2,9,'rgba(90,90,100,0.4)');
+  F(1,14,10,2,'#5a5a64');F(2,16,8,1,'#3a3a44');
+}
+function drawKeyIcon(ctx,cx,cy,u=2){
+  const ox=Math.round(cx-10*u),oy=Math.round(cy-5*u);
+  const F=(x,y,w,h,c)=>{ctx.fillStyle=c;ctx.fillRect(ox+x*u,oy+y*u,w*u,h*u);};
+  F(1,1,6,8,'#e8b838');F(0,2,8,6,'#e8b838');F(2,3,4,4,'#5a3a10');F(1,1,6,1,'#fff0a0');
+  F(8,4,11,2,'#e8b838');F(8,4,11,1,'#fff0a0');
+  F(14,6,2,3,'#e8b838');F(17,6,2,2,'#e8b838');
+}
+
+// ── House Beautiful grounds ─────────────────────────────
+function dbBuildPalace(){
+  const cols=120,rows=88,W=cols*8,H=rows*8;
+  const g=[];for(let r=0;r<rows;r++)g.push(new Array(cols).fill('f'));
+  const inb=(c,r)=>r>=0&&r<rows&&c>=0&&c<cols;
+  const set=(c0,r0,c1,r1,ch)=>{for(let r=r0;r<=r1;r++)for(let c=c0;c<=c1;c++)if(inb(c,r))g[r][c]=ch;};
+  const disc=(cc,rr,rad,ch)=>{for(let r=rr-rad-2;r<=rr+rad+2;r++)for(let c=cc-rad-3;c<=cc+rad+3;c++){if(!inb(c,r))continue;const d=Math.hypot((c-cc)*0.85,r-rr)+(vnoise(c,r,3)-0.5)*1.4;if(d<=rad)g[r][c]=ch;}};
+  set(0,6,119,7,'h');set(57,6,62,7,'G');
+  set(57,8,62,87,'p');
+  set(36,24,83,27,'p');set(36,24,39,50,'p');set(80,24,83,50,'p');set(36,45,83,50,'p');
+  const garden=(c0,r0,c1,r1,side)=>{set(c0,r0,c1,r1,'h');set(c0+1,r0+1,c1-1,r1-1,'B');const mr=Math.floor((r0+r1)/2);const ec=side>0?c1:c0;set(ec,mr-1,ec,mr+1,'d');};
+  garden(8,54,28,70,1);garden(90,54,110,70,-1);garden(10,11,26,21,1);garden(92,11,108,21,-1);
+  set(29,61,56,63,'d');set(63,61,89,63,'d');set(27,15,56,17,'d');set(63,15,91,17,'d');
+  disc(102,38,5,'w');
+  set(25,42,35,43,'d');
+
+  const solid=new Uint8Array(cols*rows);
+  const S=(c0,r0,c1,r1,v=1)=>{for(let r=r0;r<=r1;r++)for(let c=c0;c<=c1;c++)if(inb(c,r))solid[r*cols+c]=v;};
+  for(let r=0;r<rows;r++)for(let c=0;c<cols;c++){const t=g[r][c];if(t==='w'||t==='h')solid[r*cols+c]=1;}
+  S(0,0,119,5);S(57,6,62,7,2);
+  const[ground,gx]=mkCv(W,H);
+  for(let r=0;r<rows;r++)for(let c=0;c<cols;c++)dcPaintTile(gx,g,c,r);
+
+  const objects=[],chimneys=[];
+  const add=(cv,x,y,base)=>objects.push({cv,x,y,base});
+  add(dhPalace(),320,45*8-120,45*8);S(40,33,79,44);
+  gx.fillStyle='rgba(20,15,10,0.18)';gx.fillRect(320,45*8,320,6);
+  const arm=dwHouse(13,9,3,false);add(arm.cv,12*8-2,32*8-14,41*8);S(12,34,24,40);chimneys.push([12*8-2+arm.chim[0],32*8-14+arm.chim[1]]);
+  S(17,42,19,42);
+  add(dfFountain(),66*8,50*8-34,50*8);S(66,47,72,49);
+  const lion=dhLion(),lionR=flipCv(lion);add(lion,52*8-14,81*8-28,81*8);S(52,79,54,80);add(lionR,65*8-6,81*8-28,81*8);S(65,79,67,80);
+  const treeAt=(c,r,cv)=>{add(cv,c*8+4-cv.width/2,(r+1)*8-cv.height,(r+1)*8);S(c,r,c,r);pcirc(gx,c*8+5,(r+1)*8,6,'rgba(0,0,0,0.18)');};
+  [[4,30],[6,44],[30,32],[32,8],[44,12],[76,12],[88,30],[112,30],[114,46],[86,44],[4,78],[22,82],[40,76],[78,76],[98,82],[114,78],[46,58],[74,58]].forEach(([c,r],i)=>treeAt(c,r,dwGreenTree(i)));
+  const prop=(cv,c,r,wT=1)=>{add(cv,c*8+(wT*8-cv.width)/2,(r+1)*8-cv.height,(r+1)*8);S(c,r,c+wT-1,r);};
+  prop(dwSign('THE ARMORY',56),27,40,2);prop(dwSign('HOUSE BEAUTIFUL',80),64,84,3);
+  const lamp=dwLamp();[[56,30],[63,30],[56,56],[63,56],[56,74],[63,74]].forEach(([c,r])=>prop(lamp,c,r));
+  S(70,82,70,82);
+  const water=[];for(let r=0;r<rows;r++)for(let c=0;c<cols;c++)if(g[r][c]==='w')water.push([c,r]);
+  return{cols,rows,W,H,grid:g,solid,ground,objects,chimneys,water,smoke:[]};
+}
+
+// ── Valley of Humiliation ───────────────────────────────
+function duBuildValley(){
+  const cols=120,rows=88,W=cols*8,H=rows*8;
+  const g=[];for(let r=0;r<rows;r++)g.push(new Array(cols).fill('f'));
+  const inb=(c,r)=>r>=0&&r<rows&&c>=0&&c<cols;
+  const set=(c0,r0,c1,r1,ch)=>{for(let r=r0;r<=r1;r++)for(let c=c0;c<=c1;c++)if(inb(c,r))g[r][c]=ch;};
+  set(0,6,119,7,'h');set(57,6,62,7,'G');
+  for(let r=8;r<rows;r++){const lw=8+Math.round(vnoise(r,3,8)*10),rw=8+Math.round(vnoise(r,9,8)*10);set(0,r,lw,r,'k');set(119-rw,r,119,r,'k');}
+  for(let r=18;r<86;r++)for(let c=0;c<cols;c++)if(g[r][c]==='f'&&vnoise(c,r,6)>0.72)g[r][c]='B';
+  for(let r=8;r<=15;r++)for(let c=34;c<=86;c++)if(vnoise(c,r,4)>0.33)g[r][c]='r';
+  const BR=c=>(c>=57&&c<=62)||(c>=18&&c<=21)||(c>=98&&c<=101);
+  for(let c=0;c<cols;c++){const r0=50+Math.round(Math.sin(c*0.1)*2);for(let k=0;k<2;k++)g[r0+k][c]=BR(c)?'b':'w';}
+  for(let r=8;r<rows;r++){const o=Math.round(Math.sin(r*0.13)*3);for(let c=58+o;c<=61+o;c++){if(g[r][c]==='w'||g[r][c]==='b')g[r][c]='b';else g[r][c]='d';}}
+  for(let c=18;c<=21;c++)for(let r=40;r<=60;r++)if(g[r][c]!=='b'&&g[r][c]!=='w')g[r][c]='d';
+  for(let c=98;c<=101;c++)for(let r=40;r<=60;r++)if(g[r][c]!=='b'&&g[r][c]!=='w')g[r][c]='d';
+
+  const solid=new Uint8Array(cols*rows);
+  const S=(c0,r0,c1,r1,v=1)=>{for(let r=r0;r<=r1;r++)for(let c=c0;c<=c1;c++)if(inb(c,r))solid[r*cols+c]=v;};
+  for(let r=0;r<rows;r++)for(let c=0;c<cols;c++){const t=g[r][c];if(t==='w'||t==='h')solid[r*cols+c]=1;}
+  S(0,0,119,5);S(57,6,62,7,2);
+  const[ground,gx]=mkCv(W,H);
+  for(let r=0;r<rows;r++)for(let c=0;c<cols;c++)dcPaintTile(gx,g,c,r);
+  gx.fillStyle='rgba(40,20,10,0.25)';for(let i=0;i<14;i++){pcirc(gx,(40+i*3.5)*8,(10+(i%3))*8,10+(i%4)*4,'rgba(40,20,10,0.12)');}
+
+  const objects=[];
+  const add=(cv,x,y,base)=>objects.push({cv,x,y,base});
+  const hut=dwHouse(9,7,12,true);add(hut.cv,84*8-2,64*8-14,71*8);S(84,66,92,70);
+  const treeAt=(c,r,cv)=>{add(cv,c*8+4-cv.width/2,(r+1)*8-cv.height,(r+1)*8);S(c,r,c,r);pcirc(gx,c*8+5,(r+1)*8,6,'rgba(0,0,0,0.18)');};
+  [[28,24],[44,30],[76,26],[90,36],[30,62],[46,70],[72,64],[34,84],[80,84],[96,78],[26,40],[90,58]].forEach(([c,r],i)=>treeAt(c,r,dwGreenTree(i+1)));
+  [[42,12],[72,10],[50,14]].forEach(([c,r],i)=>treeAt(c,r,dwDeadTree(i)));
+  const prop=(cv,c,r,wT=1)=>{add(cv,c*8+(wT*8-cv.width)/2,(r+1)*8-cv.height,(r+1)*8);S(c,r,c+wT-1,r);};
+  prop(dwSign('VALLEY OF HUMILIATION',100),64,82,4);prop(dwSign("SHEPHERD'S HUT",72),80,72,3);
+  S(88,72,89,72);
+  const water=[];for(let r=0;r<rows;r++)for(let c=0;c<cols;c++)if(g[r][c]==='w')water.push([c,r]);
+  return{cols,rows,W,H,grid:g,solid,ground,objects,chimneys:[],water,smoke:[],sheep:dcSheep()};
+}
+
+// ── Doubting Castle ─────────────────────────────────────
+function ddPaintTile(ctx,g,c,r){
+  const ch=g[r][c];
+  if(ch==='Q'){
+    const x=c*8,y=r*8,h=tHash(c,r),R=(a,b,w,hh,col)=>{ctx.fillStyle=col;ctx.fillRect(x+a,y+b,w,hh);};
+    const face=g[r+1]&&g[r+1][c]!=='Q';
+    if(face){R(0,0,8,8,'#5e5e68');R(0,3,8,1,'#45454e');R(0,7,8,1,'#45454e');R((r%2)?2:6,0,1,3,'#45454e');R((r%2)?6:2,4,1,3,'#45454e');R(0,6,8,2,'#34343c');if(h%7===0)R(1,4,2,1,'#4e6a3a');}
+    else{R(0,0,8,8,'#7a7a84');R(0,7,8,1,'#5e5e68');R(7,0,1,8,'#5e5e68');R(0,0,8,1,'#8e8e98');if(h%5===0)R((h>>3)&5,(h>>6)&5,2,1,'#6a6a74');}
+    return;
+  }
+  dvPaintTile(ctx,g,c,r);
+}
+function ddBuildCastle(){
+  const cols=120,rows=88,W=cols*8,H=rows*8;
+  const g=[];for(let r=0;r<rows;r++)g.push(new Array(cols).fill('g'));
+  const inb=(c,r)=>r>=0&&r<rows&&c>=0&&c<cols;
+  const set=(c0,r0,c1,r1,ch)=>{for(let r=r0;r<=r1;r++)for(let c=c0;c<=c1;c++)if(inb(c,r))g[r][c]=ch;};
+  set(0,0,119,7,'Q');set(57,6,62,7,'G');
+  // castle walls round a courtyard
+  set(10,8,109,56,'Q');set(13,8,106,53,'p');
+  set(57,54,62,56,'d');
+  // the dungeon: six cells off a corridor
+  set(17,31,53,52,'Q');
+  [19,31,43].forEach(c0=>{set(c0,33,c0+8,39,'o');set(c0+3,40,c0+4,40,'o');set(c0,44,c0+8,50,'o');set(c0+3,43,c0+4,43,'o');});
+  set(19,41,52,42,'o');set(53,41,53,42,'o');
+  // By-Path Meadow outside, with a fence and the stile
+  for(let r=57;r<rows;r++)for(let c=0;c<cols;c++)if(vnoise(c,r,7)>0.68)g[r][c]='d';
+  set(0,82,119,82,'h');set(58,82,61,82,'d');
+  for(let r=57;r<rows;r++){const o=Math.round(Math.sin(r*0.25)*2);set(58+o,r,61+o,r,'d');}
+
+  const solid=new Uint8Array(cols*rows);
+  const S=(c0,r0,c1,r1,v=1)=>{for(let r=r0;r<=r1;r++)for(let c=c0;c<=c1;c++)if(inb(c,r))solid[r*cols+c]=v;};
+  for(let r=0;r<rows;r++)for(let c=0;c<cols;c++){const t=g[r][c];if(t==='Q'||t==='h')solid[r*cols+c]=1;}
+  S(57,6,62,7,2);
+  const[ground,gx]=mkCv(W,H);
+  for(let r=0;r<rows;r++)for(let c=0;c<cols;c++)ddPaintTile(gx,g,c,r);
+  // puddles in the courtyard
+  for(let i=0;i<14;i++){const x=(20+((i*37)%84))*8,y=(12+((i*23)%38))*8;if(g[Math.floor(y/8)][Math.floor(x/8)]!=='p')continue;gx.fillStyle='rgba(70,90,120,0.55)';gx.beginPath();gx.ellipse(x,y,10+(i%3)*4,4,0,0,Math.PI*2);gx.fill();}
+
+  const objects=[];
+  const add=(cv,x,y,base)=>objects.push({cv,x,y,base});
+  const treeAt=(c,r,cv)=>{add(cv,c*8+4-cv.width/2,(r+1)*8-cv.height,(r+1)*8);S(c,r,c,r);};
+  [[70,20],[96,30],[84,46],[26,16],[44,24],[8,66],[30,72],[86,66],[108,74],[48,62],[100,60],[18,78]].forEach(([c,r],i)=>treeAt(c,r,dwDeadTree(i)));
+  const barrel=dwBarrel(),crate=dwCrate();[[66,30],[67,30],[90,14],[100,50],[30,26]].forEach(([c,r],i)=>{add(i%2?crate:barrel,c*8,(r+1)*8-12,(r+1)*8);S(c,r,c,r);});
+  const prop=(cv,c,r,wT=1)=>{add(cv,c*8+(wT*8-cv.width)/2,(r+1)*8-cv.height,(r+1)*8);S(c,r,c+wT-1,r);};
+  add(dcStile(),58*8+4,83*8-18,83*8);
+  prop(dwSign('BY-PATH MEADOW',76),50,84,3);prop(dwSign('DOUBTING CASTLE',80),64,58,3);prop(dwSign('DUNGEON',46),54,40,2);
+  S(34,35,36,35);
+  return{cols,rows,W,H,grid:g,solid,ground,objects,chimneys:[],water:[],smoke:[]};
+}
+function ddOverlay(ctx,camX,camY){
+  ctx.fillStyle='rgba(20,24,44,0.22)';ctx.fillRect(0,0,640,480);
+  ctx.strokeStyle='rgba(180,200,230,0.45)';ctx.lineWidth=1;ctx.beginPath();
+  for(let i=0;i<70;i++){const x=((i*97+mapFrame*7)%700)-30,y=((i*53+mapFrame*11)%520)-20;ctx.moveTo(x,y);ctx.lineTo(x-4,y+12);}
+  ctx.stroke();
+  const ph=mapFrame%520;if(ph<6||(ph>12&&ph<16)){ctx.fillStyle='rgba(230,240,255,0.35)';ctx.fillRect(0,0,640,480);}
+}
+
 const CHEST_NEED=5;
 function altarNeed(){const D=DENSE[G.wIdx];return Math.min((D&&D.need)||10,(G.altarData&&G.altarData.length)||10);}
 function chestNeed(){const D=DENSE[G.wIdx];return(D&&D.chestNeed)||CHEST_NEED;}
 let CHEST=null;
-function dwHasBelt(){return G.armorEarned.includes(G.wIdx);}
+function dwHasBelt(){const D=DENSE[G.wIdx];return !D||!D.item||G.armorEarned.includes(G.wIdx);}
 function dwTileAt(px,py){const r=DWS&&DWS.grid[Math.floor(py/8)];return r?r[Math.floor(px/8)]:'';}
 
 // Belt of Truth item icon, drawn on a pixel grid of size u, centred on (cx,cy)
@@ -2884,6 +3074,7 @@ function startDenseLoop(){
     if(D.overlay)D.overlay(spCtx,camX,camY);
     const psy=G.py-camY,touch='ontouchstart' in window;
     if(G.phase==='itemGet')dwDrawItemGet(spCtx,Math.round(G.px-camX),Math.round(psy),G.itemT);
+    else if(G.phase!=='walk'){}
     else if(G.nearAltar&&!G.nearAltar.lit)drawPrayPrompt(spCtx,psy);
     else if(G.nearQuest){const q=G.nearQuest;if(q.done>=q.qs.length)drawPromptBox(spCtx,psy,q.name+' says:',q.thanks,'');else drawPromptBox(spCtx,psy,q.name+' says:',q.done?'"Next question! ('+(q.done+1)+' of '+q.qs.length+')"':q.hello+' ('+q.qs.length+' questions)',(touch?'TAP':'SPACE')+' to answer ▶');}
     else if(G.nearChest){
@@ -3433,7 +3624,7 @@ function drawAltarAt(ctx,alt,i,sx,sy){
     ctx.beginPath();ctx.arc(sx+11,sy-14,9,0,Math.PI*2);ctx.fill();
     ctx.fillStyle=alt.lit?'#60ff60':isNear?'#ffffff':'#c0c8ff';
     ctx.font='bold 11px monospace';ctx.textAlign='center';
-    const lbl=alt.lit?'✓':(G.wIdx===3?['I','II','III','IV','V','VI','VII','VIII','IX','X','XI','XII'][i]:String(i+1));if(lbl.length>2)ctx.font='bold 8px monospace';ctx.fillText(lbl,sx+11,sy-10);
+    const lbl=alt.lit?'✓':((G.wIdx===4||G.wIdx===5)?['I','II','III','IV','V','VI','VII','VIII','IX','X','XI','XII'][i]:String(i+1));if(lbl.length>2)ctx.font='bold 8px monospace';ctx.fillText(lbl,sx+11,sy-10);
   }
 }
 
@@ -4334,8 +4525,8 @@ function dvDrawApollyon(g,f,hp){
 function dvDart(ctx,x,y,a,u=2){ctx.save();ctx.translate(Math.round(x),Math.round(y));ctx.rotate(a);ctx.fillStyle='#6a4a2a';ctx.fillRect(-5*u,-u/2,9*u,u);ctx.fillStyle='#ff8a20';ctx.fillRect(4*u,-u*1.5,3*u,3*u);ctx.fillStyle='#ffd040';ctx.fillRect(5*u,-u/2,2*u,u);ctx.fillStyle='rgba(255,140,40,0.35)';ctx.fillRect(2*u,-u*2,6*u,4*u);ctx.fillStyle='#d8d0c0';ctx.fillRect(-6*u,-u,2*u,2*u);ctx.restore();}
 function dvDartOrbit(ctx,f,n,cx,cy,r,alpha=1){ctx.save();ctx.globalAlpha=alpha;for(let i=0;i<n;i++){const a=f*0.025+i*(Math.PI*2/n);dvDart(ctx,cx+Math.cos(a)*r,cy+Math.sin(a)*r*0.45+Math.sin(f*0.07+i)*4,a+Math.PI/2,1.5);}ctx.restore();}
 
-BOSSW[3]={name:'APOLLYON',hudName:'APOLLYON',gateX:190,horizon:134,bossX:190,feetY:240,BS:1.3,pX:470,foeW:128,foeH:140,
-  buildBg:()=>dvBuildBossBg(),clouds:null,animBg:ctx=>dvBossAnim(ctx),drawFoe:(g,f,hp)=>dvDrawApollyon(g,f,hp),orbit:(...a)=>dvDartOrbit(...a),projectile:(c,x,y)=>dvDart(c,x,y,0.25,3),icon:(...a)=>drawShieldIcon(...a),
+BOSSW[4]={name:'APOLLYON',hudName:'APOLLYON',gateX:190,horizon:134,bossX:190,feetY:240,BS:1.3,pX:470,foeW:128,foeH:140,
+  buildBg:()=>duBuildBossBg(),clouds:null,animBg:ctx=>dvBossAnim(ctx),drawFoe:(g,f,hp)=>dvDrawApollyon(g,f,hp),orbit:(...a)=>dvDartOrbit(...a),projectile:(c,x,y)=>dvDart(c,x,y,0.25,3),icon:(...a)=>drawShieldIcon(...a),
   gloom:'30,16,40',gloom2:'14,6,20',aura:'160,60,20',mist:'90,40,30',orb:'255,160,60',hp:['#d06020','#ffa040'],accent:'#ffa040',accentLt:'#ffe0b0',accentDim:'#c09070',panel:'30,12,6',
   counterFrom:[73,-133],taunt1:'"Make your own rules!"',taunt2:'"Turn back and serve me!"',introSub:'He straddles the way. Raise the Shield of Faith!',
   counterLine:'"Feel my fiery darts!"',laughLine:'"Make your own rules!"',victoryLine:'Apollyon spreads his wings and flees!',itemName:'SHIELD OF FAITH',finalWord:'FAITH',
@@ -4400,7 +4591,7 @@ function dfDrawDeceiver(g,f,hp){
 function dfCoin(ctx,x,y,ph,u=2){const w=Math.max(1,Math.abs(Math.cos(ph))*3*u);ctx.fillStyle='#a07810';ctx.fillRect(Math.round(x-w/2-u/2),Math.round(y-2*u),Math.round(w+u),4*u);ctx.fillStyle='#f8d040';ctx.fillRect(Math.round(x-w/2),Math.round(y-1.5*u),Math.round(w),3*u);if(w>2*u){ctx.fillStyle='#fff0a0';ctx.fillRect(Math.round(x-w/2+u/2),Math.round(y-u),u,u);}}
 function dfCoinOrbit(ctx,f,n,cx,cy,r,alpha=1){ctx.save();ctx.globalAlpha=alpha;for(let i=0;i<n;i++){const a=f*0.025+i*(Math.PI*2/n);dfCoin(ctx,cx+Math.cos(a)*r,cy+Math.sin(a)*r*0.45+Math.sin(f*0.07+i)*4,f*0.2+i,2);}ctx.restore();}
 
-BOSSW[4]={name:'THE DECEIVER',hudName:'THE DECEIVER',gateX:190,horizon:134,bossX:190,feetY:240,BS:1.4,pX:470,foeW:96,foeH:140,
+BOSSW[6]={name:'THE DECEIVER',hudName:'THE DECEIVER',gateX:190,horizon:134,bossX:190,feetY:240,BS:1.4,pX:470,foeW:96,foeH:140,
   buildBg:()=>dfBuildBossBg(),clouds:null,drawFoe:(g,f,hp)=>dfDrawDeceiver(g,f,hp),orbit:(...a)=>dfCoinOrbit(...a),projectile:(c,x,y)=>dfCoin(c,x,y,x*0.2,3),icon:(...a)=>drawHelmetIcon(...a),
   gloom:'40,16,50',gloom2:'20,6,30',aura:'140,40,120',mist:'120,60,140',orb:'255,220,100',hp:['#b03a90','#ff70d0'],accent:'#ff70d0',accentLt:'#ffd8f4',accentDim:'#c090b8',panel:'28,8,30',
   counterFrom:[56,-101],taunt1:'"Religion is just ritual!"',taunt2:'"Come! Buy something shiny!"',introSub:'He sells lies at the Fair. Put on the Helmet!',
@@ -4513,12 +4704,161 @@ function celestialEnding(done){
   })();
 }
 
-BOSSW[5]={name:'GIANT DESPAIR',hudName:'GIANT DESPAIR',gateX:190,horizon:134,bossX:190,feetY:240,BS:1.4,pX:470,foeW:110,foeH:142,
-  buildBg:()=>dcBuildBossBg(),clouds:null,animBg:ctx=>dcBossAnim(ctx),drawGate:(c,o)=>dcGate(c,o),ending:done=>celestialEnding(done),
-  drawFoe:(g,f,hp)=>dcDrawGiant(g,f,hp),orbit:(...a)=>dcCloudOrbit(...a),projectile:(c,x,y)=>dcCloud(c,x,y,2),icon:(...a)=>drawSwordIcon(...a),
+BOSSW[7]={name:'GIANT DESPAIR',hudName:'GIANT DESPAIR',gateX:190,horizon:134,bossX:190,feetY:240,BS:1.4,pX:470,foeW:110,foeH:142,
+  buildBg:()=>ddBuildBossBg(),clouds:null,animBg:ctx=>ddBossAnim(ctx),
+  drawFoe:(g,f,hp)=>dcDrawGiant(g,f,hp),orbit:(...a)=>dcCloudOrbit(...a),projectile:(c,x,y)=>dcCloud(c,x,y,2),icon:(...a)=>drawKeyIcon(...a),
   gloom:'30,34,44',gloom2:'14,16,24',aura:'60,70,90',mist:'100,110,130',orb:'200,210,230',hp:['#7080a0','#b0c0e0'],accent:'#c0d0f0',accentLt:'#e8f0ff',accentDim:'#90a0b8',panel:'14,18,30',
-  counterFrom:[-55,-171],taunt1:'"There is no hope!"',taunt2:'"You will never reach the City!"',introSub:'He guards the River. Wield the Sword of the Spirit!',
-  counterLine:'"Give up, pilgrim!"',laughLine:'"There is no hope!"',victoryLine:'Giant Despair is defeated! The way is open!',itemName:'SWORD OF THE SPIRIT',finalWord:'HOPE',
+  counterFrom:[-55,-171],taunt1:'"There is no hope!"',taunt2:'"You will never leave my castle!"',introSub:'He holds you in his castle. Use the Key of Promise!',
+  counterLine:'"Give up, pilgrim!"',laughLine:'"There is no hope!"',victoryLine:'The Key of Promise opens every lock!',itemName:'KEY OF PROMISE',finalWord:'PROMISE',
+  bg:null,cl:null,anim:false,idle:0,boss:null,bossG:null};
+
+
+// ── World 4 boss: Timorous & Mistrust ───────────────────
+function dbBuildBossBg(){
+  const[cv,g]=mkCv(640,480);const F=(x,y,w,h,c)=>{g.fillStyle=c;g.fillRect(x,y,w,h);};
+  const HZ=W0B.horizon,GX=W0B.gateX;
+  const sk=g.createLinearGradient(0,0,0,HZ);sk.addColorStop(0,'#6aa0e0');sk.addColorStop(1,'#d8ecf8');g.fillStyle=sk;g.fillRect(0,0,640,HZ);
+  // the valley far below, in layers
+  [[HZ-40,'#9ac0a8'],[HZ-26,'#7ab088'],[HZ-12,'#5a9a6a']].forEach(([y,c],k)=>{for(let x=0;x<640;x++){const h=Math.round(8+Math.sin(x*0.02+k)*6+vnoise(x,k,30)*8);F(x,y-h,1,h+20,c);}});
+  g.drawImage(dhPalace(),470,HZ-70,150,56);
+  // hilltop meadow
+  F(0,HZ,640,480-HZ,'#5cb43c');
+  for(let by=HZ;by<480;by+=4)for(let bx=0;bx<640;bx+=4){const n=vnoise(bx,by,30);if(n>0.66)F(bx,by,4,4,'#54aa36');else if(n<0.3)F(bx,by,4,4,'#66c046');}
+  for(let y=HZ;y<480;y++){const t=(y-HZ)/(480-HZ),cx=GX+(W0B.pX+10-GX)*Math.pow(t,1.15),hw=8+t*60,x0=Math.round(cx-hw),x1=Math.round(cx+hw);F(x0,y,x1-x0,1,'#c8bea8');if(y%6===0)F(x0,y,x1-x0,1,'#a89e88');}
+  drawArenaGate(g,GX,HZ-18,'THE DESCENT');
+  g.drawImage(dwGreenTree(0),-10,160,64,76);g.drawImage(dwGreenTree(3),590,150,64,76);
+  for(let i=0;i<50;i++){const x=(i*97)%640,y=250+((i*53)%220);if(Math.abs(x-W0B.pX)<90)continue;F(x,y,2,2,['#fff6a0','#ffffff','#ff9ec4'][i%3]);}
+  return cv;
+}
+function dbDrawCowards(g,f,hp){
+  const u=2,F=(x,y,w,h,c)=>{g.fillStyle=c;g.fillRect(Math.round(x*u),Math.round(y*u),Math.max(1,Math.round(w*u)),Math.max(1,Math.round(h*u)));};
+  const sh=Math.round(Math.sin(f*0.9));
+  // Timorous — tall, thin, trembling, hands in the air
+  F(13+sh,48,3,14,'#4a3a2e');F(19+sh,48,3,14,'#4a3a2e');F(11+sh,61,6,2,'#2a1a10');F(18+sh,61,6,2,'#2a1a10');
+  F(10+sh,24,15,26,'#7a6a9a');F(10+sh,24,3,26,'#9a8aba');F(22+sh,24,3,26,'#5a4a7a');F(10+sh,36,15,2,'#4a3a5a');
+  F(6+sh,8,4,18,'#7a6a9a');F(25+sh,8,4,18,'#7a6a9a');F(5+sh,5,5,4,'#e8c8a0');F(25+sh,5,5,4,'#e8c8a0');
+  F(11+sh,9,13,15,'#e8c8a0');F(11+sh,9,2,15,'#d0aa80');F(11+sh,6,13,4,'#8a6a3a');F(15+sh,4,4,3,'#8a6a3a');
+  F(13+sh,12,4,4,'#ffffff');F(19+sh,12,4,4,'#ffffff');F(14+sh,13,2,2,'#1a1a2a');F(20+sh,13,2,2,'#1a1a2a');
+  F(13+sh,10,4,1,'#5a3a1a');F(19+sh,10,4,1,'#5a3a1a');F(16+sh,18,3,4,'#5a1a1a');
+  if(f%40<20){F(26+sh,12,1,2,'#80c8ff');F(10+sh,15,1,2,'#80c8ff');}
+  // Mistrust — short, round, squinting, pointing back the way you came
+  F(37,55,4,7,'#3a2e24');F(46,55,4,7,'#3a2e24');F(35,61,7,2,'#1a120a');F(45,61,7,2,'#1a120a');
+  for(let dy=-11;dy<=11;dy++){const w=10*Math.sqrt(Math.max(0,1-(dy/11)**2));F(43.5-w,45+dy,w*2,1,'#5a7a5a');}
+  F(35,42,17,2,'#3a4a2a');F(42,44,3,3,'#c8a040');
+  F(52,36,9,3,'#5a7a5a');F(58,35,4,3,'#e8c8a0');F(61,35,3,1,'#e8c8a0');
+  F(30,40,5,8,'#5a7a5a');F(29,47,3,15,'#6a4a2a');
+  F(37,22,14,12,'#e8c8a0');F(37,22,2,12,'#d0aa80');
+  F(33,19,22,3,'#3a2a1a');F(37,13,14,7,'#3a2a1a');F(37,18,14,2,'#7a2a2a');
+  F(39,26,4,1,'#1a1a2a');F(45,26,4,1,'#1a1a2a');F(39,25,4,1,'#5a3a1a');F(45,24,4,1,'#5a3a1a');
+  F(41,30,6,1,'#7a2a2a');F(40,31,1,1,'#7a2a2a');F(47,31,1,1,'#7a2a2a');
+}
+function dbBang(ctx,x,y,s=16){ctx.font='bold '+s+'px monospace';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle='rgba(60,40,0,0.6)';ctx.fillText('!',x+1,y+1);ctx.fillStyle='#ffd040';ctx.fillText('!',x,y);ctx.textBaseline='alphabetic';}
+function dbBangOrbit(ctx,f,n,cx,cy,r,alpha=1){ctx.save();ctx.globalAlpha=alpha;for(let i=0;i<n;i++){const a=f*0.03+i*(Math.PI*2/n);dbBang(ctx,cx+Math.cos(a)*r,cy+Math.sin(a)*r*0.45+Math.sin(f*0.1+i)*5);}ctx.restore();}
+
+// ── World 5 arena: Apollyon in the green Valley of Humiliation ─
+function duBuildBossBg(){
+  const[cv,g]=mkCv(640,480);const F=(x,y,w,h,c)=>{g.fillStyle=c;g.fillRect(x,y,w,h);};
+  const HZ=W0B.horizon,GX=W0B.gateX;
+  const sk=g.createLinearGradient(0,0,0,HZ);sk.addColorStop(0,'#4a5a8a');sk.addColorStop(0.6,'#c08070');sk.addColorStop(1,'#f0b080');g.fillStyle=sk;g.fillRect(0,0,640,HZ);
+  for(let x=0;x<640;x++){const h1=Math.round(30+Math.sin(x*0.012)*20+vnoise(x,1,40)*16);F(x,HZ-h1,1,h1,'#4a7a4a');const h2=Math.round(14+Math.sin(x*0.03+2)*8);F(x,HZ-h2,1,h2,'#3a6a3a');}
+  F(0,HZ,640,480-HZ,'#4e9a36');
+  for(let by=HZ;by<480;by+=4)for(let bx=0;bx<640;bx+=4){const n=vnoise(bx,by,30);if(n>0.66)F(bx,by,4,4,'#46902f');else if(n<0.3)F(bx,by,4,4,'#58a840');}
+  for(let i=0;i<120;i++){const x=(i*97)%640,y=HZ+10+((i*53)%330);F(x,y,2,2,i%3?'#ffffff':'#fff6a0');}
+  // scorched ground where Apollyon stands
+  g.fillStyle='rgba(40,20,10,0.6)';g.beginPath();g.ellipse(W0B.bossX,W0B.feetY,120,34,0,0,Math.PI*2);g.fill();
+  g.fillStyle='rgba(20,10,5,0.5)';g.beginPath();g.ellipse(W0B.bossX,W0B.feetY,70,18,0,0,Math.PI*2);g.fill();
+  for(let y=HZ;y<480;y++){const t=(y-HZ)/(480-HZ),cx=GX+(W0B.pX+10-GX)*Math.pow(t,1.15),hw=8+t*56,x0=Math.round(cx-hw),x1=Math.round(cx+hw);F(x0,y,x1-x0,1,'#9a7850');}
+  drawArenaGate(g,GX,HZ-18,'THE DARK VALLEY');
+  g.drawImage(dwGreenTree(2),-10,170,64,76);g.drawImage(dwGreenTree(5),590,160,64,76);
+  return cv;
+}
+
+// ── World 6 boss: the Whisperer in the dark valley ─────
+function dwhDrawWhisperer(g,f,hp){
+  const u=2;
+  const blob=(x,y,r,c)=>pcirc(g,Math.round(x*u),Math.round(y*u),Math.round(r*u),c);
+  const w=t=>Math.sin(f*0.05+t)*1.5;
+  // tendrils
+  for(let k=0;k<3;k++){let x=16,y=30+k*6;for(let i=0;i<12;i++){x-=1.2;y+=Math.sin(f*0.06+i*0.6+k)*1.2;blob(x,y,Math.max(0.6,2.4-i*0.18),'#22162e');}
+    x=40;y=30+k*6;for(let i=0;i<12;i++){x+=1.2;y+=Math.sin(f*0.06+i*0.6+k+2)*1.2;blob(x,y,Math.max(0.6,2.4-i*0.18),'#22162e');}}
+  // wispy tail
+  for(let i=0;i<14;i++)blob(28+Math.sin(f*0.07+i*0.5)*(i*0.4),46+i*1.6,Math.max(1,9-i*0.6),i%2?'#1a1028':'#22162e');
+  // body
+  [[28,30,15,'#1a1028'],[22+w(1),24,10,'#2a1a3a'],[34+w(2),26,10,'#2a1a3a'],[28,36+w(3),12,'#22162e'],[28,18,10,'#2a1a3a'],[24,14+w(4),6,'#3a2a4a'],[33,15,5,'#3a2a4a']].forEach(([x,y,r,c])=>blob(x,y,r,c));
+  // many eyes
+  [[22,18,0],[30,14,30],[36,20,60],[26,26,90],[33,28,120],[19,30,150],[38,33,20]].forEach(([x,y,ph],k)=>{
+    const open=((f+ph*3)%170)>8;
+    if(open){g.fillStyle='#e8e060';g.fillRect(Math.round((x-1.5)*u),Math.round((y-1)*u),3*u,2*u);g.fillStyle='#1a1028';g.fillRect(Math.round(x*u),Math.round((y-1)*u),u,2*u);}
+    else{g.fillStyle='#5a4a3a';g.fillRect(Math.round((x-1.5)*u),Math.round(y*u),3*u,u/2+0.5);}
+  });
+  g.fillStyle='#8060a0';for(let i=0;i<8;i++)g.fillRect(Math.round((24+i)*u),Math.round((38+Math.sin(i*0.8+f*0.1)*0.6)*u),u,u/2+0.5);
+}
+function dwhEye(ctx,x,y,u=2){x=Math.round(x);y=Math.round(y);pcirc(ctx,x,y,4*u,'#22162e');ctx.fillStyle='#e8e060';ctx.fillRect(x-2*u,y-u,4*u,2*u);ctx.fillStyle='#1a1028';ctx.fillRect(x,y-u,u,2*u);}
+function dwhEyeOrbit(ctx,f,n,cx,cy,r,alpha=1){ctx.save();ctx.globalAlpha=alpha*0.85;for(let i=0;i<n;i++){const a=f*0.022+i*(Math.PI*2/n);dwhEye(ctx,cx+Math.cos(a)*r,cy+Math.sin(a)*r*0.45+Math.sin(f*0.08+i)*4,1.5);}ctx.restore();}
+
+// ── World 8 arena: the courtyard of Doubting Castle ────
+function ddBuildBossBg(){
+  const[cv,g]=mkCv(640,480);const F=(x,y,w,h,c)=>{g.fillStyle=c;g.fillRect(x,y,w,h);};
+  const HZ=W0B.horizon,GX=W0B.gateX;
+  const sk=g.createLinearGradient(0,0,0,HZ);sk.addColorStop(0,'#1e2230');sk.addColorStop(1,'#4a5068');g.fillStyle=sk;g.fillRect(0,0,640,HZ);
+  for(let i=0;i<8;i++){const x=i*90-20,y=10+(i%3)*14;pcirc(g,x+40,y+20,26,'#2a2e3c');pcirc(g,x+70,y+16,20,'#323646');}
+  // castle walls and towers across the back
+  F(0,HZ-60,640,60,'#5e5e68');for(let y=HZ-56;y<HZ;y+=6)F(0,y,640,1,'#45454e');for(let x=0;x<640;x+=14){F(x,HZ-68,9,8,'#5e5e68');}
+  [[30,50],[330,60],[560,50]].forEach(([x,w])=>{F(x,HZ-110,w,110,'#6a6a74');F(x,HZ-110,4,110,'#7a7a84');for(let k=0;k<w;k+=12)F(x+k,HZ-118,8,8,'#6a6a74');F(x+w/2-3,HZ-90,6,12,'#ffd860');});
+  drawArenaGate(g,GX,HZ-18,'CASTLE GATE');
+  // wet cobbled courtyard
+  F(0,HZ,640,480-HZ,'#5a5a62');
+  for(let y=HZ;y<480;y++){const depth=(y-HZ)/(480-HZ),bh=3+Math.floor(depth*6),bw=6+Math.floor(depth*12);if((y-HZ)%bh===0)F(0,y,640,1,'#45454e');for(let x=((Math.floor((y-HZ)/bh))%2)*bw/2;x<640;x+=bw)F(Math.round(x),y,1,1,'#45454e');}
+  for(let i=0;i<10;i++){const x=(i*131)%640,y=HZ+40+((i*73)%280);g.fillStyle='rgba(90,110,150,0.5)';g.beginPath();g.ellipse(x,y,20+(i%3)*10,5+(i%2)*2,0,0,Math.PI*2);g.fill();}
+  g.drawImage(dwDeadTree(1),0,150,56,72);g.drawImage(dwDeadTree(4),588,140,56,72);
+  return cv;
+}
+function ddBossAnim(ctx){
+  ctx.strokeStyle='rgba(180,200,230,0.4)';ctx.lineWidth=1;ctx.beginPath();
+  for(let i=0;i<60;i++){const x=((i*97+mapFrame*7)%700)-30,y=((i*53+mapFrame*11)%520)-20;ctx.moveTo(x,y);ctx.lineTo(x-4,y+12);}ctx.stroke();
+  const ph=mapFrame%420;if(ph<5){ctx.fillStyle='rgba(230,240,255,0.3)';ctx.fillRect(0,0,640,480);}
+}
+
+// ── World 9 boss: the Dark River ────────────────────────
+function drDrawRiver(g,f,hp){
+  const u=2,F=(x,y,w,h,c)=>{g.fillStyle=c;g.fillRect(Math.round(x*u),Math.round(y*u),Math.max(1,Math.round(w*u)),Math.max(1,Math.round(h*u)));};
+  for(let y=8;y<70;y++){
+    const sway=Math.sin(y*0.15+f*0.06)*2,base=y>52?(y-52)*0.9:0,w=13+Math.sin(y*0.22+f*0.05)*2+base,cx=30+sway*(1-y/70);
+    F(cx-w-1,y,w*2+2,1,'#0a1a2a');F(cx-w,y,w*2,1,'#1a3a5a');F(cx-w*0.6,y,w*0.5,1,'#2a5a8a');if((y+Math.floor(f/6))%5===0)F(cx-w*0.3,y,w*0.7,1,'#4a8ac0');
+  }
+  // crest curling over
+  for(let i=0;i<16;i++){const a=Math.PI*(0.9+i/16*1.2),x=36+Math.cos(a)*10,y=12+Math.sin(a)*8;pcirc(g,Math.round(x*u),Math.round(y*u),Math.round((3-i*0.12)*u),i<8?'#2a5a8a':'#4a8ac0');}
+  for(let i=0;i<10;i++){const a=Math.PI*(0.9+i/10*1.2);F(36+Math.cos(a)*12,12+Math.sin(a)*10,2,1,'#e8f4ff');}
+  F(18,8,6,2,'#e8f4ff');F(22,6,4,2,'#ffffff');
+  // face
+  const blink=(f%160)<5;
+  F(22,22,6,2,'#0a1a2a');F(32,22,6,2,'#0a1a2a');
+  if(!blink){F(23,24,4,3,'#c0f0ff');F(33,24,4,3,'#c0f0ff');F(24,25,2,2,'#0a2a4a');F(34,25,2,2,'#0a2a4a');}
+  F(24,31,12,4,'#0a1a2a');F(25,31,10,1,'#4a8ac0');
+  // drips
+  for(let i=0;i<4;i++){const y=(f*0.6+i*17)%30;F(14+i*9,40+y,1,2,'#9ad0ff');}
+}
+function drDrop(ctx,x,y,u=2){x=Math.round(x);y=Math.round(y);ctx.fillStyle='#4a8ac0';ctx.fillRect(x-u,y-2*u,2*u,4*u);ctx.fillRect(x-2*u,y,4*u,2*u);ctx.fillStyle='#c0f0ff';ctx.fillRect(x-u,y-u,u,u);}
+function drDropOrbit(ctx,f,n,cx,cy,r,alpha=1){ctx.save();ctx.globalAlpha=alpha;for(let i=0;i<n;i++){const a=f*0.025+i*(Math.PI*2/n);drDrop(ctx,cx+Math.cos(a)*r,cy+Math.sin(a)*r*0.45+Math.sin(f*0.08+i)*4,2);}ctx.restore();}
+
+BOSSW[3]={name:'TIMOROUS & MISTRUST',hudName:'TIMOROUS & MISTRUST',gateX:190,horizon:134,bossX:190,feetY:240,BS:1.4,pX:470,foeW:128,foeH:128,
+  buildBg:()=>dbBuildBossBg(),clouds:()=>w0Clouds(),drawFoe:(g,f,hp)=>dbDrawCowards(g,f,hp),orbit:(...a)=>dbBangOrbit(...a),projectile:(c,x,y)=>dbBang(c,x,y,28),icon:(...a)=>drawLanternIcon(...a),
+  gloom:'30,40,60',gloom2:'14,20,34',aura:'90,90,140',mist:'140,140,170',orb:'255,220,120',hp:['#8a7ab0','#c0b0e8'],accent:'#c0b0e8',accentLt:'#ece4ff',accentDim:'#9a90b8',panel:'20,16,34',
+  counterFrom:[-40,-150],taunt1:'"Turn back! There are lions ahead!"',taunt2:'"We barely escaped! Run home!"',introSub:'They try to scare you home. Hold up the Lantern!',
+  counterLine:'"Lions! LIONS!"',laughLine:'"We told you to turn back!"',victoryLine:'Timorous and Mistrust run away!',itemName:'LANTERN',finalWord:'COURAGE',
+  bg:null,cl:null,anim:false,idle:0,boss:null,bossG:null};
+BOSSW[5]={name:'THE WHISPERER',hudName:'THE WHISPERER',gateX:190,horizon:134,bossX:190,feetY:240,BS:1.45,pX:470,foeW:112,foeH:136,
+  buildBg:()=>dvBuildBossBg(),clouds:null,animBg:ctx=>dvBossAnim(ctx),drawFoe:(g,f,hp)=>dwhDrawWhisperer(g,f,hp),orbit:(...a)=>dwhEyeOrbit(...a),projectile:(c,x,y)=>dwhEye(c,x,y,2),icon:(...a)=>drawLanternIcon(...a),
+  gloom:'20,10,34',gloom2:'8,4,16',aura:'60,30,90',mist:'60,40,90',orb:'230,230,120',hp:['#6a4a9a','#a080d0'],accent:'#a080d0',accentLt:'#e0d0ff',accentDim:'#8070a0',panel:'12,6,22',
+  counterFrom:[0,-120],taunt1:'"No one is with you…"',taunt2:'"You are all alone in the dark!"',introSub:'It whispers in the dark. Lift up the Lantern!',
+  counterLine:'"Shhh… give up…"',laughLine:'"You are all alone!"',victoryLine:'The Whisperer flees from the light!',itemName:'',extraLine:'"I will fear no evil, for Thou art with me."',finalWord:'LIGHT',
+  bg:null,cl:null,anim:false,idle:0,boss:null,bossG:null};
+BOSSW[8]={name:'THE DARK RIVER',hudName:'THE DARK RIVER',gateX:190,horizon:134,bossX:190,feetY:240,BS:1.4,pX:470,foeW:120,foeH:140,
+  buildBg:()=>dcBuildBossBg(),clouds:null,animBg:ctx=>dcBossAnim(ctx),drawGate:(c,o)=>dcGate(c,o),ending:done=>celestialEnding(done),
+  drawFoe:(g,f,hp)=>drDrawRiver(g,f,hp),orbit:(...a)=>drDropOrbit(...a),projectile:(c,x,y)=>drDrop(c,x,y,3),icon:(...a)=>drawSwordIcon(...a),
+  gloom:'14,24,44',gloom2:'6,10,22',aura:'30,60,110',mist:'60,100,150',orb:'160,220,255',hp:['#2a5a8a','#6aa8e8'],accent:'#8ac0f0',accentLt:'#e0f0ff',accentDim:'#80a0c0',panel:'8,14,28',
+  counterFrom:[0,-150],taunt1:'"You will sink in the deep!"',taunt2:'"There is no bottom to me!"',introSub:'The last river before the City. Hold fast to the Sword!',
+  counterLine:'"Down you go!"',laughLine:'"You will sink!"',victoryLine:'"I feel the bottom, and it is good!"',itemName:'SWORD OF THE SPIRIT',finalWord:'HOPE',
   bg:null,cl:null,anim:false,idle:0,boss:null,bossG:null};
 
 BOSSW[1]={name:'THE OLD SERPENT',hudName:'OLD SERPENT',gateX:190,horizon:134,bossX:190,feetY:240,BS:1.35,pX:470,foeW:104,foeH:136,
@@ -4942,7 +5282,7 @@ function w0Victory(){
       bChromaText(ctx,'VICTORY!',320,py+52,'#f8c840',40,4);
       ctx.fillStyle='#ffffff';ctx.font='bold 16px monospace';ctx.fillText(W0B.victoryLine,320,py+84);
       ctx.fillStyle='#a0ffa0';ctx.font='bold 14px monospace';ctx.fillText('+200 BONUS  •  WORLD COMPLETE',320,py+108);
-      ctx.fillStyle=ARMOR_BATTLE_COLS[G.wIdx];ctx.fillText(W0B.itemName+' EQUIPPED',320,py+130);
+      ctx.fillStyle=ARMOR_BATTLE_COLS[G.wIdx];ctx.fillText(W0B.itemName?W0B.itemName+' EQUIPPED':(W0B.extraLine||''),320,py+130);
       if(f>200){ctx.fillStyle=Math.floor(f/20)%2?'#f8c840':'#c89820';ctx.font='bold 13px monospace';ctx.fillText('▶ PRESS ENTER OR TAP TO CONTINUE',320,py+150);}
     }
     if(f>420){finish();return;}
@@ -5406,7 +5746,7 @@ function triggerArmorGrant(onDone){
   anim();
 }
 
-const ARMOR_BATTLE_COLS=['#d8a030','#a0b8d0','#60b060','#c0a030','#8888b0','#e0e8ff'];
+const ARMOR_BATTLE_COLS=['#d8a030','#a0b8d0','#60b060','#f0c060','#c0a030','#a0a0d0','#8888b0','#e8b838','#e0e8ff'];
 const ARMOR_BATTLE_DESC=[
   'TRUTH STRIKES THE DOUBTER!','RIGHTEOUSNESS REPELS THE SERPENT!',
   'PEACE SILENCES THE ACCUSER!','FAITH SMASHES THE IDOL KING!',
@@ -6147,14 +6487,14 @@ function endWorld(won){
   if(!won&&G.lives<=0){showGameOver();return;}
   const acc=G.correct+G.wrong>0?Math.round(G.correct/(G.correct+G.wrong)*100):100;
   document.getElementById('resIcon').textContent=won?(acc===100?'🏆':acc>=80?'🎉':'😊'):'💀';
-  const finale=won&&G.wIdx===5;
+  const finale=won&&G.wIdx===WORLDS.length-1;
   document.getElementById('resTitle').textContent=finale?'JOURNEY COMPLETE!':won?'WORLD COMPLETE!':'DEFEATED...';
-  document.getElementById('resSub').textContent=finale?'You reached the Celestial City wearing the whole armor of God!':won?w.boss.name+' has been vanquished! +300 bonus points!':'The enemy was too strong this time. Keep learning!';
+  document.getElementById('resSub').textContent=finale?'You reached the Celestial City wearing the whole armor of God!':won?w.boss.name+(w.boss.name.includes('&')?' have':' has')+' been vanquished! +300 bonus points!':'The enemy was too strong this time. Keep learning!';
   document.getElementById('rRight').textContent=G.correct;
   document.getElementById('rWrong').textContent=G.wrong;
   document.getElementById('rScore').textContent=G.score;
   const am=document.getElementById('armorMsg');
-  if(won&&G.armorEarned.includes(G.wIdx)){am.style.display='block';am.textContent=ARMOR[G.wIdx].p+' '+ARMOR[G.wIdx].n+' EARNED!';}
+  if(won&&ARMOR[G.wIdx].n){am.style.display='block';am.textContent=ARMOR[G.wIdx].p+' '+ARMOR[G.wIdx].n+' EARNED!';}
   else am.style.display='none';
   const nw=WORLDS[G.wIdx+1];
   document.getElementById('nextWBtn').style.display=won&&nw?'block':'none';
@@ -6168,7 +6508,7 @@ function endWorld(won){
   show('resultScr');
 }
 
-function goNextWorld(){if(G.wIdx<5)beginWorld(G.wIdx+1);else goWM();}
+function goNextWorld(){if(G.wIdx<WORLDS.length-1)beginWorld(G.wIdx+1);else goWM();}
 function retryWorld(){
   if(G.retryBoss){G.retryBoss=false;stopLoop();G.phase='bossIntro';G.bossHP=100;startBossBattle();return;}
   beginWorld(G.wIdx);
@@ -6382,7 +6722,7 @@ function buildParent(){
   Object.entries(saves).forEach(([n,s])=>{
     const d=new Date(s.ts).toLocaleDateString();
     const ms=Object.values(s.mastery||{});
-    si.innerHTML+=`📂 ${n} — Score: ${s.score} | Worlds: ${(s.worldsDone||[]).length}/6 | Roll: ${ms.filter(m=>m.r).length}/${QS.length} | ★★★ ${ms.filter(m=>m.s>=3).length} · ★★ ${ms.filter(m=>m.s===2).length} · ★ ${ms.filter(m=>m.s===1).length} | Mode: ${s.diff||'young'} | ${d}<br>`;
+    si.innerHTML+=`📂 ${n} — Score: ${s.score} | Worlds: ${(s.worldsDone||[]).length}/9 | Roll: ${ms.filter(m=>m.r).length}/${QS.length} | ★★★ ${ms.filter(m=>m.s>=3).length} · ★★ ${ms.filter(m=>m.s===2).length} · ★ ${ms.filter(m=>m.s===1).length} | Mode: ${s.diff||'young'} | ${d}<br>`;
   });
   if(!Object.keys(saves).length)si.innerHTML='No saved games.';
 }
