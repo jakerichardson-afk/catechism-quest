@@ -237,11 +237,11 @@ function _fmtDate(ts){
 // ===============================
 const WORLDS=[
   {id:0,name:"City of Destruction",icon:"🏛",sky:["#38b0f8","#78d0ff"],ground:"#3a8a20",path:"#c8a050",water:"#2070d0",boss:{name:"The Doubter",sp:"👿",sub:"'Is God even real?' — Answer with TRUTH!",bg:["#1a2a5a","#0a1a3a"]}},
-  {id:1,name:"Slough of Despond",icon:"🌑",sky:["#0a0018","#180030"],ground:"#1a1208",path:"#3a2510",water:"#101028",boss:{name:"Old Serpent",sp:"🐍",sub:"'Sin doesn't matter!' — Answer with JUSTICE!",bg:["#0a0005","#150010"]}},
+  {id:1,name:"Slough of Despond",icon:"🌑",sky:["#0a0018","#180030"],ground:"#1a1208",path:"#3a2510",water:"#101028",boss:{name:"The Old Serpent",sp:"🐍",sub:"'Sin doesn't matter!' — Answer with JUSTICE!",bg:["#0a0005","#150010"]}},
   {id:2,name:"House Beautiful",icon:"✝",sky:["#f0a030","#f8d060"],ground:"#4a7020",path:"#d0a848",water:"#3080c0",boss:{name:"The Accuser",sp:"👹",sub:"'You can never be saved!' — Answer with FAITH!",bg:["#200a00","#380a00"]}},
-  {id:3,name:"Valley of the Shadow",icon:"⛰",sky:["#7080a0","#90a0c0"],ground:"#6a5a30",path:"#b09050",water:"#4060a0",boss:{name:"The Idol King",sp:"🗿",sub:"'Make your own rules!' — Answer with GOD'S LAW!",bg:["#1a1000","#2a1800"]}},
+  {id:3,name:"Valley of the Shadow",icon:"⛰",sky:["#7080a0","#90a0c0"],ground:"#6a5a30",path:"#b09050",water:"#4060a0",boss:{name:"Apollyon",sp:"🗿",sub:"'Make your own rules!' — Answer with GOD'S LAW!",bg:["#1a1000","#2a1800"]}},
   {id:4,name:"Vanity Fair",icon:"💧",sky:["#30a870","#60d890"],ground:"#206830",path:"#b89840",water:"#1060c0",boss:{name:"The Deceiver",sp:"🦹",sub:"'Religion is just ritual!' — Answer with TRUTH!",bg:["#001a10","#002a18"]}},
-  {id:5,name:"The Celestial City",icon:"🌟",sky:["#f0d050","#fff080"],ground:"#60a030",path:"#e0c860",water:"#60b0e0",boss:{name:"Death & Despair",sp:"💀",sub:"'There is no hope!' — Answer with ETERNAL TRUTH!",bg:["#080618","#100c28"]}}
+  {id:5,name:"The Celestial City",icon:"🌟",sky:["#f0d050","#fff080"],ground:"#60a030",path:"#e0c860",water:"#60b0e0",boss:{name:"Giant Despair",sp:"💀",sub:"'There is no hope!' — Answer with ETERNAL TRUTH!",bg:["#080618","#100c28"]}}
 ];
 const ARMOR=[{p:"🥋",n:"Belt of Truth"},{p:"🛡",n:"Breastplate"},{p:"👟",n:"Shoes of Peace"},{p:"🔰",n:"Shield of Faith"},{p:"⛑",n:"Helm of Salvation"},{p:"⚔",n:"Sword of Spirit"}];
 // Distractors organized by grammatical category for context-matching
@@ -463,12 +463,12 @@ window.addEventListener('keydown',e=>{
   if(e.key==='ArrowLeft'){keys.left=true;e.preventDefault();}
   if(e.key==='ArrowRight'){keys.right=true;e.preventDefault();}
   if(e.key==='d'||e.key==='D'){keys.right=true;}
-  if(e.key==='a'&&G.phase==='walk'&&!G.nearAltar){keys.left=true;}
+  if(e.key==='a'||e.key==='A'){keys.left=true;}
 });
 window.addEventListener('keyup',e=>{
   if(e.key==='ArrowUp'||e.key==='w'||e.key==='W')keys.up=false;
   if(e.key==='ArrowDown'||e.key==='s'||e.key==='S')keys.down=false;
-  if(e.key==='ArrowLeft'||e.key==='a')keys.left=false;
+  if(e.key==='ArrowLeft'||e.key==='a'||e.key==='A')keys.left=false;
   if(e.key==='ArrowRight'||e.key==='d'||e.key==='D')keys.right=false;
 });
 let soundOn=localStorage.getItem('cqSound')!=='off';
@@ -835,7 +835,7 @@ function drawTitle(){
   ctx.fillText(soundOn?'\ud83d\udd0a SOUND ON':'\ud83d\udd07 SOUND OFF',630,472);
   // Center tagline
   ctx.fillStyle='#90d0ff';ctx.font='8px monospace';ctx.textAlign='center';
-  ctx.fillText('135 QUESTIONS  \u2022  6 WORLDS  \u2022  ARMOR OF GOD  \u2022  FILL IN THE BLANKS',320,472);
+  ctx.fillText('134 QUESTIONS  \u2022  6 WORLDS  \u2022  ARMOR OF GOD  \u2022  FILL IN THE BLANKS',320,472);
 }
 
 
@@ -1146,7 +1146,8 @@ function beginWorld(wIdx){
   G.altarData.forEach((a,i)=>{a.qIdx=shuffledQs[i%shuffledQs.length];});
   // Player starts near bottom center of map
   G.px=320;G.py=376;G.dir='up';G.frame=0;
-  if(wIdx===0)G.burden=100; // reset burden only at start of game, not per world
+  G.burden=G.armorEarned.includes(2)?0:(wIdx===0?100:G.burden);
+  G.lives=3;
   G.companion={px:320,py:396,frame:0,animT:0};
   G.trail=[];G.chestOpen=G.armorEarned.includes(wIdx);G.nearChest=false;
   if(D){G.px=D.start[0];G.py=D.start[1];G.companion.px=D.comp[0];G.companion.py=D.comp[1];}
@@ -1332,7 +1333,7 @@ const DENSE={
   5:{
     build:dcBuildJourney,
     start:[488,680],comp:[466,690],
-    gateY:62,need:6,chestNeed:3,slowMap:{k:0.6,r:0.45},
+    gateY:62,need:6,chestNeed:3,slowMap:{k:0.6,r:0.45},camTop:110,sky:'#fff2c8',
     chest:{x:712,y:432,draw:(...a)=>dcDrawShepherds(...a),label:'The Shepherds say:',text:'"Take the Word of God — the sword of the Spirit!"',action:'to talk ▶',locked:'"Light 3 altars, then visit the Shepherds on Hill Clear."'},
     gateLabel:'CELESTIAL CITY',light:(...a)=>dcDrawLight(...a),wicket:(...a)=>dcWicket(...a),
     tick:()=>dcTick(),dyn:(...a)=>dcDyn(...a),promptFn:()=>dcPrompt(),
@@ -2777,8 +2778,9 @@ function startDenseLoop(){
       if(G.altarsLit>=altarNeed()&&dwHasBelt()&&G.py<D.gateY){G.phase='bossIntro';stopLoop();triggerBossIntro();return;}
     }else if(G.phase==='itemGet'){G.itemT++;}
     const camX=Math.round(Math.max(0,Math.min(DWS.W-640,G.px-320)));
-    const camY=Math.round(Math.max(-TOP,Math.min(DWS.H-480,G.py-TOP-225)));
+    const camY=Math.round(Math.max(-(D.camTop||TOP),Math.min(DWS.H-480,G.py-TOP-225)));
     owCtx.clearRect(0,0,640,480);
+    if(camY<0&&D.sky){owCtx.fillStyle=D.sky;owCtx.fillRect(0,0,640,-camY);}
     owCtx.drawImage(DWS.ground,-camX,-camY);
     dwAnimWater(owCtx,camX,camY);
     (D.light||dwDrawLight)(owCtx,camX,camY);
@@ -3555,7 +3557,7 @@ function shuffle(a){const b=[...a];for(let i=b.length-1;i>0;i--){const j=Math.fl
 
 function openQuestion(qIdx){
   G.activeQ=QS[qIdx];G.blankIdx=0;G.filledBlanks=[];
-  G.typedAns='';G.wbSel=0;_di.value='';
+  G.typedAns='';G.wbSel=0;G.wbTap=-1;_di.value='';
   G.wordBank=buildWordBank(G.activeQ.blanks,0);
   G.phase='question';
   document.getElementById('qDlg').style.display='block';
@@ -3640,7 +3642,7 @@ function renderBlankDisplay(ctx,q,filled,currentBlank,x,y,maxW){
 
 function renderWB(ctx,bank,sel,x,y){
   ctx.fillStyle='#f8c840';ctx.font='bold 10px monospace';ctx.textAlign='left';
-  ctx.fillText('WORD BANK — pick the right word:',x,y-5);
+  ctx.fillText(('ontouchstart' in window)?'WORD BANK — tap a word, then tap it again to choose:':'WORD BANK — click a word twice, or press 1-4 then Enter:',x,y-5);
   // Measure max word width to decide layout
   ctx.font='11px monospace';
   const maxWordW=Math.max(...bank.map(w=>ctx.measureText(w).width));
@@ -3694,9 +3696,11 @@ function wrapText(ctx,text,x,y,maxW,lh){
 }
 
 // ─── Submit one blank ─────────────────────────────────────
+function normAns(t){return String(t||'').toLowerCase().replace(/[\u2018\u2019\u02bc`]/g,"'").replace(/[.,!?;:"]+/g,'').replace(/\s+/g,' ').trim();}
 function submitBlank(answer){
+  if(G.diff!=='young'&&!normAns(answer))return;
   const correct=G.activeQ.blanks[G.blankIdx];
-  const ok=answer.toLowerCase().trim()===correct.toLowerCase().trim();
+  const ok=normAns(answer)===normAns(correct);
   if(ok){
     sfxBlankOk();flash('#00aa00',0.18);
     G.filledBlanks.push(answer);
@@ -3708,7 +3712,7 @@ function submitBlank(answer){
       showQFeedback(true);
     }else{
       // next blank
-      G.wbSel=0;G.typedAns='';_di.value='';
+      G.wbSel=0;G.wbTap=-1;G.typedAns='';_di.value='';
       G.wordBank=buildWordBank(G.activeQ.blanks,G.blankIdx);
       renderQDlg();
     }
@@ -3721,6 +3725,7 @@ function submitBlank(answer){
 }
 
 function showQFeedback(good){
+  G.phase='feedback';
   const cv=document.getElementById('qCv'),ctx=cv.getContext('2d');
   ctx.imageSmoothingEnabled=false;
   ctx.fillStyle=good?'rgba(0,28,0,0.97)':'rgba(28,0,0,0.97)';ctx.fillRect(0,0,640,230);
@@ -3793,7 +3798,7 @@ document.addEventListener('keydown',e=>{
     return;
   }
   // P key toggles pause (any phase except title/name/result)
-  if((e.key==='p'||e.key==='P')&&['walk','question','boss'].includes(G.phase)){
+  if((e.key==='p'||e.key==='P')&&(G.phase==='walk'||(G.diff==='young'&&['question','boss'].includes(G.phase)))){
     if(G.paused)resumeGame();else pauseGame();
     return;
   }
@@ -3853,13 +3858,13 @@ document.getElementById('qCv').addEventListener('click',e=>{
     for(let i=0;i<G.wordBank.length;i++){
       const col=i%2,row=Math.floor(i/2);
       const bx=sx+col*(bw+gap),by=sy+row*(bh+gap);
-      if(mx>=bx&&mx<=bx+bw&&my>=by&&my<=by+bh){G.wbSel=i;sfxMenu();renderQDlg();break;}
+      if(mx>=bx&&mx<=bx+bw&&my>=by&&my<=by+bh){if(G.wbTap===i){G.wbTap=-1;submitBlank(G.wordBank[i]);}else{G.wbTap=i;G.wbSel=i;sfxMenu();renderQDlg();}break;}
     }
   }else{
     const bw=142,gap=6,sx=10;
     if(my>=154&&my<=188){
       const i=Math.floor((mx-sx)/(bw+gap));
-      if(i>=0&&i<G.wordBank.length){G.wbSel=i;sfxMenu();renderQDlg();}
+      if(i>=0&&i<G.wordBank.length){if(G.wbTap===i){G.wbTap=-1;submitBlank(G.wordBank[i]);}else{G.wbTap=i;G.wbSel=i;sfxMenu();renderQDlg();}}
     }
   }
 });
@@ -4633,7 +4638,7 @@ function w0QMarks(ctx,f,n,cx,cy,r,alpha=1){
 
 function w0DrawPilgrim(ctx,x,y,f,opts={}){
   ctx.fillStyle='rgba(0,0,0,0.3)';ctx.beginPath();ctx.ellipse(x,y+1,24,5,0,0,Math.PI*2);ctx.fill();
-  const bp=G.burden/100;
+  const bp=G.wIdx<=2?G.burden/100:0;
   if(bp>0&&!opts.noPack){
     const pw=16+Math.round(20*bp),ph=14+Math.round(14*bp),px=x-Math.round(pw/2),py=y-48-Math.round(8*bp);
     ctx.fillStyle='#4a2a0e';ctx.fillRect(px-2,py-2,pw+4,ph+4);
@@ -5639,10 +5644,10 @@ document.getElementById('bqCv').addEventListener('click',e=>{
     for(let i=0;i<G.bossWB.length;i++){
       const col=i%2,row=Math.floor(i/2);
       const bx=sx+col*(bw+gap),by=sy+row*(bh+gap);
-      if(mx>=bx&&mx<=bx+bw&&my>=by&&my<=by+bh){G.bossSel=i;sfxMenu();renderBQDlg();break;}
+      if(mx>=bx&&mx<=bx+bw&&my>=by&&my<=by+bh){if(G.bossTap===i){G.bossTap=-1;submitBossBlank(G.bossWB[i]);}else{G.bossTap=i;G.bossSel=i;sfxMenu();renderBQDlg();}break;}
     }
   }else{
-    if(my>=154&&my<=188){const bw=142,gap=6,sx=10;const i=Math.floor((mx-sx)/(bw+gap));if(i>=0&&i<G.bossWB.length){G.bossSel=i;sfxMenu();renderBQDlg();}}
+    if(my>=154&&my<=188){const bw=142,gap=6,sx=10;const i=Math.floor((mx-sx)/(bw+gap));if(i>=0&&i<G.bossWB.length){if(G.bossTap===i){G.bossTap=-1;submitBossBlank(G.bossWB[i]);}else{G.bossTap=i;G.bossSel=i;sfxMenu();renderBQDlg();}}}
   }
 });
 
@@ -5729,8 +5734,10 @@ function triggerBossAttackAnim(onDone){
 }
 
 function submitBossBlank(answer){
+  if(G.diff!=='young'&&!normAns(answer))return;
+  G.bossTap=-1;
   const correct=(G.bossBlanks||G.bossQ.blanks)[G.bossBlankIdx];
-  const ok=answer.toLowerCase().trim()===correct.toLowerCase().trim();
+  const ok=normAns(answer)===normAns(correct);
   if(ok){
     G.bossMiss=null;sfxBossHit();flash('#f8c840',0.22);G.bossFilledBlanks.push(answer);G.bossBlankIdx++;
     const dmgPer=Math.floor(100/G.bossMaxBlanks);G.bossHP=Math.max(0,G.bossHP-dmgPer);showBossDamageNumber(dmgPer);
@@ -6039,8 +6046,9 @@ function endWorld(won){
   if(!won&&G.lives<=0){showGameOver();return;}
   const acc=G.correct+G.wrong>0?Math.round(G.correct/(G.correct+G.wrong)*100):100;
   document.getElementById('resIcon').textContent=won?(acc===100?'🏆':acc>=80?'🎉':'😊'):'💀';
-  document.getElementById('resTitle').textContent=won?'WORLD COMPLETE!':'DEFEATED...';
-  document.getElementById('resSub').textContent=won?w.boss.name+' has been vanquished! +300 bonus points!':'The enemy was too strong this time. Keep learning!';
+  const finale=won&&G.wIdx===5;
+  document.getElementById('resTitle').textContent=finale?'JOURNEY COMPLETE!':won?'WORLD COMPLETE!':'DEFEATED...';
+  document.getElementById('resSub').textContent=finale?'You reached the Celestial City wearing the whole armor of God!':won?w.boss.name+' has been vanquished! +300 bonus points!':'The enemy was too strong this time. Keep learning!';
   document.getElementById('rRight').textContent=G.correct;
   document.getElementById('rWrong').textContent=G.wrong;
   document.getElementById('rScore').textContent=G.score;
