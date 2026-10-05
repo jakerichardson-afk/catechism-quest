@@ -1108,8 +1108,7 @@ function drawWM(){
   // top bar
   ctx.fillStyle='rgba(20,12,6,0.9)';ctx.fillRect(0,0,640,34);ctx.fillStyle='#f8c840';ctx.fillRect(0,33,640,2);
   ctx.textAlign='left';ctx.fillStyle='#f8c840';ctx.font='bold 16px monospace';ctx.fillText("THE PILGRIM'S MAP",12,23);
-  for(let i=0;i<3;i++){const hx=232+i*22,hy=17;ctx.fillStyle=i<G.lives?'#e03030':'#4a2a2a';ctx.beginPath();ctx.arc(hx-4,hy-3,5,0,Math.PI*2);ctx.arc(hx+4,hy-3,5,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.moveTo(hx-9,hy-1);ctx.lineTo(hx,hy+7);ctx.lineTo(hx+9,hy-1);ctx.closePath();ctx.fill();}
-  ctx.fillStyle='#fff4d8';ctx.font='bold 13px monospace';ctx.fillText('★'+G.score,306,22);
+  {const ex=drawHearts(ctx,232,17,5,'#4a2a2a');ctx.fillStyle='#fff4d8';ctx.font='bold 13px monospace';ctx.textAlign='left';ctx.fillText('★'+G.score,Math.max(306,ex+4),22);}
   const btn=(x,y,w,h,label,col,act)=>{ctx.fillStyle=col;ctx.fillRect(x,y,w,h);ctx.strokeStyle='#f8c840';ctx.lineWidth=1.5;ctx.strokeRect(x+0.5,y+0.5,w-1,h-1);ctx.fillStyle='#ffffff';ctx.font='bold 11px monospace';ctx.textAlign='center';ctx.fillText(label,x+w/2,y+h/2+4);wmBtns.push({x,y,w,h,act});};
   btn(440,6,92,22,'PARENTS','#4a2a7a',()=>{sfxMenu();buildParent();show('parentScr');});
   btn(540,6,92,22,'← TITLE','#2a3a6a',()=>{sfxMenu();goTitle();});
@@ -1191,7 +1190,7 @@ function beginWorld(wIdx){
   // Player starts near bottom center of map
   G.px=320;G.py=376;G.dir='up';G.frame=0;
   G.burden=G.armorEarned.includes(2)?0:(wIdx===0?100:G.burden);
-  G.lives=3;
+  G.lives=maxLives();
   G.companion={px:320,py:396,frame:0,animT:0};
   G.trail=[];G.chestOpen=G.armorEarned.includes(wIdx);G.nearChest=false;
   if(D){G.px=D.start[0];G.py=D.start[1];G.companion.px=D.comp[0];G.companion.py=D.comp[1];}
@@ -2641,9 +2640,35 @@ function markMastery(q,ok){
   try{save();}catch(e){}
 }
 function rollCount(w){const r=WRANGES[w];let n=0,t=0;for(let i=r[0];i<=r[1];i++){t++;if(mastery(i).r)n++;}return[n,t];}
+// every sealed Roll is a heart piece; three pieces make a new heart (up to 6)
+function maxLives(){return 3+Math.min(3,Math.floor((G.sealed||[]).length/3));}
+function heartPieces(){const n=(G.sealed||[]).length;return n>=9?0:n%3;}
 function checkRollSeal(){
   const w=G.wIdx,[n,t]=rollCount(w);G.sealed=G.sealed||[];
-  if(n>=t&&!G.sealed.includes(w)){G.sealed.push(w);G.score+=250;showToast("Christian's Roll for this world is complete! +250");}
+  if(n>=t&&!G.sealed.includes(w)){
+    const before=maxLives();G.sealed.push(w);G.score+=250;
+    if(maxLives()>before){G.lives=Math.min(maxLives(),G.lives+1);showToast('Roll sealed! A NEW HEART! +250');sfxWin();}
+    else showToast('Roll sealed! Heart piece '+heartPieces()+'/3  +250');
+  }
+}
+function heartShape(ctx,hx,hy,r){
+  ctx.beginPath();ctx.arc(hx-r*0.75,hy-r*0.6,r,0,Math.PI*2);ctx.arc(hx+r*0.75,hy-r*0.6,r,0,Math.PI*2);ctx.fill();
+  ctx.beginPath();ctx.moveTo(hx-r*1.75,hy-r*0.3);ctx.lineTo(hx,hy+r*1.4);ctx.lineTo(hx+r*1.75,hy-r*0.3);ctx.closePath();ctx.fill();
+}
+// draws the hearts and any heart pieces; returns where the row ends
+function drawHearts(ctx,x,y,r,emptyCol){
+  const m=maxLives(),step=Math.round(r*(m>3?3.9:4.6));
+  for(let i=0;i<m;i++){
+    const hx=x+i*step;ctx.fillStyle=i<G.lives?'#e03030':emptyCol;heartShape(ctx,hx,y,r);
+    if(i<G.lives){ctx.fillStyle='rgba(255,140,140,0.7)';ctx.fillRect(Math.round(hx-r),Math.round(y-r*1.1),Math.max(1,Math.round(r*0.5)),Math.max(1,Math.round(r*0.5)));}
+  }
+  const pc=heartPieces();
+  if(pc){
+    const hx=x+m*step;ctx.save();ctx.fillStyle='rgba(0,0,0,0.45)';heartShape(ctx,hx,y,r);
+    ctx.beginPath();ctx.rect(hx-r*2,y-r*2,r*4*pc/3,r*4);ctx.clip();ctx.fillStyle='#f8c840';heartShape(ctx,hx,y,r);ctx.restore();
+    return hx+step;
+  }
+  return x+m*step;
 }
 function showToast(text){G.toast={text,t:170};}
 function drawToast(ctx){
@@ -3107,17 +3132,10 @@ function drawMapHUDNew(ctx){
   ctx.fillStyle='rgba(0,0,14,0.95)';ctx.fillRect(0,0,640,H);
   ctx.fillStyle='#f8c840';ctx.fillRect(0,H-2,640,2);
   ctx.fillStyle='#202050';ctx.fillRect(0,H-3,640,1);
-  // Hearts
-  for(let i=0;i<3;i++){
-    const hx=12+i*22,hy=15;
-    ctx.fillStyle=i<G.lives?'#e03030':'#302020';
-    ctx.beginPath();ctx.arc(hx-3,hy-3,4,0,Math.PI*2);ctx.arc(hx+3,hy-3,4,0,Math.PI*2);ctx.fill();
-    ctx.beginPath();ctx.moveTo(hx-7,hy-2);ctx.lineTo(hx,hy+5);ctx.lineTo(hx+7,hy-2);ctx.closePath();ctx.fill();
-    if(i<G.lives){ctx.fillStyle='rgba(255,120,120,0.6)';ctx.beginPath();ctx.arc(hx-1,hy-4,2,0,Math.PI*2);ctx.fill();}
-  }
-  ctx.fillStyle='#f8c840';ctx.font='bold 10px monospace';ctx.textAlign='left';ctx.fillText('★'+G.score,76,19);
-  {const D=DENSE[G.wIdx];if(D&&D.item&&G.armorEarned.includes(G.wIdx))D.item.icon(ctx,150,15,1);}
-  {const[n,t]=rollCount(G.wIdx);ctx.fillStyle='#e8d8b0';ctx.font='bold 10px monospace';ctx.textAlign='left';ctx.fillText('ROLL '+n+'/'+t,168,19);}
+  const hEnd=drawHearts(ctx,12,15,4,'#302020');
+  ctx.fillStyle='#f8c840';ctx.font='bold 10px monospace';ctx.textAlign='left';ctx.fillText('★'+G.score,Math.max(76,hEnd+2),19);
+  {const D=DENSE[G.wIdx];if(D&&D.item&&G.armorEarned.includes(G.wIdx))D.item.icon(ctx,Math.max(150,hEnd+52),15,1);}
+  {const[n,t]=rollCount(G.wIdx);ctx.fillStyle='#e8d8b0';ctx.font='bold 10px monospace';ctx.textAlign='left';ctx.fillText('ROLL '+n+'/'+t,Math.max(168,hEnd+70),19);}
   // World name + altar counter (center)
   ctx.fillStyle='#e0e0ff';ctx.textAlign='center';ctx.font='bold 12px monospace';
   ctx.fillText(WORLDS[G.wIdx].name.toUpperCase(),320,13);
@@ -3409,7 +3427,7 @@ function showQFeedback(good){
     // lives remaining pip display
     const livesY=ry+36;
     ctx.fillStyle='#606080';ctx.font='9px monospace';ctx.fillText('Lives remaining:',220,livesY);
-    for(let i=0;i<3;i++){ctx.fillStyle=i<G.lives?'#e03030':'#301010';ctx.beginPath();ctx.arc(338+i*22,livesY-5,7,0,Math.PI*2);ctx.arc(338+i*22+8,livesY-5,7,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.moveTo(338+i*22-7,livesY-4);ctx.lineTo(338+i*22+4,livesY+4);ctx.lineTo(338+i*22+15,livesY-4);ctx.closePath();ctx.fill();}
+    drawHearts(ctx,345,livesY-3,6,'#301010');
   }
   if(good&&G.streak>=3){ctx.fillStyle='#ff8020';ctx.font='bold 12px monospace';ctx.textAlign='center';ctx.fillText('🔥 '+G.streak+'x STREAK! +25 BONUS!',320,148);}
   ctx.fillStyle='#404060';ctx.font='10px monospace';ctx.textAlign='center';ctx.fillText('continuing...',320,218);
@@ -4320,8 +4338,8 @@ function w0DrawPilgrim(ctx,x,y,f,opts={}){
 
 function w0DrawHUD(ctx){
   ctx.fillStyle='rgba(6,6,24,0.94)';ctx.fillRect(0,0,640,36);ctx.fillStyle='#f8c840';ctx.fillRect(0,34,640,2);
-  for(let i=0;i<3;i++){const hx=16+i*24,hy=19;ctx.fillStyle=i<G.lives?'#e03030':'#302020';ctx.beginPath();ctx.arc(hx-4,hy-3,5,0,Math.PI*2);ctx.arc(hx+4,hy-3,5,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.moveTo(hx-9,hy-1);ctx.lineTo(hx,hy+7);ctx.lineTo(hx+9,hy-1);ctx.closePath();ctx.fill();}
-  ctx.fillStyle='#e0e0ff';ctx.font='bold 12px monospace';ctx.textAlign='left';ctx.fillText(G.name.toUpperCase(),90,23);
+  const hEnd=drawHearts(ctx,16,19,5,'#302020');
+  ctx.fillStyle='#e0e0ff';ctx.font='bold 12px monospace';ctx.textAlign='left';ctx.fillText(G.name.toUpperCase().slice(0,hEnd>120?8:12),Math.max(90,hEnd+4),23);
   ctx.fillStyle=W0B.accentLt;ctx.font='bold 13px monospace';ctx.textAlign='center';ctx.fillText(W0B.hudName,400,15);
   const bx=300,by=20,bw=200;
   ctx.fillStyle='#1a0a20';ctx.fillRect(bx-2,by-2,bw+4,12);
@@ -4941,7 +4959,7 @@ function bossWinsAnimation(){useBoss();w0Defeat();}
 function endWorld(won){
   stopLoop();G.win=won;
   G.retryBoss=!won&&G.bossLost;
-  if(G.retryBoss){G.lives=3;}
+  if(G.retryBoss){G.lives=maxLives();}
   G.bossLost=false;G.bossMiss=null;
   const w=WORLDS[G.wIdx];
   if(won){
