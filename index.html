@@ -508,14 +508,15 @@ function save(){
   localStorage.setItem('cq3s',JSON.stringify(saves));
   const lb=JSON.parse(localStorage.getItem('cq3lb')||'[]');
   const ei=lb.findIndex(e=>e.name===G.name);
-  const ent={name:G.name,score:G.score,worlds:G.worldsDone.length,armor:G.armorEarned.length,ts:Date.now(),date:_fmtDate(Date.now())};
-  if(ei>=0){if(G.score>lb[ei].score)lb[ei]=ent;}else lb.push(ent);
+  const lbScore=Math.max(0,G.score); // never post a negative (Android) score to the leaderboard
+  const ent={name:G.name,score:lbScore,worlds:G.worldsDone.length,armor:G.armorEarned.length,ts:Date.now(),date:_fmtDate(Date.now())};
+  if(ei>=0){if(lbScore>lb[ei].score)lb[ei]=ent;}else lb.push(ent);
   lb.sort((a,b)=>b.score-a.score);
   localStorage.setItem('cq3lb',JSON.stringify(lb.slice(0,25)));
   if(_fbDb){
     _fbDb.ref('cq3lb').orderByChild('name').equalTo(G.name).once('value',snap=>{
       const data=snap.val();
-      if(data){const key=Object.keys(data)[0];if(G.score>data[key].score)_fbDb.ref('cq3lb/'+key).set(ent);}
+      if(data){const key=Object.keys(data)[0];if(lbScore>data[key].score)_fbDb.ref('cq3lb/'+key).set(ent);}
       else _fbDb.ref('cq3lb').push(ent);
     });
   }
@@ -5127,6 +5128,25 @@ function startJourney(){
   G.name=n;G.gender=sel.g;G.diff=sel.d;
   G.score=0;G.lives=3;G.worldsDone=[];G.armorEarned=[];G.totalAnswered=0;G.qIdx=0;G.correct=0;G.wrong=0;G.mastery={};G.sealed=[];
   sfxMenu();save();goWM();
+  if(isAndroid())androidTax();
+}
+
+// Just for fun: Android players start in the hole. (?android forces it for testing.)
+function isAndroid(){
+  return /android/i.test(navigator.userAgent)||navigator.userAgentData?.platform==='Android'||/[?&]android\b/.test(location.search);
+}
+function androidTax(){
+  G.score=-100;save();
+  sfxBad();flash('#40d040',0.35);
+  const d=document.createElement('div');
+  d.style.cssText='position:absolute;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.6);';
+  d.innerHTML=`<div style="width:420px;background:#000;border:4px solid #f8c840;box-shadow:0 0 0 4px #000,0 0 0 8px #40d040;padding:18px 20px;text-align:center;">
+    <div style="font-size:30px;margin-bottom:6px;">📱</div>
+    <div style="font-size:14px;color:#40d040;letter-spacing:2px;text-shadow:3px 3px 0 #000;margin-bottom:10px;">ANDROID DETECTED</div>
+    <div style="font-size:8px;color:#c0c0ff;line-height:1.9;margin-bottom:12px;">Every pilgrim faces trials. Yours is an Android phone,<br>so you begin your journey with <span style="color:#f8c840;">-100 points</span>.<br>Offer it up and press on, pilgrim!<br><span style="color:#8080c0;">(The iPhone pilgrims will never let you forget it.)</span></div>
+    <button class="pbtn gr" style="width:200px;margin:0 auto;">PRESS ON →</button></div>`;
+  d.querySelector('button').onclick=()=>{sfxMenu();d.remove();};
+  document.getElementById('gc').appendChild(d);
 }
 
 function doLoad(){
