@@ -240,7 +240,7 @@ const WORLDS=[
   {id:1,name:"Slough of Despond",icon:"🌑",sky:["#0a0018","#180030"],ground:"#1a1208",path:"#3a2510",water:"#101028",boss:{name:"Old Serpent",sp:"🐍",sub:"'Sin doesn't matter!' — Answer with JUSTICE!",bg:["#0a0005","#150010"]}},
   {id:2,name:"House Beautiful",icon:"✝",sky:["#f0a030","#f8d060"],ground:"#4a7020",path:"#d0a848",water:"#3080c0",boss:{name:"The Accuser",sp:"👹",sub:"'You can never be saved!' — Answer with FAITH!",bg:["#200a00","#380a00"]}},
   {id:3,name:"Valley of the Shadow",icon:"⛰",sky:["#7080a0","#90a0c0"],ground:"#6a5a30",path:"#b09050",water:"#4060a0",boss:{name:"The Idol King",sp:"🗿",sub:"'Make your own rules!' — Answer with GOD'S LAW!",bg:["#1a1000","#2a1800"]}},
-  {id:4,name:"The Living Waters",icon:"💧",sky:["#30a870","#60d890"],ground:"#206830",path:"#b89840",water:"#1060c0",boss:{name:"The Deceiver",sp:"🦹",sub:"'Religion is just ritual!' — Answer with TRUTH!",bg:["#001a10","#002a18"]}},
+  {id:4,name:"Vanity Fair",icon:"💧",sky:["#30a870","#60d890"],ground:"#206830",path:"#b89840",water:"#1060c0",boss:{name:"The Deceiver",sp:"🦹",sub:"'Religion is just ritual!' — Answer with TRUTH!",bg:["#001a10","#002a18"]}},
   {id:5,name:"Celestial City",icon:"🌟",sky:["#f0d050","#fff080"],ground:"#60a030",path:"#e0c860",water:"#60b0e0",boss:{name:"Death & Despair",sp:"💀",sub:"'There is no hope!' — Answer with ETERNAL TRUTH!",bg:["#080618","#100c28"]}}
 ];
 const ARMOR=[{p:"🥋",n:"Belt of Truth"},{p:"🛡",n:"Breastplate"},{p:"👟",n:"Shoes of Peace"},{p:"🔰",n:"Shield of Faith"},{p:"⛑",n:"Helm of Salvation"},{p:"⚔",n:"Sword of Spirit"}];
@@ -1443,6 +1443,16 @@ const DENSE={
     npc:{x:532,y:96,name:'Faithful',line:'"I will fear no evil, for Thou art with me!"',robe:['#8a4a2a','#a85a34','#6a3420']},
     item:{name:'SHIELD OF FAITH',short:'FIND THE SHIELD!',verse:'"Take up the shield of faith, to quench every fiery dart."',ref:'Ephesians 6:16',hint:'Use it against Apollyon!',gateMsg:'"Find the Shield first — in a cave off the path!"',icon:(...a)=>drawShieldIcon(...a)},
     altars:dvAltarList()
+  },
+  4:{
+    build:dfBuildFair,
+    start:[480,680],comp:[456,688],
+    gateY:62,
+    chest:{x:524,y:392,draw:(...a)=>dfDrawHopeful(...a),label:'Hopeful says:',text:'"I will go with you! Take this helmet."',action:'to talk ▶',locked:'"Light 5 altars, then come talk to Hopeful."'},
+    gateLabel:"KING'S HIGHWAY",light:(...a)=>dfDrawLight(...a),overlay:(...a)=>dfOverlay(...a),
+    tick:()=>dfTick(),dyn:(...a)=>dfDyn(...a),promptFn:()=>dfPrompt(),
+    item:{name:'HELMET OF SALVATION',short:'TALK TO HOPEFUL!',verse:'"Take the helmet of salvation."',ref:'Ephesians 6:17',hint:'Hopeful joins your journey!',gateMsg:'"Talk to Hopeful first — he\'s by the fountain!"',icon:(...a)=>drawHelmetIcon(...a)},
+    altars:[[82,54],[64,10],[62,80],[46,34],[42,84],[26,10],[26,46],[28,108],[12,56],[46,100],[62,46],[80,92]]
   }
 };
 let DWS=null;
@@ -2416,6 +2426,181 @@ function dvBuildValley(){
   return{cols,rows,W,H,grid:g,solid,ground,objects,chimneys:[],water:[],mud,bubbles:[],smoke:[],eyes};
 }
 
+
+// ===============================
+// WORLD 5 — VANITY FAIR
+// ===============================
+function drawHelmetIcon(ctx,cx,cy,u=2){
+  const ox=Math.round(cx-9*u),oy=Math.round(cy-9*u);
+  const F=(x,y,w,h,c)=>{ctx.fillStyle=c;ctx.fillRect(ox+x*u,oy+y*u,w*u,h*u);};
+  F(7,0,4,2,'#d83030');F(6,1,6,2,'#e84848');F(8,0,2,1,'#ff8080');
+  const rows=[[5,8],[3,12],[2,14],[1,16],[1,16],[1,16],[1,16],[1,16],[1,16],[2,14],[2,5],[11,5],[2,4],[12,4]];
+  rows.forEach(([x,w],i)=>F(x,3+i,w,1,'#b8c0cc'));
+  F(3,4,3,6,'#e4eaf2');F(14,5,2,6,'#7a8494');
+  F(1,8,16,2,'#e8b838');F(1,8,16,1,'#fff0a0');
+  F(4,11,10,2,'#2a2a34');F(8,10,2,6,'#b8c0cc');
+}
+
+function dfPaintTile(ctx,g,c,r){
+  const ch=g[r][c],x=c*8,y=r*8,h=tHash(c,r);
+  const R=(a,b,w,hh,col)=>{ctx.fillStyle=col;ctx.fillRect(x+a,y+b,w,hh);};
+  if(ch==='Z'){
+    const face=r<87&&g[r+1]&&g[r+1][c]!=='Z';
+    R(0,0,8,8,face?'#9a4a3a':'#b45a46');
+    R(0,3,8,1,'#7a3428');R(0,7,8,1,'#7a3428');R((r%2)?2:6,0,1,3,'#7a3428');R((r%2)?6:2,4,1,3,'#7a3428');
+    if(!face)R(0,0,8,1,'#d07a62');else R(0,6,8,2,'#5a2418');
+    if(h%9===0)R(2,1,2,1,'#c86a52');
+    return;
+  }
+  dwPaintTile(ctx,g,c,r);
+}
+
+function dfStall(seed,label){
+  const[cv,g]=mkCv(42,40);const F=(x,y,w,h,c)=>{g.fillStyle=c;g.fillRect(x,y,w,h);};
+  const pals=[['#d83030','#fff6e8'],['#3060c0','#f8d040'],['#30a050','#ffffff'],['#a040c0','#f8d040'],['#e07020','#fff6e8']];
+  const[a,b]=pals[seed%pals.length];
+  F(3,12,2,26,'#6a4426');F(37,12,2,26,'#6a4426');
+  // vendor behind the counter
+  const sk=['#f0c8a0','#c89068','#8a5a3a'][seed%3];
+  F(18,18,8,8,sk);F(17,16,10,3,['#3a2a1a','#8a5a2a','#d8b040'][seed%3]);F(19,21,2,1,'#2a1a10');F(23,21,2,1,'#2a1a10');F(20,24,4,1,'#a0503a');
+  F(16,26,12,6,['#2a5aa0','#a02a3a','#2a8a4a'][(seed+1)%3]);
+  // counter with goods
+  F(2,30,38,8,'#8a5a30');F(2,30,38,2,'#a8743c');F(2,37,38,2,'#5a3818');
+  const goods=['#f8d040','#e04848','#40a0e0','#ffffff','#a050d0','#50c060'];
+  for(let i=0;i<7;i++){F(5+i*5,27,3,3,goods[(seed+i)%6]);F(5+i*5,27,1,1,'#ffffff');}
+  // striped awning
+  for(let i=0;i<7;i++){F(i*6,6,6,8,i%2?a:b);F(i*6,13,6,2,i%2?a:b);}
+  for(let i=0;i<7;i++){F(i*6+1,15,4,1,i%2?a:b);}
+  F(0,5,42,2,'#5a3818');
+  // sign
+  F(8,0,26,7,'#3a2414');F(9,1,24,5,'#f8e0a0');
+  g.fillStyle='#5a2a10';g.font='bold 5px monospace';g.textAlign='center';g.textBaseline='middle';g.fillText(label,21,4);
+  return cv;
+}
+
+function dfTent(){
+  const[cv,g]=mkCv(116,96);const F=(x,y,w,h,c)=>{g.fillStyle=c;g.fillRect(x,y,w,h);};
+  // walls
+  for(let x=6;x<110;x++){const k=Math.floor((x-6)/8)%2;F(x,46,1,48,k?'#d83030':'#fff6e8');}
+  F(6,46,104,2,'#a02020');F(6,92,104,4,'#7a1818');
+  // roof cone
+  for(let y=6;y<48;y++){const t=(y-6)/42,hw=Math.round(4+t*54);for(let x=58-hw;x<58+hw;x++){const k=Math.floor((x-58)/(6+t*6)+20)%2;F(x,y,1,1,k?'#d83030':'#fff6e8');}}
+  for(let x=4;x<112;x+=6){F(x,46,4,4,'#f8d040');}
+  F(57,0,2,8,'#5a3818');F(59,0,10,5,'#3060c0');F(59,0,10,1,'#6a90e0');
+  // entrance
+  F(48,62,20,32,'#2a1010');for(let y=62;y<94;y++){const w=Math.max(0,Math.round((94-y)*0.35));F(48,y,w,1,'#d83030');F(68-w,y,w,1,'#d83030');}
+  F(46,58,24,4,'#f8d040');g.fillStyle='#7a1818';g.font='bold 5px monospace';g.textAlign='center';g.textBaseline='middle';g.fillText('BIG TOP',58,60);
+  return cv;
+}
+function dfFountain(){
+  const[cv,g]=mkCv(58,34);const F=(x,y,w,h,c)=>{g.fillStyle=c;g.fillRect(x,y,w,h);};
+  g.fillStyle='#8e867a';g.beginPath();g.ellipse(29,24,28,9,0,0,Math.PI*2);g.fill();
+  g.fillStyle='#b2aa9c';g.beginPath();g.ellipse(29,22,27,8,0,0,Math.PI*2);g.fill();
+  g.fillStyle='#4a8ac0';g.beginPath();g.ellipse(29,22,23,6,0,0,Math.PI*2);g.fill();
+  F(26,6,6,16,'#b2aa9c');F(26,6,2,16,'#d0c8ba');F(22,4,14,3,'#b2aa9c');
+  F(28,0,2,5,'#a0d8ff');F(24,2,1,3,'#a0d8ff');F(33,2,1,3,'#a0d8ff');
+  return cv;
+}
+
+function dfPerson(ctx,x,y,look,f,flip){
+  const cx=Math.round(x)-6,cy=Math.round(y)-26+((Math.floor(f/10))%2);
+  ctx.fillStyle='rgba(0,0,0,0.25)';ctx.beginPath();ctx.ellipse(x,y,8,3,0,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle=look.body;ctx.fillRect(cx,cy+10,12,12);ctx.fillStyle=look.trim;ctx.fillRect(cx,cy+16,12,2);
+  ctx.fillStyle=look.skin;ctx.fillRect(cx+2,cy+2,8,8);
+  ctx.fillStyle='#2a1a10';ctx.fillRect(cx+(flip?3:5),cy+5,1,1);ctx.fillRect(cx+(flip?6:8),cy+5,1,1);
+  ctx.fillStyle=look.hat;ctx.fillRect(cx+1,cy,10,3);if(look.tall)ctx.fillRect(cx+3,cy-4,6,4);ctx.fillRect(cx-1,cy+2,14,1);
+  ctx.fillStyle='#3a2a1a';ctx.fillRect(cx+2,cy+22,3,4);ctx.fillRect(cx+7,cy+22,3,4);
+}
+
+const DF_LOOKS=[{body:'#d83030',trim:'#f8d040',skin:'#f0c8a0',hat:'#3060c0',tall:1},{body:'#3060c0',trim:'#ffffff',skin:'#c89068',hat:'#e07020'},{body:'#a040c0',trim:'#f8d040',skin:'#f0c8a0',hat:'#30a050',tall:1},{body:'#30a050',trim:'#ffe0a0',skin:'#8a5a3a',hat:'#d83030'},{body:'#e07020',trim:'#3060c0',skin:'#f0c8a0',hat:'#5a2a7a',tall:1},{body:'#e8e0d0',trim:'#d83030',skin:'#c89068',hat:'#d8b040'}];
+
+function dfFolk(){
+  // fairgoers strolling up and down the streets: [x0,y0,x1,y1]
+  return[[40,160,180,160],[230,300,420,300],[520,160,700,160],[760,300,900,300],[100,460,300,460],[540,460,760,460],[200,590,420,590],[640,590,880,590],
+         [488,120,488,280],[198,320,198,520],[770,200,770,420],[470,520,470,640],[300,340,300,380],[690,380,860,380]]
+    .map((p,i)=>({p,t:i*0.13,look:DF_LOOKS[i%DF_LOOKS.length],sp:0.0025+((i*7)%5)*0.0006}));
+}
+function dfTick(){
+  DWS.folk.forEach(o=>{o.t+=o.sp;});
+  let near=null;
+  DWS.folk.forEach(o=>{const k=(Math.sin(o.t*Math.PI*2)+1)/2,x=o.p[0]+(o.p[2]-o.p[0])*k,y=o.p[1]+(o.p[3]-o.p[1])*k;o.x=x;o.y=y;o.flip=Math.cos(o.t*Math.PI*2)<0;if(Math.hypot(G.px-x,G.py-y)<26)near=o;});
+  G.nearFolk=near;
+}
+function dfDyn(list,camX,camY,ctx){
+  DWS.folk.forEach((o,i)=>{if(o.x==null)return;const sx=o.x-camX,sy=o.y-camY;if(sx<-20||sx>660||sy<-40||sy>500)return;list.push({base:o.y,draw:()=>dfPerson(ctx,sx,sy,o.look,mapFrame+i*7,o.flip)});});
+}
+function dfPrompt(){return G.nearFolk?['Fairgoer says:','"What will ye buy?"  You: "We buy the truth!"']:null;}
+
+function dfOverlay(ctx,camX,camY){
+  // bunting strung across each street
+  const cols=['#d83030','#f8d040','#3060c0','#30a050','#ffffff','#a040c0'];
+  [18,34,54,70].forEach(r=>{
+    const y0=r*8-10-camY;if(y0<-20||y0>500)return;
+    for(let x=16;x<944;x+=64){const sx=x-camX;if(sx<-70||sx>650)continue;
+      for(let k=0;k<64;k+=8){const t=k/64,yy=y0+Math.sin(t*Math.PI)*10;ctx.fillStyle='#5a3818';ctx.fillRect(sx+k,Math.round(yy),8,1);
+        ctx.fillStyle=cols[((x+k)/8)%cols.length];ctx.beginPath();ctx.moveTo(sx+k+1,yy+1);ctx.lineTo(sx+k+7,yy+1);ctx.lineTo(sx+k+4,yy+7);ctx.closePath();ctx.fill();}}
+  });
+  // vendors calling out
+  const calls=['Buy! Buy!','Fine silks!','Shiny trinkets!','Fame for sale!','Sweets! Sweets!','Titles! Titles!','Gold! Gold!'];
+  DWS.stalls.forEach(([x,y],i)=>{const ph=(mapFrame+i*97)%360;if(ph>110)return;const sx=x-camX,sy=y-camY-46;if(sx<-60||sx>700||sy<-20||sy>480)return;
+    const txt=calls[(i+Math.floor(mapFrame/360))%calls.length];ctx.font='bold 9px monospace';const w=ctx.measureText(txt).width+10;
+    ctx.fillStyle='rgba(255,250,235,0.95)';ctx.fillRect(sx-w/2,sy,w,13);ctx.strokeStyle='#5a3818';ctx.lineWidth=1;ctx.strokeRect(sx-w/2+0.5,sy+0.5,w-1,12);
+    ctx.fillStyle='#5a2a10';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(txt,sx,sy+7);ctx.textBaseline='alphabetic';});
+}
+function dfDrawLight(ctx,camX,camY){
+  const lx=480-camX,ly=10-camY;
+  if(ly>-200){const gr=ctx.createRadialGradient(lx,ly,6,lx,ly,180);gr.addColorStop(0,'rgba(255,250,215,0.85)');gr.addColorStop(0.3,'rgba(255,236,160,0.35)');gr.addColorStop(1,'rgba(255,230,140,0)');ctx.fillStyle=gr;ctx.fillRect(lx-200,ly-40,400,260);}
+}
+
+function dfDrawHopeful(ctx,cx,base,f){
+  const ready=!G.chestOpen&&G.altarsLit>=CHEST_NEED;
+  if(ready){const p=0.35+Math.sin(f*0.12)*0.2,gr=ctx.createRadialGradient(cx,base-14,2,cx,base-14,34);gr.addColorStop(0,`rgba(255,230,120,${p})`);gr.addColorStop(1,'rgba(255,220,100,0)');ctx.fillStyle=gr;ctx.fillRect(cx-36,base-50,72,60);}
+  dwDrawHelp(ctx,cx,base,f,['#2a7a6a','#3a9a84','#1e5a4e']);
+  if(!G.chestOpen)drawHelmetIcon(ctx,cx-10,base-30+Math.round(Math.sin(f*0.1)),1);
+}
+
+function dfBuildFair(){
+  const cols=120,rows=88,W=cols*8,H=rows*8;
+  const g=[];for(let r=0;r<rows;r++)g.push(new Array(cols).fill('p'));
+  const inb=(c,r)=>r>=0&&r<rows&&c>=0&&c<cols;
+  const set=(c0,r0,c1,r1,ch)=>{for(let r=r0;r<=r1;r++)for(let c=c0;c<=c1;c++)if(inb(c,r))g[r][c]=ch;};
+  set(0,0,119,5,'f');set(0,6,119,7,'Z');set(57,6,62,7,'G');
+  set(0,8,1,87,'Z');set(118,8,119,87,'Z');set(0,86,119,87,'Z');set(57,86,62,87,'c');
+  [18,34,54,70].forEach(r=>set(2,r,117,r+3,'c'));
+  set(57,8,62,87,'c');set(22,8,25,85,'c');set(94,8,97,85,'c');
+  set(30,40,89,49,'f');
+  set(57,40,62,49,'c');
+
+  const solid=new Uint8Array(cols*rows);
+  const S=(c0,r0,c1,r1,v=1)=>{for(let r=r0;r<=r1;r++)for(let c=c0;c<=c1;c++)if(inb(c,r))solid[r*cols+c]=v;};
+  for(let r=0;r<rows;r++)for(let c=0;c<cols;c++)if(g[r][c]==='Z')solid[r*cols+c]=1;
+  S(0,0,119,5);S(57,6,62,7,2);
+
+  const[ground,gx]=mkCv(W,H);
+  for(let r=0;r<rows;r++)for(let c=0;c<cols;c++)dfPaintTile(gx,g,c,r);
+
+  const objects=[],chimneys=[],stalls=[];
+  const add=(cv,x,y,base)=>objects.push({cv,x,y,base});
+  const house=(c,r,w,h,i)=>{const hs=dwHouse(w,h,tHash(c,r)%97+i*3+1,false);add(hs.cv,c*8-2,r*8-14,(r+h)*8);S(c,r+2,c+w-1,r+h-1);if(i%2===0)chimneys.push([c*8-2+hs.chim[0],r*8-14+hs.chim[1]]);gx.fillStyle='rgba(20,15,10,0.2)';gx.fillRect((c+w)*8+2,(r+3)*8,5,(h-3)*8+2);};
+  [[4,9,11,8],[27,9,11,8],[40,9,12,8],[65,9,12,8],[79,9,12,8],[100,9,12,8],[4,76,11,8],[27,76,11,8],[40,76,12,8],[65,76,12,8],[79,76,12,8],[100,76,12,8]].forEach(([c,r,w,h],i)=>house(c,r,w,h,i));
+  const labels=['SILKS','GOLD','SWEETS','FAME','TOYS','TITLES','JEWELS','PERFUME','HATS','SILVER'];
+  let li=0;
+  [33,53,69].forEach(br=>{[4,13,30,39,48,66,75,84,101,110].forEach(c=>{
+    const cv=dfStall(li,labels[li%labels.length]);li++;
+    const x=c*8-1,y=(br+1)*8-cv.height;add(cv,x,y,(br+1)*8);S(c,br-1,c+4,br);stalls.push([x+21,y+8]);});});
+  add(dfTent(),37*8-6,50*8-96,50*8);S(37,44,51,49);
+  add(dfFountain(),67*8-4,47*8-34,47*8);S(67,44,73,46);
+  S(65,48,65,48);
+  const treeAt=(c,r,cv)=>{add(cv,c*8+4-cv.width/2,(r+1)*8-cv.height,(r+1)*8);S(c,r,c,r);pcirc(gx,c*8+5,(r+1)*8,6,'rgba(0,0,0,0.18)');};
+  [[32,41],[86,41],[32,48],[86,48],[78,44],[54,43]].forEach(([c,r],i)=>treeAt(c,r,dwGreenTree(i+2)));
+  const prop=(cv,c,r,wT=1)=>{add(cv,c*8+(wT*8-cv.width)/2,(r+1)*8-cv.height,(r+1)*8);S(c,r,c+wT-1,r);};
+  prop(dwSign('BRITAIN ROW',60),27,23,2);prop(dwSign('FRANCE ROW',56),27,39,2);prop(dwSign('ITALY ROW',54),27,59,2);prop(dwSign('SPAIN ROW',54),27,75,2);
+  prop(dwSign('WE BUY THE TRUTH',84),53,16,2);prop(dwSign('VANITY FAIR',60),64,84,2);
+  const lamp=dwLamp();[[56,24],[63,28],[56,62],[63,64],[56,78],[63,82]].forEach(([c,r])=>prop(lamp,c,r));
+
+  return{cols,rows,W,H,grid:g,solid,ground,objects,chimneys,water:[],smoke:[],stalls,folk:dfFolk()};
+}
+
 const CHEST_NEED=5;
 let CHEST=null;
 function dwHasBelt(){return G.armorEarned.includes(G.wIdx);}
@@ -2550,6 +2735,7 @@ function startDenseLoop(){
         if(moved){G.trail.push([G.px,G.py]);if(G.trail.length>80)G.trail.shift();}
       }else G.frame=0;
       dwUpdateCompanion();
+      if(D.tick)D.tick();
       checkAltarProximity();
       G.nearNpc=!!D.npc&&Math.hypot(G.px-D.npc.x,G.py-D.npc.y)<36;
       G.nearChest=!!CHEST&&!G.chestOpen&&Math.hypot(G.px-CHEST.x,G.py-(CHEST.y+6))<30;
@@ -2571,6 +2757,7 @@ function startDenseLoop(){
     if(CHEST)list.push({base:CHEST.y,draw:()=>(CHEST.draw||dwDrawChest)(spCtx,CHEST.x-camX,CHEST.y-camY,mapFrame)});
     list.push({base:G.companion.py,draw:()=>drawCompanionSprite(spCtx,Math.round(G.companion.px-camX)-7,Math.round(G.companion.py-camY)-8)});
     list.push({base:G.py+0.5,draw:()=>dwDrawPlayer(spCtx,Math.round(G.px-camX),Math.round(G.py-camY))});
+    if(D.dyn)D.dyn(list,camX,camY,spCtx);
     list.sort((a,b)=>a.base-b.base).forEach(o=>o.draw());
     dwSmoke(spCtx,camX,camY);
     if(D.overlay)D.overlay(spCtx,camX,camY);
@@ -2582,6 +2769,7 @@ function startDenseLoop(){
       else drawPromptBox(spCtx,psy,'Evangelist says:',(CHEST.locked||'"Light '+CHEST_NEED+' altars to open this chest."')+' ('+G.altarsLit+'/'+CHEST_NEED+')','');
     }
     else if(G.nearNpc)drawPromptBox(spCtx,psy,D.npc.name+' says:',D.npc.line,'');
+    else if(D.promptFn&&D.promptFn())drawPromptBox(spCtx,psy,...D.promptFn(),'');
     else if(D.item&&G.altarsLit>=10&&!dwHasBelt()&&G.py<120)drawPromptBox(spCtx,psy,'Evangelist says:',D.item.gateMsg,'');
     drawMapHUDNew(spCtx);
   }
@@ -4020,6 +4208,72 @@ BOSSW[3]={name:'APOLLYON',hudName:'APOLLYON',gateX:190,horizon:134,bossX:190,fee
   gloom:'30,16,40',gloom2:'14,6,20',aura:'160,60,20',mist:'90,40,30',orb:'255,160,60',hp:['#d06020','#ffa040'],accent:'#ffa040',accentLt:'#ffe0b0',accentDim:'#c09070',panel:'30,12,6',
   counterFrom:[73,-133],taunt1:'"Make your own rules!"',taunt2:'"Turn back and serve me!"',introSub:'He straddles the way. Raise the Shield of Faith!',
   counterLine:'"Feel my fiery darts!"',laughLine:'"Make your own rules!"',victoryLine:'Apollyon spreads his wings and flees!',itemName:'SHIELD OF FAITH',finalWord:'FAITH',
+  bg:null,cl:null,anim:false,idle:0,boss:null,bossG:null};
+
+
+// ── World 5 boss: the Deceiver ───────────────────────────
+function dfBuildBossBg(){
+  const[cv,g]=mkCv(640,480);
+  const F=(x,y,w,h,c)=>{g.fillStyle=c;g.fillRect(x,y,w,h);};
+  const HZ=W0B.horizon,GX=W0B.gateX;
+  const sk=g.createLinearGradient(0,0,0,HZ);sk.addColorStop(0,'#2a1a4a');sk.addColorStop(0.6,'#8a3a6a');sk.addColorStop(1,'#f0a060');
+  g.fillStyle=sk;g.fillRect(0,0,640,HZ);
+  for(let i=0;i<30;i++){F((i*137)%640,(i*53)%80,1,1,'#fff8e0');}
+  // tent tops and stalls on the skyline
+  const tent=dfTent();g.drawImage(tent,360,HZ-70,92,76);g.drawImage(tent,520,HZ-56,70,58);
+  for(let i=0;i<6;i++){const st=dfStall(i,['SILKS','GOLD','FAME','TOYS','SWEETS','TITLES'][i]);const x=[0,60,250,300,440,580][i];g.drawImage(st,x,HZ-30,48,46);}
+  F(0,HZ,640,480-HZ,'#8a8178');
+  for(let y=HZ;y<480;y++){const depth=(y-HZ)/(480-HZ),bh=3+Math.floor(depth*6),bw=6+Math.floor(depth*12);if((y-HZ)%bh===0)F(0,y,640,1,'#6a625a');for(let x=((Math.floor((y-HZ)/bh))%2)*bw/2;x<640;x+=bw)F(Math.round(x),y,1,1,'#6a625a');}
+  drawArenaGate(g,GX,HZ-18,"KING'S HIGHWAY");
+  // strings of lights
+  for(let k=0;k<3;k++){const y0=20+k*26;for(let x=0;x<640;x+=2){const yy=y0+Math.sin(x/640*Math.PI*3)*10;F(x,Math.round(yy),2,1,'#3a2a1a');if(x%24===0){F(x,Math.round(yy)+1,3,3,['#ffe080','#ff8080','#80e0ff','#a0ff80'][(x/24+k)%4]);}}}
+  // crowd silhouettes behind a rope
+  for(let i=0;i<26;i++){const x=i*25+(i%3)*4,h=26+(i%4)*4;F(x,HZ+8-h+18,14,h,'#3a2a3a');pcirc(g,x+7,HZ+8-h+14,6,'#3a2a3a');}
+  F(0,HZ+26,640,2,'#d8b040');
+  for(let i=0;i<40;i++){const x=(i*97)%640,y=250+((i*53)%220);F(x,y,3,2,['#d83030','#f8d040','#3060c0','#30a050'][i%4]);}
+  return cv;
+}
+
+function dfDrawDeceiver(g,f,hp){
+  const u=2,F=(x,y,w,h,c)=>{g.fillStyle=c;g.fillRect(Math.round(x*u),Math.round(y*u),Math.max(1,Math.round(w*u)),Math.max(1,Math.round(h*u)));};
+  const C='#a0306a',CH='#c04a88',CD='#6a1a46',GD='#e8b838',P='#5a2a7a';
+  const sw=Math.round(Math.sin(f*0.07));
+  // cane with a crystal orb
+  F(8,26,2,40,'#2a1a2a');F(8,26,1,40,'#5a4a5a');
+  const gl=0.5+Math.sin(f*0.15)*0.3;g.fillStyle=`rgba(128,224,255,${gl*0.5})`;g.beginPath();g.arc(9*u,23*u,6*u,0,Math.PI*2);g.fill();
+  F(6,20,6,6,'#80e0ff');F(7,21,2,2,'#ffffff');
+  // legs and shoes
+  F(18,58,5,8,'#2a2a3a');F(25,58,5,8,'#2a2a3a');for(let y=58;y<66;y+=2){F(18,y,5,1,'#4a4a6a');F(25,y,5,1,'#4a4a6a');}
+  F(16,65,8,3,'#1a1a1a');F(25,65,8,3,'#1a1a1a');F(17,65,3,1,'#6a6a7a');F(26,65,3,1,'#6a6a7a');
+  // tailcoat
+  for(let y=28;y<60;y++){const half=Math.round(9+(y-28)*0.22+(y>48?(y-48)*0.4:0)),x0=24-half;F(x0,y,half*2,1,C);F(x0,y,2,1,CH);F(x0+half*2-2,y,2,1,CD);}
+  F(20,28,8,22,'#f0e8f0');F(23,28,2,22,'#d8c8d8');
+  F(18,28,3,14,P);F(27,28,3,14,P);
+  for(let y=32;y<48;y+=5){F(19,y,1.5,1.5,GD);F(28,y,1.5,1.5,GD);}
+  F(22,29,4,2,'#d83030');F(23,30,2,1,'#ff8080');
+  // arms: one on the cane, one beckoning with a gold coin
+  F(10,30,6,4,C);F(9,26,4,4,'#ffffff');
+  F(32,30,8,4,C);F(38,26+sw,4,5,C);F(40,23+sw,5,4,'#ffffff');
+  F(41,19+sw,4,4,GD);F(42,20+sw,2,2,'#fff0a0');
+  // face
+  F(17,16,14,12,'#e8c8a0');F(17,16,2,12,'#d0aa80');
+  F(16,19,16,4,GD);F(16,19,16,1,'#fff0a0');F(19,20,3,2,'#2a1030');F(26,20,3,2,'#2a1030');
+  const blink=(f%150)<5;if(!blink){F(20,20,1,1,'#d080ff');F(27,20,1,1,'#d080ff');}
+  F(19,24,10,1,'#3a2018');F(17,23,3,1,'#3a2018');F(28,23,3,1,'#3a2018');F(16,22,1,1,'#3a2018');F(31,22,1,1,'#3a2018');
+  F(20,25,8,2,'#7a2030');F(21,25,6,1,'#ffffff');F(25,25,1,1,GD);
+  // top hat
+  F(9,14,30,3,P);F(9,14,30,1,'#7a4a9a');F(13,1,22,13,P);F(13,1,22,1,'#7a4a9a');F(13,1,2,13,'#7a4a9a');F(13,10,22,3,GD);
+  F(30,4,2,5,'#d83030');F(31,3,1,2,'#ff8080');
+}
+
+function dfCoin(ctx,x,y,ph,u=2){const w=Math.max(1,Math.abs(Math.cos(ph))*3*u);ctx.fillStyle='#a07810';ctx.fillRect(Math.round(x-w/2-u/2),Math.round(y-2*u),Math.round(w+u),4*u);ctx.fillStyle='#f8d040';ctx.fillRect(Math.round(x-w/2),Math.round(y-1.5*u),Math.round(w),3*u);if(w>2*u){ctx.fillStyle='#fff0a0';ctx.fillRect(Math.round(x-w/2+u/2),Math.round(y-u),u,u);}}
+function dfCoinOrbit(ctx,f,n,cx,cy,r,alpha=1){ctx.save();ctx.globalAlpha=alpha;for(let i=0;i<n;i++){const a=f*0.025+i*(Math.PI*2/n);dfCoin(ctx,cx+Math.cos(a)*r,cy+Math.sin(a)*r*0.45+Math.sin(f*0.07+i)*4,f*0.2+i,2);}ctx.restore();}
+
+BOSSW[4]={name:'THE DECEIVER',hudName:'THE DECEIVER',gateX:190,horizon:134,bossX:190,feetY:240,BS:1.4,pX:470,foeW:96,foeH:140,
+  buildBg:()=>dfBuildBossBg(),clouds:null,drawFoe:(g,f,hp)=>dfDrawDeceiver(g,f,hp),orbit:(...a)=>dfCoinOrbit(...a),projectile:(c,x,y)=>dfCoin(c,x,y,x*0.2,3),icon:(...a)=>drawHelmetIcon(...a),
+  gloom:'40,16,50',gloom2:'20,6,30',aura:'140,40,120',mist:'120,60,140',orb:'255,220,100',hp:['#b03a90','#ff70d0'],accent:'#ff70d0',accentLt:'#ffd8f4',accentDim:'#c090b8',panel:'28,8,30',
+  counterFrom:[56,-101],taunt1:'"Religion is just ritual!"',taunt2:'"Come! Buy something shiny!"',introSub:'He sells lies at the Fair. Put on the Helmet!',
+  counterLine:'"Everything has a price!"',laughLine:'"Religion is just ritual!"',victoryLine:"The Deceiver's tricks are exposed!",itemName:'HELMET OF SALVATION',finalWord:'SALVATION',
   bg:null,cl:null,anim:false,idle:0,boss:null,bossG:null};
 
 BOSSW[1]={name:'THE OLD SERPENT',hudName:'OLD SERPENT',gateX:190,horizon:134,bossX:190,feetY:240,BS:1.35,pX:470,foeW:104,foeH:136,
