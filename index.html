@@ -1076,8 +1076,8 @@ function drawWM(){
   [0,1,2,3,4,6,7,8].forEach((k,n)=>{const x=100+n*30,y=464;pcirc(ctx,x,y,11,'#2a1a0e');if(G.armorEarned.includes(k))wmRewardIcon(k,ctx,x,y,1);else{ctx.save();ctx.globalAlpha=0.25;wmRewardIcon(k,ctx,x,y,1);ctx.restore();}});
   {const[rn,rt]=rollCount(i);btn(370,424,120,40,'ROLL '+rn+'/'+rt,G.sealed&&G.sealed.includes(i)?'#8a6a10':'#5a4020',()=>{sfxMenu();G.rollOpen=i;});}
   if(un)btn(500,424,126,40,(G.worldsDone.includes(i)?'PLAY AGAIN ▶':'PLAY ▶'),'#2a7a3a',()=>{sfxMenu();beginWorld(i);});
-  if(G.rollOpen!=null)drawRollOverlay(ctx,G.rollOpen);
   ctx.textAlign='right';ctx.fillStyle='#8a7a60';ctx.font='10px monospace';ctx.fillText('← → choose   ENTER play',626,419);
+  if(G.rollOpen!=null)drawRollOverlay(ctx,G.rollOpen);
 }
 
 function buildWM(){
@@ -6692,6 +6692,12 @@ function doLoad(){
   G.name=nm;G.gender=s.gender||'boy';G.diff=s.diff||'young';
   G.score=s.score||0;G.lives=s.lives||3;
   G.worldsDone=s.worldsDone||[];G.armorEarned=s.armorEarned||[];G.totalAnswered=s.totalAnswered||0;G.mastery=s.mastery||{};G.sealed=s.sealed||[];
+  if(!('mastery' in s)){
+    // a save from the original six-world game: map its worlds onto the nine
+    const W={0:[0],1:[1],2:[2,3],3:[4,5],4:[6,7],5:[8]},A={0:0,1:1,2:2,3:4,4:6,5:8};
+    G.worldsDone=[...new Set((s.worldsDone||[]).flatMap(w=>W[w]||[]))];
+    G.armorEarned=[...new Set([...(s.armorEarned||[]).map(a=>A[a]).filter(a=>a!=null),...G.worldsDone.filter(w=>ARMOR[w]&&ARMOR[w].n)])];
+  }
   sfxMenu();goWM();
 }
 
