@@ -35,12 +35,13 @@ canvas{display:block;image-rendering:pixelated;}
 <!-- TITLE -->
 <div id="titleScr" class="scr on">
 <canvas id="titleCv" width="640" height="480" style="position:absolute;top:0;left:0;"></canvas>
-<div style="position:relative;z-index:2;width:100%;height:100%;display:flex;flex-direction:column;align-items:flex-start;justify-content:flex-end;padding-bottom:48px;padding-left:24px;">
-  <div style="background:rgba(58,34,14,0.92);border:3px solid #f8c840;padding:16px 20px;width:220px;box-shadow:4px 4px 0 #2a1a08,0 0 24px rgba(248,200,64,0.3);">
+<div style="position:relative;z-index:2;width:100%;height:100%;display:flex;flex-direction:column;align-items:flex-start;justify-content:flex-end;padding-bottom:30px;padding-left:24px;">
+  <div style="background:rgba(58,34,14,0.92);border:3px solid #f8c840;padding:10px 20px;width:220px;box-shadow:4px 4px 0 #2a1a08,0 0 24px rgba(248,200,64,0.3);">
     <button class="pbtn" onclick="goName()">▶  NEW JOURNEY</button>
     <button class="pbtn bl" onclick="doLoad()">📂  CONTINUE</button>
     <button class="pbtn" onclick="goLeaderboard(false)" style="background:#1a1a00;color:#f8c840;border:2px solid #f8c840;">🏆  LEADERBOARD</button>
     <button class="pbtn pu" onclick="goParent()">👁  PARENT MODE</button>
+    <button class="pbtn sm musicBtn" onclick="event.stopPropagation();toggleMusic()" style="background:#1a1a3a;color:#c0c0ff;border:2px solid #4040a0;margin-top:4px;"></button>
   </div>
 </div>
 </div>
@@ -178,6 +179,7 @@ canvas{display:block;image-rendering:pixelated;}
   <button class="pbtn" onclick="pauseQuitWM()">🗺 WORLD MAP</button>
   <button class="pbtn bl" onclick="pauseQuitTitle()">← TITLE</button>
   <button class="pbtn" id="soundBtn" onclick="toggleSound()" style="background:#1a1a3a;color:#c0c0ff;border:2px solid #4040a0;margin-top:8px;"></button>
+  <button class="pbtn musicBtn" onclick="toggleMusic()" style="background:#1a1a3a;color:#c0c0ff;border:2px solid #4040a0;"></button>
   <button class="pbtn" id="readBtn" onclick="toggleRead()" style="background:#1a1a3a;color:#c0c0ff;border:2px solid #4040a0;"></button>
 </div>
 </div>
@@ -484,6 +486,8 @@ window.addEventListener('keyup',e=>{
   if(e.key==='ArrowRight'||e.key==='d'||e.key==='D')keys.right=false;
 });
 let soundOn=localStorage.getItem('cqSound')!=='off';
+// music has its own switch; sound effects and the voice follow soundOn only
+let musicOn=localStorage.getItem('cqMusic')!=='off';
 
 // ===============================
 // AUDIO
@@ -605,7 +609,7 @@ function playMusic(name){
   let c;try{c=ac();}catch(e){return;}
   if(c.state==='suspended')c.resume().catch(()=>{});
   if(MUS.cur===name)return;
-  stopMusic();if(!soundOn)return;
+  stopMusic();if(!soundOn||!musicOn)return;
   MUS.cur=name;MUS.song=prepSong(SONGS[name]);MUS.step=0;MUS.nextT=c.currentTime+0.12;
   MUS.gain=c.createGain();MUS.gain.gain.value=0.0001;MUS.gain.gain.linearRampToValueAtTime(0.55,c.currentTime+0.4);MUS.gain.connect(c.destination);
   musSchedule();MUS.timer=setInterval(()=>{try{musSchedule();}catch(e){}},60);
@@ -832,7 +836,7 @@ function drawTitleScene(ctx,f,full){
   ctx.fillStyle='rgba(10,20,50,0.85)';ctx.fillRect(0,458,640,22);ctx.fillStyle='#f8c840';ctx.fillRect(0,458,640,2);
   const _best=_fbTopScore||(JSON.parse(localStorage.getItem('cq3lb')||'[]')[0]||null);
   if(_best){ctx.fillStyle='#f8c840';ctx.font='bold 10px monospace';ctx.textAlign='left';ctx.fillText('★ BEST: '+_best.score+' — '+String(_best.name).toUpperCase().slice(0,12),10,473);}
-  ctx.fillStyle=soundOn?'#90d0ff':'#8080a0';ctx.font='bold 10px monospace';ctx.textAlign='right';ctx.fillText(soundOn?'♪ SOUND ON':'♪ SOUND OFF',630,473);
+  ctx.fillStyle=soundOn?'#90d0ff':'#8080a0';ctx.font='bold 10px monospace';ctx.textAlign='right';ctx.fillText(!soundOn?'♪ SOUND OFF':musicOn?'♪ SOUND ON':'♪ MUSIC OFF',630,473);
 }
 function drawTitle(){
   const scr=document.getElementById('titleScr');
@@ -4759,6 +4763,7 @@ function bossRoarSFX(){
 }
 
 function introTheme(){
+  if(!musicOn)return;
   const notes=[55,55,55,110,55,82,73,0,55,55,55,110,55,82,73];
   notes.forEach((n,i)=>setTimeout(()=>n&&tone(n,0.25,'sawtooth',0.18),i*120));
 }
@@ -5159,9 +5164,15 @@ function goLeaderboard(fromGameOver){
 // ===============================
 // PAUSE / RESUME / SOUND
 // ===============================
+function toggleMusic(){
+  musicOn=!musicOn;try{localStorage.setItem('cqMusic',musicOn?'on':'off');}catch(e){}
+  if(!musicOn)stopMusic();else{const on=document.querySelector('.scr.on');playMusic(screenSong(on?on.id:''));}
+  _updateSoundBtn();if(document.getElementById('titleScr').classList.contains('on'))drawTitle();
+}
 function _updateSoundBtn(){
   const b=document.getElementById('soundBtn');
   if(b)b.textContent=(soundOn?'🔊':'🔇')+' SOUND: '+(soundOn?'ON':'OFF');
+  document.querySelectorAll('.musicBtn').forEach(m=>m.textContent='🎵 MUSIC: '+(musicOn?'ON':'OFF'));
   const r=document.getElementById('readBtn');if(r)r.textContent='🗣 READ ALOUD: '+(readAloudOn()?'ON':'OFF');
 }
 function pauseGame(){
@@ -5432,6 +5443,7 @@ document.addEventListener('keydown',e=>{
 // ===============================
 // INIT
 // ===============================
+_updateSoundBtn();
 drawTitle();
 {const m=location.hash.match(/^#boss(\d)?$/);if(m){
   const wi=(+m[1]||1)-1;
