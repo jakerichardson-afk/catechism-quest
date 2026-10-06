@@ -1,0 +1,21 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+    "cq3lb": {
+      ".read": true,
+      ".indexOn": ["score", "name"],
+      "$entry": {
+        ".write": "newData.exists() && (!data.exists() || newData.child('score').val() >= data.child('score').val())",
+        ".validate": "newData.hasChildren(['name', 'score'])",
+        "name": { ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 20" },
+        "score": { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 200000" },
+        "worlds": { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 20" },
+        "armor": { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 20" },
+        "ts": { ".validate": "newData.isNumber() && newData.val() <= now + 60000" },
+        "date": { ".validate": "newData.isString() && newData.val().length <= 30" },
+        "$other": { ".validate": false }
+      }
+    }
+  }
+}
