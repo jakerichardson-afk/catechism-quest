@@ -2726,9 +2726,13 @@ function showToast(text){G.toast={text,t:170};}
 function drawToast(ctx){
   if(!G.toast||G.toast.t<=0)return;G.toast.t--;
   const a=Math.min(1,G.toast.t/20);ctx.save();ctx.globalAlpha=a;ctx.font='bold 15px monospace';
-  const w=ctx.measureText(G.toast.text).width+30;
-  ctx.fillStyle='rgba(40,24,6,0.95)';ctx.fillRect(320-w/2,120,w,28);ctx.strokeStyle='#f8c840';ctx.lineWidth=2;ctx.strokeRect(320-w/2,120,w,28);
-  ctx.fillStyle='#ffe080';ctx.textAlign='center';ctx.fillText(G.toast.text,320,139);ctx.restore();
+  // long messages wrap onto a second line at the sentence break nearest the middle
+  let lines=[G.toast.text];
+  if(ctx.measureText(G.toast.text).width>580){const t=G.toast.text,cuts=[...t.matchAll(/[.!?,] /g)].map(m=>m.index+1);
+    const cut=cuts.length?cuts.reduce((b,c)=>Math.abs(c-t.length/2)<Math.abs(b-t.length/2)?c:b):t.lastIndexOf(' ',t.length/2);lines=[t.slice(0,cut).trim(),t.slice(cut).trim()];}
+  const w=Math.max(...lines.map(l=>ctx.measureText(l).width))+30,h=10+lines.length*20;
+  ctx.fillStyle='rgba(40,24,6,0.95)';ctx.fillRect(320-w/2,120,w,h);ctx.strokeStyle='#f8c840';ctx.lineWidth=2;ctx.strokeRect(320-w/2,120,w,h);
+  ctx.fillStyle='#ffe080';ctx.textAlign='center';lines.forEach((l,i)=>ctx.fillText(l,320,139+i*20));ctx.restore();
 }
 function dwDrawQuestGiver(ctx,q,sx,sy,f){
   dwDrawHelp(ctx,sx,sy,f,q.robe);
@@ -3499,14 +3503,14 @@ function showQFeedback(good){
     if(good&&G.activeAltarIdx>=0){
       const alt=G.altarData[G.activeAltarIdx];
       if(alt&&!alt.lit){
-        alt.lit=true;
+        alt.lit=true;alt.litOrder=(G.litSeq=(G.litSeq||0)+1);
         G.altarsLit=Math.min(altarNeed(),G.altarsLit+1);
         if(G.wIdx<=2)G.burden=Math.max(0,Math.round(G.burden-100/30));
       }
     }
     G.activeAltarIdx=-1;
     if(G.activeQuest){const q=G.activeQuest;G.activeQuest=null;if(good){q.done++;if(q.done>=q.qs.length){G.score+=100;sfxWin();showToast(q.name+"'s quest complete! +100");}}}
-    if(!good&&G.lives<=0){endWorld(false);return;}
+    if(!good&&G.lives<=0){if(G.diff==='young'){easyRevive();return;}endWorld(false);return;}
     G.phase='walk';startMapLoop();
   },delay);
 }
@@ -3609,7 +3613,20 @@ function skipQ(){
   G.lives=Math.max(0,G.lives-1);G.streak=0;sfxBad();flash('#ff8800',0.2);
   G.activeQ=null;G.filledBlanks=[];G.blankIdx=0;G.typedAns='';_di.value='';
   document.getElementById('qDlg').style.display='none';
-  if(G.lives<=0){endWorld(false);return;}
+  if(G.lives<=0){if(G.diff==='young'){easyRevive();return;}endWorld(false);return;}
+  G.phase='walk';startMapLoop();
+}
+// Easy mode: running out of hearts doesn't restart the whole world, but it does cost something:
+// the two most recently lit altars go dark (those questions must be answered again), 100 points,
+// and the pilgrim goes back to the start of the world. Everything else stays done.
+function easyRevive(){
+  const lost=G.altarData.filter(a=>a.lit).sort((a,b)=>(b.litOrder||0)-(a.litOrder||0)).slice(0,2);
+  lost.forEach(a=>{a.lit=false;G.altarsLit=Math.max(0,G.altarsLit-1);if(G.wIdx<=2&&!G.armorEarned.includes(2))G.burden=Math.min(100,Math.round(G.burden+100/30));});
+  const pts=Math.min(100,G.score);G.score-=pts;
+  G.lives=maxLives();G.streak=0;
+  const D=DENSE[G.wIdx];if(D){G.px=D.start[0];G.py=D.start[1];G.companion.px=D.comp[0];G.companion.py=D.comp[1];G.trail=[];}
+  flash('#ff8040',0.45);sfxBad();
+  showToast(lost.length?`Ouch! ${lost.length===1?'1 altar':lost.length+' altars'} went dark${pts?' and you lost '+pts+' points':''}. Hearts refilled. Try again!`:'Ouch! Back to the start. Hearts refilled. Try again!');
   G.phase='walk';startMapLoop();
 }
 
@@ -5091,7 +5108,7 @@ function showGameOver(){
   ctx.fillStyle='#f8c840';ctx.font='bold 10px monospace';ctx.textAlign='left';
   ctx.fillText('Final Score:',176,328);ctx.fillText('Worlds:',176,346);
   ctx.fillStyle='#c0c0ff';ctx.textAlign='right';
-  ctx.fillText(G.score,464,328);ctx.fillText(G.worldsDone.length+' / 6',464,346);
+  ctx.fillText(G.score,464,328);ctx.fillText(G.worldsDone.length+' / '+WORLDS.length,464,346);
   ctx.fillStyle='rgba(248,200,64,0.5)';ctx.font='8px monospace';ctx.textAlign='center';
   ctx.fillText('Loading leaderboard...',320,400);
   show('gameOverScr');
