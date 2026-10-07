@@ -494,7 +494,25 @@ let musicOn=localStorage.getItem('cqMusic')!=='off';
 // ===============================
 let AC=null;
 function ac(){if(!AC)AC=new(window.AudioContext||window.webkitAudioContext)();return AC;}
-function tone(f,d,t='square',v=0.12){if(!soundOn)return;try{const c=ac(),o=c.createOscillator(),g=c.createGain();o.connect(g);g.connect(c.destination);o.type=t;o.frequency.value=f;g.gain.setValueAtTime(v,c.currentTime);g.gain.exponentialRampToValueAtTime(0.001,c.currentTime+d);o.start();o.stop(c.currentTime+d);}catch(e){}}
+// all sound effects share one volume control, so they can dip (even ones already playing) while George talks
+const SFX_LEVEL=1,SFX_DUCKED=0.22,MUS_LEVEL=0.55,MUS_DUCKED=0.08;
+let SFXBUS=null;
+function sfxOut(){const c=ac();if(!SFXBUS||SFXBUS.context!==c){SFXBUS=c.createGain();SFXBUS.gain.value=SFX_LEVEL;SFXBUS.connect(c.destination);}return SFXBUS;}
+function rampTo(g,lvl,at){const now=ac().currentTime;g.cancelScheduledValues(now);g.setValueAtTime(g.value,now);g.linearRampToValueAtTime(lvl,Math.max(now+0.03,at));}
+// effects and music fade down just before George starts, and come back after he stops
+function duckAll(from,to){
+  for(const [g,lo,hi] of [[sfxOut().gain,SFX_DUCKED,SFX_LEVEL],[MUS.gain&&MUS.gain.gain,MUS_DUCKED,MUS_LEVEL]]){if(!g)continue;rampTo(g,lo,from-0.02);g.setValueAtTime(lo,to);g.linearRampToValueAtTime(hi,to+0.4);}
+}
+function unduckAll(){if(!AC)return;if(SFXBUS)rampTo(SFXBUS.gain,SFX_LEVEL,AC.currentTime+0.2);if(MUS.gain)rampTo(MUS.gain.gain,MUS_LEVEL,AC.currentTime+0.2);}
+// George's voice: cut the rumble small speakers can't play, lift the range where words are clear, and never clip
+function voiceChain(c){
+  const hp=c.createBiquadFilter();hp.type='highpass';hp.frequency.value=110;
+  const pres=c.createBiquadFilter();pres.type='peaking';pres.frequency.value=2800;pres.Q.value=0.8;pres.gain.value=4;
+  const g=c.createGain();g.gain.value=0.9;
+  const lim=c.createDynamicsCompressor();lim.threshold.value=-4;lim.knee.value=2;lim.ratio.value=20;lim.attack.value=0.001;lim.release.value=0.1;
+  hp.connect(pres);pres.connect(g);g.connect(lim);lim.connect(c.destination);return hp;
+}
+function tone(f,d,t='square',v=0.12){if(!soundOn)return;try{const c=ac(),o=c.createOscillator(),g=c.createGain();o.connect(g);g.connect(sfxOut());o.type=t;o.frequency.value=f;g.gain.setValueAtTime(v,c.currentTime);g.gain.exponentialRampToValueAtTime(0.001,c.currentTime+d);o.start();o.stop(c.currentTime+d);}catch(e){}}
 function sfxOk(){tone(523,0.08);setTimeout(()=>tone(659,0.08),80);setTimeout(()=>tone(784,0.15),160);}
 function sfxBad(){tone(200,0.1,'sawtooth');setTimeout(()=>tone(150,0.18,'sawtooth'),100);}
 function sfxWin(){[523,659,784,1047].forEach((n,i)=>setTimeout(()=>tone(n,0.18),i*110));}
@@ -659,7 +677,7 @@ function voLoad(path){
   return VO.pending[path];
 }
 function voPrefetch(paths){paths.forEach(p=>voLoad(p).catch(()=>{}));}
-function voStop(){VO.token++;VO.srcs.forEach(x=>{try{x.stop();}catch(e){}});VO.srcs=[];VO.endT=0;try{speechSynthesis.cancel();}catch(e){}}
+function voStop(){unduckAll();VO.token++;VO.srcs.forEach(x=>{try{x.stop();}catch(e){}});VO.srcs=[];VO.endT=0;try{speechSynthesis.cancel();}catch(e){}}
 // queue=true plays after whatever is already playing; otherwise it interrupts
 async function voPlay(paths,queue,fallback){
   if(!soundOn)return;
@@ -667,10 +685,10 @@ async function voPlay(paths,queue,fallback){
   let bufs;try{bufs=await Promise.all(paths.map(voLoad));}catch(e){if(token===VO.token)say(fallback,queue);return;}
   if(token!==VO.token)return;
   const c=ac();if(c.state==='suspended')c.resume().catch(()=>{});
-  if(!VO.gain){VO.gain=c.createGain();VO.gain.gain.value=1;VO.gain.connect(c.destination);}
-  let t=Math.max(c.currentTime+0.03,queue?VO.endT:0);
+  if(!VO.gain||VO.gain.context!==c){VO.gain=c.createGain();VO.gain.gain.value=1;VO.gain.connect(voiceChain(c));}
+  const t0=Math.max(c.currentTime+0.15,queue?VO.endT:0);let t=t0;   // starts just after the effects and music have dipped
   bufs.forEach((b,k)=>{const x=c.createBufferSource();x.buffer=b;x.connect(VO.gain);x.start(t);VO.srcs.push(x);t+=b.duration+(k<bufs.length-1?0.35:0);});
-  VO.endT=t;musDuck(true);clearTimeout(VO.duckT);VO.duckT=setTimeout(()=>musDuck(false),(t-c.currentTime)*1000+200);
+  VO.endT=t;duckAll(t0,t);
 }
 function qClips(q){const i=QS.indexOf(q);return i<0?null:i;}
 function sayQuestion(q,dp,manual){if(!(manual||readAloudOn()))return;const i=qClips(q);if(i==null)return say(speechText(q,dp),!manual);voPlay(['audio/q/'+i+'.mp3','audio/f/'+i+'.mp3'],!manual,speechText(q,dp));}
@@ -4702,11 +4720,11 @@ function bossRoarSFX(){
         const o=c.createOscillator(),g=c.createGain();
         o.type='sawtooth';o.frequency.setValueAtTime(180,now);o.frequency.exponentialRampToValueAtTime(55,now+1.4);
         g.gain.setValueAtTime(0.45,now);g.gain.exponentialRampToValueAtTime(0.001,now+1.8);
-        o.connect(g);g.connect(c.destination);o.start(now);o.stop(now+1.8);
+        o.connect(g);g.connect(sfxOut());o.start(now);o.stop(now+1.8);
         // Metal clang overtones
-        [440,660,880].forEach((f2,i)=>{const o2=c.createOscillator(),g2=c.createGain();o2.type='square';o2.frequency.value=f2;g2.gain.setValueAtTime(0.15,now+i*0.06);g2.gain.exponentialRampToValueAtTime(0.001,now+0.3+i*0.05);o2.connect(g2);g2.connect(c.destination);o2.start(now+i*0.06);o2.stop(now+0.4);});
+        [440,660,880].forEach((f2,i)=>{const o2=c.createOscillator(),g2=c.createGain();o2.type='square';o2.frequency.value=f2;g2.gain.setValueAtTime(0.15,now+i*0.06);g2.gain.exponentialRampToValueAtTime(0.001,now+0.3+i*0.05);o2.connect(g2);g2.connect(sfxOut());o2.start(now+i*0.06);o2.stop(now+0.4);});
         // Noise burst (sword unsheath)
-        const buf=c.createBuffer(1,c.sampleRate*0.18,c.sampleRate);const d=buf.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/d.length,1.2)*0.6;const src=c.createBufferSource();src.buffer=buf;const ng=c.createGain();ng.gain.value=0.7;src.connect(ng);ng.connect(c.destination);src.start(now+0.05);
+        const buf=c.createBuffer(1,c.sampleRate*0.18,c.sampleRate);const d=buf.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/d.length,1.2)*0.6;const src=c.createBufferSource();src.buffer=buf;const ng=c.createGain();ng.gain.value=0.7;src.connect(ng);ng.connect(sfxOut());src.start(now+0.05);
       },
       // 1 Serpent: long sibilant hiss + rattle + subsonic rumble
       ()=>{
@@ -4716,26 +4734,26 @@ function bossRoarSFX(){
         const src=c.createBufferSource();src.buffer=buf;
         const filt=c.createBiquadFilter();filt.type='bandpass';filt.frequency.setValueAtTime(3000,now);filt.frequency.exponentialRampToValueAtTime(800,now+2);filt.Q.value=0.8;
         const ng=c.createGain();ng.gain.setValueAtTime(0.6,now);ng.gain.exponentialRampToValueAtTime(0.001,now+2);
-        src.connect(filt);filt.connect(ng);ng.connect(c.destination);src.start(now);
+        src.connect(filt);filt.connect(ng);ng.connect(sfxOut());src.start(now);
         // Subsonic rumble
-        const o=c.createOscillator(),g=c.createGain();o.type='sine';o.frequency.value=28;g.gain.setValueAtTime(0.35,now+0.2);g.gain.exponentialRampToValueAtTime(0.001,now+1.5);o.connect(g);g.connect(c.destination);o.start(now+0.2);o.stop(now+1.6);
+        const o=c.createOscillator(),g=c.createGain();o.type='sine';o.frequency.value=28;g.gain.setValueAtTime(0.35,now+0.2);g.gain.exponentialRampToValueAtTime(0.001,now+1.5);o.connect(g);g.connect(sfxOut());o.start(now+0.2);o.stop(now+1.6);
       },
       // 2 Accuser: piercing demonic shriek — descending tritone
       ()=>{
         [[740,0],[523,0.12],[370,0.24],[262,0.4],[185,0.6],[130,0.9]].forEach(([freq,t])=>{
           const o=c.createOscillator(),g=c.createGain();o.type='sawtooth';o.frequency.value=freq;
           g.gain.setValueAtTime(0.28,now+t);g.gain.exponentialRampToValueAtTime(0.001,now+t+0.22);
-          o.connect(g);g.connect(c.destination);o.start(now+t);o.stop(now+t+0.25);
+          o.connect(g);g.connect(sfxOut());o.start(now+t);o.stop(now+t+0.25);
         });
         // Noise screech
-        const buf=c.createBuffer(1,c.sampleRate*0.4,c.sampleRate);const d=buf.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/d.length,0.4)*0.5;const src=c.createBufferSource();src.buffer=buf;const ng=c.createGain();ng.gain.value=0.55;src.connect(ng);ng.connect(c.destination);src.start(now);
+        const buf=c.createBuffer(1,c.sampleRate*0.4,c.sampleRate);const d=buf.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/d.length,0.4)*0.5;const src=c.createBufferSource();src.buffer=buf;const ng=c.createGain();ng.gain.value=0.55;src.connect(ng);ng.connect(sfxOut());src.start(now);
       },
       // 3 Idol King: deep stone grinding + slow bass pulse
       ()=>{
         const buf=c.createBuffer(1,c.sampleRate*2.0,c.sampleRate);const d=buf.getChannelData(0);
         for(let i=0;i<d.length;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/d.length,0.5)*0.55*(1+Math.sin(i*0.008)*0.6);
-        const src=c.createBufferSource();src.buffer=buf;const ng=c.createGain();ng.gain.setValueAtTime(0.65,now);ng.gain.exponentialRampToValueAtTime(0.001,now+2);src.connect(ng);ng.connect(c.destination);src.start(now);
-        [55,50,45].forEach((f2,i)=>{const o=c.createOscillator(),g=c.createGain();o.type='sine';o.frequency.value=f2;g.gain.setValueAtTime(0.4,now+i*0.2);g.gain.exponentialRampToValueAtTime(0.001,now+i*0.2+0.6);o.connect(g);g.connect(c.destination);o.start(now+i*0.2);o.stop(now+i*0.2+0.7);});
+        const src=c.createBufferSource();src.buffer=buf;const ng=c.createGain();ng.gain.setValueAtTime(0.65,now);ng.gain.exponentialRampToValueAtTime(0.001,now+2);src.connect(ng);ng.connect(sfxOut());src.start(now);
+        [55,50,45].forEach((f2,i)=>{const o=c.createOscillator(),g=c.createGain();o.type='sine';o.frequency.value=f2;g.gain.setValueAtTime(0.4,now+i*0.2);g.gain.exponentialRampToValueAtTime(0.001,now+i*0.2+0.6);o.connect(g);g.connect(sfxOut());o.start(now+i*0.2);o.stop(now+i*0.2+0.7);});
       },
       // 4 Deceiver: eerie modulated whisper-to-shriek
       ()=>{
@@ -4744,18 +4762,18 @@ function bossRoarSFX(){
         lfo.type='sine';lfo.frequency.value=8;lfoG.gain.value=60;
         lfo.connect(lfoG);lfoG.connect(o.frequency);
         g.gain.setValueAtTime(0.0,now);g.gain.linearRampToValueAtTime(0.4,now+0.4);g.gain.exponentialRampToValueAtTime(0.001,now+1.6);
-        o.connect(g);g.connect(c.destination);lfo.start(now);lfo.stop(now+1.6);o.start(now);o.stop(now+1.6);
+        o.connect(g);g.connect(sfxOut());lfo.start(now);lfo.stop(now+1.6);o.start(now);o.stop(now+1.6);
         // Glitch pops
-        [0.1,0.3,0.5,0.7,0.9,1.1].forEach(t=>{const o2=c.createOscillator(),g2=c.createGain();o2.type='square';o2.frequency.value=200+Math.random()*800;g2.gain.setValueAtTime(0.18,now+t);g2.gain.exponentialRampToValueAtTime(0.001,now+t+0.04);o2.connect(g2);g2.connect(c.destination);o2.start(now+t);o2.stop(now+t+0.05);});
+        [0.1,0.3,0.5,0.7,0.9,1.1].forEach(t=>{const o2=c.createOscillator(),g2=c.createGain();o2.type='square';o2.frequency.value=200+Math.random()*800;g2.gain.setValueAtTime(0.18,now+t);g2.gain.exponentialRampToValueAtTime(0.001,now+t+0.04);o2.connect(g2);g2.connect(sfxOut());o2.start(now+t);o2.stop(now+t+0.05);});
       },
       // 5 Death & Despair: chilling dissonant chord + death knell toll
       ()=>{
         // Dissonant death chord — tritone cluster
         [[55,58],[110,116],[165,175],[220,233]].forEach(([f1,f2],i)=>{
-          [f1,f2].forEach(freq=>{const o=c.createOscillator(),g=c.createGain();o.type='sawtooth';o.frequency.value=freq;g.gain.setValueAtTime(0.18,now+i*0.05);g.gain.exponentialRampToValueAtTime(0.001,now+2.2);o.connect(g);g.connect(c.destination);o.start(now+i*0.05);o.stop(now+2.3);});
+          [f1,f2].forEach(freq=>{const o=c.createOscillator(),g=c.createGain();o.type='sawtooth';o.frequency.value=freq;g.gain.setValueAtTime(0.18,now+i*0.05);g.gain.exponentialRampToValueAtTime(0.001,now+2.2);o.connect(g);g.connect(sfxOut());o.start(now+i*0.05);o.stop(now+2.3);});
         });
         // Bell toll
-        const o=c.createOscillator(),g=c.createGain();o.type='sine';o.frequency.value=220;g.gain.setValueAtTime(0.5,now+0.1);g.gain.exponentialRampToValueAtTime(0.001,now+2.5);o.connect(g);g.connect(c.destination);o.start(now+0.1);o.stop(now+2.6);
+        const o=c.createOscillator(),g=c.createGain();o.type='sine';o.frequency.value=220;g.gain.setValueAtTime(0.5,now+0.1);g.gain.exponentialRampToValueAtTime(0.001,now+2.5);o.connect(g);g.connect(sfxOut());o.start(now+0.1);o.stop(now+2.6);
       },
     ];
     roars[G.wIdx]();
